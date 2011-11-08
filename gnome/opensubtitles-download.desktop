@@ -1,0 +1,17 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+MimeType=media/x-video
+Icon=text
+Categories=Video;FileTransfer
+Exec=opensubtitles-download.py "%F"
+
+Name=OpenSubtitles-download
+GenericName=Automatic subtitles downloader
+GenericName[fr]=Téléchargeur automatique de sous-titres
+X-GNOME-FullName=Download subtitle from opensubtitles.org
+X-GNOME-FullName[fr]=Télécharge des sous-titres depuis opensubtitles.org
+Comment=Download subtitle from opensubtitles.org
+Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
+
+Name[fr_FR]=opensubtitles-download
