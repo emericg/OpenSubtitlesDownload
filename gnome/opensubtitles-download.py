@@ -194,9 +194,6 @@ try:
             resp = 0
         
         if resp == 0:
-            # Progress bar during downloading
-            op_progressbar = subprocess.Popen(['zenity', '--width=600', '--progress', '--pulsate', '--title=Downloading subtitle, please wait...', '--text=Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\'...'], bufsize=256, stdin=subprocess.PIPE)
-            
             # Select subtitle file to download
             index = 0
             subIndex = 0
@@ -209,14 +206,9 @@ try:
             subDirName = os.path.dirname(moviePath)
             subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
             subFileName = os.path.basename(moviePath)[:-3] + subtitlesList['data'][subIndex]['SubFileName'][-3:]
-            #print 'wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '"'
             
-            # Download and unzip selected subtitle
-            op_download = subprocess.call('wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '"', shell=True)
-            
-            # Stop progress bar
-            if op_progressbar.returncode != None:
-                op_progressbar.communicate('\n')
+            # Download and unzip selected subtitle (with progressbar)
+            op_download = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\' : "', shell=True)
             
             # If an error occur, say so
             if op_download != 0:
