@@ -87,6 +87,7 @@ def hashFile(path):
         hash = filesize
         
         if filesize < 65536 * 2:
+            subprocess.call(['zenity', '--error', '--text=Size error while generating hash for this file :\n- ' + path])
             return "SizeError"
         
         buffer = f.read(65536)
@@ -157,11 +158,11 @@ try:
         # Connection to opensubtitles.org server
         session = server.LogIn('', '', 'en', 'opensubtitles-download 1.1')
         if session['status'] != '200 OK':
-            subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server : ' + session['status']])
+            subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server : ' + session['status'] + '. Please check :\n- Your internet connection\n- www.opensubtitles.org availability'])
             exit(1)
         token = session['token']
     except Exception:
-        subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server.'])
+        subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server. Please check :\n- Your internet connection\n- www.opensubtitles.org availability'])
         exit(1)
     
     movieHash = hashFile(moviePath)
