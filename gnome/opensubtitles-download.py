@@ -201,7 +201,7 @@ try:
                 if item['SubFileName'] == subtitleSelected:
                     subIndex = index
                 else:
-                    index = 1
+                    index += 1
             
             subDirName = os.path.dirname(moviePath)
             subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
