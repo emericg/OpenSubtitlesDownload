@@ -1,15 +1,15 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitles download - (gnome edition)
-# version 1.0
+# OpenSubtitles download - (Gnome edition)
+# version 1.1
 #
-# Find and download subtitles from opensubtitles.org
+# Automatically find and download subtitles from opensubtitles.org !
 
 # Emeric Grange <emeric.grange@gmail.com>
-# Carlos Acedo <carlos@linux-labs.net> for original script
+# Carlos Acedo <carlos@linux-labs.net> for the original script
 
-# Copyright (c) 2010 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2011 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,16 +31,17 @@ import mimetypes
 from sys import argv
 from xmlrpclib import ServerProxy, Error
 
-# ============================= Language selection =============================
-# Default language is english. You can change the 'SubLanguageID' by using any valid 'ISO 639-3' or 'ISO 639-2' language code.
-# Complete list : http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+# ==== Language selection ======================================================
+# Default language is english. You can change the 'SubLanguageID' by using any 
+# valid 'ISO 639-3' or 'ISO 639-2' language code.
+# ISO codes list : http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
 SubLanguageID = 'eng'
 
-# ============================== Server selection ==============================
+# ==== Server selection ========================================================
 # Xml-rpc API server domain of opensubtitles.org
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
-# ================================= Check file =================================
+# ==== Check file type =========================================================
 def checkFile(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
@@ -69,10 +70,12 @@ def checkFile(path):
     
     return True
 
-# ============================= Hashing algorithm ==============================
-# source: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+# ==== Hashing algorithm =======================================================
+# Source : http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+# This particular implementation is from SubDownloader
 def hashFile(path):
-    """Produce a hash for a video file : size + 64bit chksum of the first and last 64k (even if they overlap because the file is smaller than 128k)"""
+    """Produce a hash for a video file : size + 64bit chksum of the first and 
+    last 64k (even if they overlap because the file is smaller than 128k)"""
     try:
         longlongformat = 'Q' # unsigned long long little endian
         bytesize = struct.calcsize(longlongformat)
@@ -104,7 +107,7 @@ def hashFile(path):
         subprocess.call(['zenity', '--error', '--text=Input/Output error while generating hash for this file :\n- ' + path])
         return "IOError"
 
-# ============================ Get file(s) path(s) =============================
+# ==== Get file(s) path(s) =====================================================
 # Get opensubtitles-download script path, then remove it from argv list
 execPath = argv[0]
 argv.pop(0)
@@ -148,11 +151,11 @@ else:
     for i in range(len(moviePathList)):
         op_dispatchedvideo = subprocess.Popen(execPath + ' --file \'' + moviePathList[i] + '\'', shell=True)
 
-# ================================ Main program ================================
+# ==== Main program ============================================================
 try:
     try:
-        # Connexion to opensubtitles.org server
-        session = server.LogIn('', '', 'en', 'opensubtitles-download 1.0')
+        # Connection to opensubtitles.org server
+        session = server.LogIn('', '', 'en', 'opensubtitles-download 1.1')
         if session['status'] != '200 OK':
             subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server : ' + session['status']])
             exit(1)
