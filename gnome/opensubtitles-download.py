@@ -175,12 +175,10 @@ try:
     subtitlesList = server.SearchSubtitles(token, searchList)
     
     if subtitlesList['data']:
-        # Sanitize strings to avoid parsing errors
+        # Sanitize title strings to avoid parsing errors
         for item in subtitlesList['data']:
-            item['MovieName'] = item['MovieName'].strip('"')
-            item['MovieName'] = item['MovieName'].strip("'")
-            item['SubFileName'] = item['SubFileName'].strip('"')
-            item['SubFileName'] = item['SubFileName'].strip("'")
+            item['MovieName'] = item['MovieName'].replace('"', '')
+            item['MovieName'] = item['MovieName'].replace("'", '')
         
         # If there is more than one subtitle, let the user decided wich one will be downloaded
         if len(subtitlesList['data']) != 1:
