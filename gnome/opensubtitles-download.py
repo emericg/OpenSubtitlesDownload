@@ -153,7 +153,7 @@ else:
     
     # Dispatch remaining file(s) to other instance(s)
     for i in range(len(moviePathList)):
-        op_dispatchedvideo = subprocess.Popen(execPath + ' --file \'' + moviePathList[i] + '\'', shell=True)
+        process_movieDispatched = subprocess.Popen(execPath + ' --file \'' + moviePathList[i] + '\'', shell=True)
 
 # ==== Main program ============================================================
 try:
@@ -189,9 +189,9 @@ try:
             for item in subtitlesList['data']:
                 subtitleItems += '"' + item['SubFileName'] + '" '
             
-            op_subtitleselection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True)
-            resp = op_subtitleselection.returncode
-            subtitleSelected = str(op_subtitleselection.communicate()[0]).strip('\n')
+            process_subtitleSelection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True)
+            resp = process_subtitleSelection.returncode
+            subtitleSelected = str(process_subtitleSelection.communicate()[0]).strip('\n')
         else:
             subtitleSelected = ''
             resp = 0
@@ -211,10 +211,10 @@ try:
             subFileName = os.path.basename(moviePath)[:-3] + subtitlesList['data'][subIndex]['SubFileName'][-3:]
             
             # Download and unzip selected subtitle (with progressbar)
-            op_download = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\' : "', shell=True)
+            process_subDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\' : "', shell=True)
             
             # If an error occur, say so
-            if op_download != 0:
+            if process_subDownload != 0:
                 subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing the selected subtitle.'])
     else:
         movieFileName = moviePath.rsplit('/', -1)
