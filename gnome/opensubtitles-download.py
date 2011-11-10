@@ -41,7 +41,7 @@ SubLanguageID = 'eng'
 # Xml-rpc API server domain of opensubtitles.org
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
-# ==== Check file type =========================================================
+# ==== Check file path & file ==================================================
 def checkFile(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
@@ -112,9 +112,6 @@ def hashFile(path):
 # Get opensubtitles-download script path, then remove it from argv list
 execPath = argv[0]
 argv.pop(0)
-
-filePathList = []
-moviePathList = []
 moviePath = ''
 
 if len(argv) == 0:
@@ -123,10 +120,14 @@ if len(argv) == 0:
 elif argv[0] == '--file':
     moviePath = argv[1]
 else:
-    # Put file(s) path(s) in filePathList
+    filePathList = []
+    moviePathList = []
+    
     try:
+        # Fill filePathList (using nautilus script)
         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
     except Exception:
+        # Fill filePathList (using program arguments)
         try:
             for i in range(len(argv)):
                 if os.path.isabs(argv[i]) == False:
@@ -146,9 +147,11 @@ else:
     if len(moviePathList) == 0:
         exit(1)
     
-    # Dispatch file(s)
+    # The first file will be processed immediatly
     moviePath = moviePathList[0]
     moviePathList.pop(0)
+
+    # Dispatch remaining file(s) to other instance(s)
     for i in range(len(moviePathList)):
         op_dispatchedvideo = subprocess.Popen(execPath + ' --file \'' + moviePathList[i] + '\'', shell=True)
 
@@ -185,7 +188,7 @@ try:
             subtitleItems = ''
             for item in subtitlesList['data']:
                 subtitleItems += '"' + item['SubFileName'] + '" '
-            op_subtitleselection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitle(s)" ' + subtitleItems, shell=True, bufsize=256, stdout=subprocess.PIPE)
+            op_subtitleselection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True, bufsize=256, stdout=subprocess.PIPE)
             
             subtitleSelected = str(op_subtitleselection.communicate()[0]).strip('\n')
             resp = op_subtitleselection.returncode
