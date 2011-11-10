@@ -150,7 +150,7 @@ else:
     # The first file will be processed immediatly
     moviePath = moviePathList[0]
     moviePathList.pop(0)
-
+    
     # Dispatch remaining file(s) to other instance(s)
     for i in range(len(moviePathList)):
         op_dispatchedvideo = subprocess.Popen(execPath + ' --file \'' + moviePathList[i] + '\'', shell=True)
@@ -188,10 +188,10 @@ try:
             subtitleItems = ''
             for item in subtitlesList['data']:
                 subtitleItems += '"' + item['SubFileName'] + '" '
-            op_subtitleselection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True, bufsize=256, stdout=subprocess.PIPE)
             
-            subtitleSelected = str(op_subtitleselection.communicate()[0]).strip('\n')
+            op_subtitleselection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True)
             resp = op_subtitleselection.returncode
+            subtitleSelected = str(op_subtitleselection.communicate()[0]).strip('\n')
         else:
             subtitleSelected = ''
             resp = 0
