@@ -1,8 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitles download - (Gnome edition)
-# version 1.1
+# OpenSubtitles download / Gnome edition
+# Version 1.1
 #
 # Automatically find and download subtitles from opensubtitles.org !
 
@@ -32,13 +32,13 @@ from sys import argv
 from xmlrpclib import ServerProxy, Error
 
 # ==== Language selection ======================================================
-# Default language is english. You can change the 'SubLanguageID' by using any 
-# valid 'ISO 639-3' or 'ISO 639-2' language code.
-# ISO codes list : http://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+# The default language is English. You can change the search language by using
+# any valid 'ISO 639-3' or 'ISO 639-2' language code.
+# Supported ISO codes : http://www.opensubtitles.org/addons/export_languages.php
 SubLanguageID = 'eng'
 
 # ==== Server selection ========================================================
-# Xml-rpc API server domain of opensubtitles.org
+# XML-RPC server domain for opensubtitles.org :
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
 # ==== Check file path & file ==================================================
