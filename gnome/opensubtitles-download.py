@@ -87,7 +87,7 @@ def hashFile(path):
         hash = filesize
         
         if filesize < 65536 * 2:
-            subprocess.call(['zenity', '--error', '--text=Size error while generating hash for this file :\n- ' + path])
+            subprocess.call(['zenity', '--error', '--text=File size error while generating hash for this file :\n- ' + path])
             return "SizeError"
         
         buffer = f.read(65536)
