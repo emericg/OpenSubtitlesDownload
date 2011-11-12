@@ -202,6 +202,8 @@ try:
             subDirName = os.path.dirname(moviePath)
             subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
             subFileName = os.path.basename(moviePath)[:-3] + subtitlesList['data'][subIndex]['SubFileName'][-3:]
+            subFileName = subFileName.replace('"', '\\"')
+            subFileName = subFileName.replace("'", "\'")
             
             # Download and unzip selected subtitle (with progressbar)
             process_subDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\' : "', shell=True)
