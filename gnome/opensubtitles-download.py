@@ -128,15 +128,8 @@ else:
         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
     except Exception:
         # Fill filePathList (using program arguments)
-        try:
-            for i in range(len(argv)):
-                if os.path.isabs(argv[i]) == False:
-                    filePathList.append(os.getcwd() + '/' + argv[i])
-                else:
-                    filePathList.append(argv[i])
-        except Exception:
-            #subprocess.call(['zenity', '--error', '--text=Bug in the filepath given in parameter.'])
-            exit(1)
+        for i in range(len(argv)):
+            filePathList.append(os.path.abspath(argv[i]))
     
     # Check file(s) type
     for i in range(len(filePathList)):
