@@ -153,7 +153,7 @@ else:
     
     # Dispatch remaining file(s) to other instance(s)
     for i in range(len(moviePathList)):
-        process_movieDispatched = subprocess.Popen(execPath + ' --file \'' + moviePathList[i] + '\'', shell=True)
+        process_movieDispatched = subprocess.Popen([execPath, '--file', moviePathList[i]])
 
 # ==== Main program ============================================================
 try:
