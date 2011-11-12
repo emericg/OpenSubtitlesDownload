@@ -71,8 +71,8 @@ def checkFile(path):
     return True
 
 # ==== Hashing algorithm =======================================================
-# Source : http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
-# This particular implementation is from SubDownloader
+# http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+# This particular implementation is from SubDownloader.
 def hashFile(path):
     """Produce a hash for a video file : size + 64bit chksum of the first and 
     last 64k (even if they overlap because the file is smaller than 128k)"""
@@ -144,7 +144,7 @@ else:
     moviePath = moviePathList[0]
     moviePathList.pop(0)
     
-    # Dispatch remaining file(s) to other instance(s)
+    # The remaining file(s) are dispatched to new instance(s) of this script
     for i in range(len(moviePathList)):
         process_movieDispatched = subprocess.Popen([execPath, '--file', moviePathList[i]])
 
