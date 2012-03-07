@@ -201,7 +201,7 @@ try:
             
             subDirName = os.path.dirname(moviePath)
             subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
-            subFileName = os.path.basename(moviePath)[:-4] + '_' + SubLanguageID + subtitlesList['data'][subIndex]['SubFileName'][-4:]
+            subFileName = os.path.basename(moviePath)[:-3] + subtitlesList['data'][subIndex]['SubFileName'][-3:]
             subFileName = subFileName.replace('"', '\\"')
             subFileName = subFileName.replace("'", "\'")
             
