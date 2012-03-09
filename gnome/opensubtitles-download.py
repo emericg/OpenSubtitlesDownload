@@ -60,12 +60,12 @@ def checkFile(path):
         'nut', 'ogg', 'ogm', 'ogv', 'omf', 'ps', 'qt', 'ram', 'rm', 'rmvb', \
         'swf', 'ts', 'vfw', 'vid', 'video', 'viv', 'vivo', 'vob', 'vro', \
         'webm', 'wm', 'wmv', 'wmx', 'wrap', 'wvx', 'wx', 'x264', 'xvid']:
-            #subprocess.call(['zenity', '--error', '--text=This file is not a video :\n- (unknown mimetype AND bad extension)\n- ' + path])
+            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype AND invalid file extension) :\n- ' + path])
             return False
     else:
         fileMimeType = fileMimeType.split('/', 1)
         if fileMimeType[0] != 'video':
-            #subprocess.call(['zenity', '--error', '--text=This file is not a video :\n- (unknown mimetype)\n- ' + path])
+            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype) :\n- ' + path])
             return False
     
     return True
