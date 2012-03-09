@@ -4,7 +4,7 @@
 # OpenSubtitles download / Gnome edition
 # Version 1.1
 #
-# Automatically find and download subtitles from opensubtitles.org !
+# Automatically find and download subtitles for your favorite videos!
 
 # Emeric Grange <emeric.grange@gmail.com>
 # Carlos Acedo <carlos@linux-labs.net> for the original script
@@ -32,20 +32,20 @@ from sys import argv
 from xmlrpclib import ServerProxy, Error
 
 # ==== Language selection ======================================================
-# The default language is English. You can change the search language by using
-# any valid 'ISO 639-3' (preferred) or 'ISO 639-2' language code.
-# Supported ISO codes : http://www.opensubtitles.org/addons/export_languages.php
+# You can change the search language here by using either 2-letter (ISO 639-1) 
+# or 3-letter (ISO 639-2) language codes.
+# Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
 SubLanguageID = 'eng'
 
 # ==== Server selection ========================================================
-# XML-RPC server domain for opensubtitles.org :
+# XML-RPC server domain for opensubtitles.org:
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
 # ==== Check file path & file ==================================================
 def checkFile(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
-        #subprocess.call(['zenity', '--error', '--text=This is not a file :\n- ' + path])
+        #subprocess.call(['zenity', '--error', '--text=This is not a file:\n- ' + path])
         return False
     
     fileMimeType, encoding = mimetypes.guess_type(path)
@@ -60,21 +60,21 @@ def checkFile(path):
         'nut', 'ogg', 'ogm', 'ogv', 'omf', 'ps', 'qt', 'ram', 'rm', 'rmvb', \
         'swf', 'ts', 'vfw', 'vid', 'video', 'viv', 'vivo', 'vob', 'vro', \
         'webm', 'wm', 'wmv', 'wmx', 'wrap', 'wvx', 'wx', 'x264', 'xvid']:
-            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype AND invalid file extension) :\n- ' + path])
+            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype AND invalid file extension):\n- ' + path])
             return False
     else:
         fileMimeType = fileMimeType.split('/', 1)
         if fileMimeType[0] != 'video':
-            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype) :\n- ' + path])
+            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype):\n- ' + path])
             return False
     
     return True
 
 # ==== Hashing algorithm =======================================================
-# Infos : http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
-# This particular implementation is coming from SubDownloader : http://subdownloader.net/
+# Infos: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+# This particular implementation is coming from SubDownloader: http://subdownloader.net/
 def hashFile(path):
-    """Produce a hash for a video file : size + 64bit chksum of the first and 
+    """Produce a hash for a video file: size + 64bit chksum of the first and 
     last 64k (even if they overlap because the file is smaller than 128k)"""
     try:
         longlongformat = 'Q' # unsigned long long little endian
@@ -87,7 +87,7 @@ def hashFile(path):
         hash = filesize
         
         if filesize < 65536 * 2:
-            subprocess.call(['zenity', '--error', '--text=File size error while generating hash for this file :\n- ' + path])
+            subprocess.call(['zenity', '--error', '--text=File size error while generating hash for this file:\n- ' + path])
             return "SizeError"
         
         buffer = f.read(65536)
@@ -105,7 +105,7 @@ def hashFile(path):
         return returnedhash
     
     except IOError:
-        subprocess.call(['zenity', '--error', '--text=Input/Output error while generating hash for this file :\n- ' + path])
+        subprocess.call(['zenity', '--error', '--text=Input/Output error while generating hash for this file:\n- ' + path])
         return "IOError"
 
 # ==== Get file(s) path(s) =====================================================
@@ -154,11 +154,11 @@ try:
         # Connection to opensubtitles.org server
         session = server.LogIn('', '', 'en', 'opensubtitles-download 1.1')
         if session['status'] != '200 OK':
-            subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server : ' + session['status'] + '. Please check :\n- Your internet connection status\n- www.opensubtitles.org availability'])
+            subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server: ' + session['status'] + '. Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
             exit(1)
         token = session['token']
     except Exception:
-        subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server. Please check :\n- Your internet connection status\n- www.opensubtitles.org availability'])
+        subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server. Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
         exit(1)
     
     searchList = []
@@ -209,20 +209,20 @@ try:
             subFileName = subFileName.replace("'", "\'")
             
             # Download and unzip selected subtitle (with progressbar)
-            process_subDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --auto-close --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\' : "', shell=True)
+            process_subDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --auto-close --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\'"', shell=True)
             
             # If an error occur, say so
             if process_subDownload != 0:
                 subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing the selected subtitle.'])
     else:
         movieFileName = moviePath.rsplit('/', -1)
-        subprocess.call(['zenity', '--info', '--title=No subtitle found', '--text=No subtitle found for this video :\n- ' + movieFileName[-1]])
+        subprocess.call(['zenity', '--info', '--title=No subtitle found', '--text=No subtitle found for this video:\n- ' + movieFileName[-1]])
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
     exit(0)
 except Error:
     # If an unknown error occur, say so (and apologize)
-    subprocess.call(['zenity', '--error', '--text=An unknown error occurred, sorry about that... Please check :\n- Your internet connection status\n- www.opensubtitles.org availability'])
+    subprocess.call(['zenity', '--error', '--text=An unknown error occurred, sorry about that... Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
     exit(1)
 
