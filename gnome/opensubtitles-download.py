@@ -179,13 +179,23 @@ try:
                item['MovieName'] = item['MovieName'].replace('"', '\\"')
                item['MovieName'] = item['MovieName'].replace("'", "\'")
            
-           # If there is more than one subtitle, let the user decided wich one will be downloaded
+           # If there are more than one subtitles, let the user decide which  will be downloaded
            if len(subtitlesList['data']) != 1:
                subtitleItems = ''
                for item in subtitlesList['data']:
-                   subtitleItems += '"' + item['SubFileName'] + '" '
-
-               process_subtitleSelection = subprocess.Popen('zenity --width=600 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True, stdout=subprocess.PIPE)
+                   # Give the user some additional information about the subtitles
+                   hearingImpaired = ''
+                   if item['SubHearingImpaired'] == '1':
+                       hearingImpaired += '✓'
+                   else: 
+                       hearingImpaired += '\'\''
+                   CD = ''
+                   if int(item['SubSumCD']) > 1:
+                       CD += str(item['SubActualCD']) + '/' + str(item['SubSumCD'])
+                   else:
+                       CD += '\'\''
+                   subtitleItems += '"' + item['SubFileName'] + '" ' + item['LanguageName'] + ' ' + hearingImpaired + ' ' + CD + ' '
+               process_subtitleSelection = subprocess.Popen('zenity --width=1024 --height=480 --list --title="' + os.path.basename(moviePath) + '" --column="Available subtitles" --column="Language" --column="Hearing impaired" --column="CD" '  + subtitleItems, shell=True, stdout=subprocess.PIPE)
                subtitleSelected = str(process_subtitleSelection.communicate()[0]).strip('\n')
                resp = process_subtitleSelection.returncode
            else:
