@@ -32,9 +32,10 @@ from sys import argv
 from xmlrpclib import ServerProxy, Error
 
 # ==== Language selection ======================================================
-# You can change the search language here by using either 2-letter (ISO 639-1) 
-# or 3-letter (ISO 639-2) language codes.
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
+#
+# You can change the subtitle's search language here by using either 2-letter
+# (ISO 639-1) or 3-letter (ISO 639-2) language codes.
 SubLanguageID = 'eng'
 
 # ==== Server selection ========================================================
@@ -179,7 +180,7 @@ try:
             item['MovieName'] = item['MovieName'].replace('"', '\\"')
             item['MovieName'] = item['MovieName'].replace("'", "\'")
         
-        # If there is more than one subtitle available, let the user decided wich one will be downloaded
+        # If there is more than one subtitle available, let the user decide which one will be downloaded
         if len(subtitlesList['data']) != 1:
             subtitleItems = ''
             for item in subtitlesList['data']:
@@ -225,4 +226,3 @@ except Error:
     # If an unknown error occur, say so (and apologize)
     subprocess.call(['zenity', '--error', '--text=An unknown error occurred, sorry about that... Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
     exit(1)
-
