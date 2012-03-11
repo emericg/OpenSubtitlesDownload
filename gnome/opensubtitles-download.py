@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # OpenSubtitles download / Gnome edition
-# Version 1.1
+# Version 2.0
 #
 # Automatically find and download subtitles for your favorite videos!
 
@@ -10,7 +10,7 @@
 # Tomáš Hnyk <tomashnyk@gmail.com>
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
-# Copyright (c) 2011 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2012 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -154,7 +154,7 @@ else:
 try:
     try:
         # Connection to opensubtitles.org server
-        session = server.LogIn('', '', 'en', 'opensubtitles-download 1.1')
+        session = server.LogIn('', '', 'en', 'opensubtitles-download 2.0')
         if session['status'] != '200 OK':
             subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server: ' + session['status'] + '. Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
             exit(1)
