@@ -187,7 +187,7 @@ try:
             for item in subtitlesList['data']:
                 subtitleItems += '"' + item['SubFileName'] + '" '
             
-            process_subtitleSelection = subprocess.Popen('zenity --width=512 --height=256 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True, stdout=subprocess.PIPE)
+            process_subtitleSelection = subprocess.Popen('zenity --width=640 --height=320 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True, stdout=subprocess.PIPE)
             subtitleSelected = str(process_subtitleSelection.communicate()[0]).strip('\n')
             resp = process_subtitleSelection.returncode
         else:
