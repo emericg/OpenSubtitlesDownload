@@ -7,7 +7,8 @@
 # Automatically find and download subtitles for your favorite videos!
 
 # Emeric Grange <emeric.grange@gmail.com>
-# Carlos Acedo <carlos@linux-labs.net> for the original script
+# Tomáš Hnyk <tomashnyk@gmail.com>
+# Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
 # Copyright (c) 2011 by Emeric GRANGE <emeric.grange@gmail.com>
 #
