@@ -226,11 +226,11 @@ try:
                 
                 # If an error occur, say so
                 if process_subtitleDownload != 0:
-                    subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing the selected subtitle.'])
+                    subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitle for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>".'])
     
     # Print a message if none of the subtitle languages have been found
-    if len(subFound) != len(SubLanguageIDs):
-        subprocess.call(['zenity', '--info', '--title=No subtitle found for ' + movieFileName, '--text=No subtitle found for this video:\n- ' + movieFileName])
+    if len(subFound) == 0:
+        subprocess.call(['zenity', '--info', '--title=No subtitle(s) found for ' + movieFileName, '--text=No subtitle(s) found for this video:\n- ' + movieFileName])
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
