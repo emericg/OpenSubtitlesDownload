@@ -221,7 +221,7 @@ try:
                 subPath = moviePath[:-4] + '_' + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip selected subtitle (with progressbar)
-                process_subtitleDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | zenity --auto-close --progress --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for <b>' + subtitlesList['data'][0]['MovieName'] + '</b>"', shell=True)
+                process_subtitleDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | zenity --auto-close --progress --pulsate --title="Downloading subtitle, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitle for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>"', shell=True)
                 subFound.append(SubLanguageID)
                 
                 # If an error occur, say so
