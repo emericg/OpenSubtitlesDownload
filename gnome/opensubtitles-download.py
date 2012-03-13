@@ -35,8 +35,12 @@ from xmlrpclib import ServerProxy, Error
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
 #
-# You can change the subtitle's search language here by using either 2-letter
-# (ISO 639-1) or 3-letter (ISO 639-2) language codes.
+# You can change the search language here by using either 2-letter (ISO 639-1)
+# or 3-letter (ISO 639-2) language codes.
+#
+# You can also search for subtitles in several languages ​​at once:
+# - SubLanguageIDs = ['eng,fre'] to download the first language available only
+# - SubLanguageIDs = ['eng','fre'] to download all selected languages
 SubLanguageID = 'eng'
 
 # ==== Server selection ========================================================
@@ -156,11 +160,11 @@ try:
         # Connection to opensubtitles.org server
         session = server.LogIn('', '', 'en', 'opensubtitles-download 2.0')
         if session['status'] != '200 OK':
-            subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server: ' + session['status'] + '. Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
+            subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server: ' + session['status'] + '. Please check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
             exit(1)
         token = session['token']
     except Exception:
-        subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server. Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
+        subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server. Please check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
         exit(1)
     
     searchList = []
@@ -225,5 +229,5 @@ try:
     exit(0)
 except Error:
     # If an unknown error occur, say so (and apologize)
-    subprocess.call(['zenity', '--error', '--text=An unknown error occurred, sorry about that... Please check:\n- Your internet connection status\n- www.opensubtitles.org availability'])
+    subprocess.call(['zenity', '--error', '--text=An unknown error occurred, sorry about that... Please check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
     exit(1)
