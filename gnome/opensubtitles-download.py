@@ -138,9 +138,9 @@ else:
             filePathList.append(os.path.abspath(argv[i]))
     
     # Check file(s) type
-    for i in range(len(filePathList)):
-        if checkFile(filePathList[i]):
-            moviePathList.append(filePathList[i])
+    for filePath in filePathList:
+        if checkFile(filePath):
+            moviePathList.append(filePath)
     
     # If moviePathList is empty, abort
     if len(moviePathList) == 0:
@@ -151,8 +151,8 @@ else:
     moviePathList.pop(0)
     
     # The remaining file(s) are dispatched to new instance(s) of this script
-    for i in range(len(moviePathList)):
-        process_movieDispatched = subprocess.Popen([execPath, '--file', moviePathList[i]])
+    for moviePathDispatch in moviePathList:
+        process_movieDispatched = subprocess.Popen([execPath, '--file', moviePathDispatch])
 
 # ==== Main program ============================================================
 try:
