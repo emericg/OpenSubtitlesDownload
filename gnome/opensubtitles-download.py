@@ -41,7 +41,7 @@ from xmlrpclib import ServerProxy, Error
 # You can also search for subtitles in several languages ​​at once:
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
-SubLanguageID = 'eng'
+SubLanguageIDs = ['eng']
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
@@ -167,62 +167,68 @@ try:
         subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server. Please check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
         exit(1)
     
-    searchList = []
     movieHash = hashFile(moviePath)
     movieSize = os.path.getsize(moviePath)
+    movieFileName = os.path.basename(moviePath)
     
-    # Search for available subtitles (using file hash and size)
-    searchList.append({'sublanguageid':SubLanguageID, 'moviehash':movieHash, 'moviebytesize':str(movieSize)})
+    subFound = []
     
-    # Search for available subtitles (using file name)
-    #searchList.append({'sublanguageid':SubLanguageID, 'query':moviePath})
-    
-    # Launch the search
-    subtitlesList = server.SearchSubtitles(token, searchList)
-    if subtitlesList['data']:
-        # Sanitize title strings to avoid parsing errors
-        for item in subtitlesList['data']:
-            item['MovieName'] = item['MovieName'].replace('"', '\\"')
-            item['MovieName'] = item['MovieName'].replace("'", "\'")
+    # Search for subtitles
+    for SubLanguageID in SubLanguageIDs:
         
-        # If there is more than one subtitle available, let the user decide which one will be downloaded
-        if len(subtitlesList['data']) != 1:
-            subtitleItems = ''
-            for item in subtitlesList['data']:
-                subtitleItems += '"' + item['SubFileName'] + '" '
-            
-            process_subtitleSelection = subprocess.Popen('zenity --width=640 --height=320 --list --title="' + item['MovieName'] + '" --column="Available subtitles" ' + subtitleItems, shell=True, stdout=subprocess.PIPE)
-            subtitleSelected = str(process_subtitleSelection.communicate()[0]).strip('\n')
-            resp = process_subtitleSelection.returncode
-        else:
-            subtitleSelected = ''
-            resp = 0
+        # Search for available subtitles (using file hash and file size)
+        searchList = []
+        searchList.append({'sublanguageid':SubLanguageID, 'moviehash':movieHash, 'moviebytesize':str(movieSize)})
+        subtitlesList = server.SearchSubtitles(token, searchList)
         
-        if resp == 0:
-            # Select subtitle file to download
-            index = 0
-            subIndex = 0
+        # Parse the results of the XML-RPC query
+        if subtitlesList['data']:
+            # Sanitize the title string to avoid parsing errors
             for item in subtitlesList['data']:
-                if item['SubFileName'] == subtitleSelected:
-                    subIndex = index
-                else:
-                    index += 1
+                item['MovieName'] = item['MovieName'].replace('"', '\\"')
+                item['MovieName'] = item['MovieName'].replace("'", "\'")
             
-            subDirName = os.path.dirname(moviePath)
-            subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
-            subFileName = os.path.basename(moviePath)[:-4] + '_' + SubLanguageID + subtitlesList['data'][subIndex]['SubFileName'][-4:]
-            subFileName = subFileName.replace('"', '\\"')
-            subFileName = subFileName.replace("'", "\'")
+            # If there is more than one subtitles, let the user decide which one will be downloaded
+            if len(subtitlesList['data']) != 1:
+                subtitlesItems = ''
+                for item in subtitlesList['data']:
+                    subtitlesItems += '"' + item['SubFileName'] + '" '
+                    subtitlesItems += '"' + item['LanguageName'] + '" '
+                
+                process_subtitlesSelection = subprocess.Popen('zenity --width=640 --height=320 --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" --column="Available subtitles" --column="Language" ' + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+                subtitlesSelected = str(process_subtitlesSelection.communicate()[0]).strip('\n')
+                retcode = process_subtitlesSelection.returncode
+            else:
+                subtitlesSelected = ''
+                retcode = 0
             
-            # Download and unzip selected subtitle (with progressbar)
-            process_subDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subDirName + '/' + subFileName + '") 2>&1 | zenity --progress --auto-close --pulsate --title="Downloading subtitle, please wait..." --text="Downloading subtitle for \'' + subtitlesList['data'][0]['MovieName'] + '\'"', shell=True)
-            
-            # If an error occur, say so
-            if process_subDownload != 0:
-                subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing the selected subtitle.'])
-    else:
-        movieFileName = moviePath.rsplit('/', -1)
-        subprocess.call(['zenity', '--info', '--title=No subtitle found', '--text=No subtitle found for this video:\n- ' + movieFileName[-1]])
+            if retcode == 0:
+                subIndex = 0
+                subIndexTemp = 0
+                # Select the subtitles file to download
+                for item in subtitlesList['data']:
+                    if item['SubFileName'] == subtitlesSelected:
+                        subIndex = subIndexTemp
+                        break
+                    else:
+                        subIndexTemp += 1
+                
+                subLangId = subtitlesList['data'][subIndex]['ISO639']
+                subLangName = subtitlesList['data'][subIndex]['LanguageName']
+                subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
+                subPath = moviePath.rsplit('.', 1)[0] + '_' + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                
+                # Download and unzip the selected subtitles (with progressbar)
+                process_subtitlesDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>"', shell=True)
+                subFound.append(SubLanguageID)
+                
+                # If an error occur, say so
+                if process_subtitlesDownload != 0:
+                    subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>".'])
+    
+    # Print a message if none of the subtitles languages have been found
+    if len(subFound) == 0:
+        subprocess.call(['zenity', '--info', '--title=No subtitles found for ' + movieFileName, '--text=No subtitles found for this video:\n- ' + movieFileName])
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
