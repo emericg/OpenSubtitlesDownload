@@ -1,13 +1,12 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitles download / Gnome edition
-# Version 2.0
-#
+# OpenSubtitles-download / GNOME edition / Version 2.0
 # Automatically find and download subtitles for your favorite videos!
+# https://github.com/emericg/opensubtitles-download
 
-# Emeric Grange <emeric.grange@gmail.com>
-# Tomáš Hnyk <tomashnyk@gmail.com>
+# Contributors:
+# Tomáš Hnyk <tomashnyk@gmail.com> for his work on multiple language download
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
 # Copyright (c) 2012 by Emeric GRANGE <emeric.grange@gmail.com>
@@ -27,8 +26,8 @@
 
 import os
 import struct
-import subprocess
 import mimetypes
+import subprocess
 from sys import argv
 from xmlrpclib import ServerProxy, Error
 

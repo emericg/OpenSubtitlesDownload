@@ -9,9 +9,7 @@ Exec=opensubtitles-download.py "%F"
 Name=OpenSubtitles-download
 GenericName=Automatic subtitles downloader
 GenericName[fr]=Téléchargeur automatique de sous-titres
-X-GNOME-FullName=Download subtitle from opensubtitles.org
+X-GNOME-FullName=Download subtitles from opensubtitles.org
 X-GNOME-FullName[fr]=Télécharge des sous-titres depuis opensubtitles.org
-Comment=Download subtitle from opensubtitles.org
+Comment=Download subtitles from opensubtitles.org
 Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
-
-Name[fr_FR]=opensubtitles-download
