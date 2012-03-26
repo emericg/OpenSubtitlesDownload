@@ -50,7 +50,7 @@ server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 def checkFile(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
-        #subprocess.call(['zenity', '--error', '--text=This is not a file:\n- ' + path])
+        #subprocess.call(['zenity', '--error', '--text=This is not a file:\n<i>' + path + '</i>'])
         return False
     
     fileMimeType, encoding = mimetypes.guess_type(path)
@@ -65,12 +65,12 @@ def checkFile(path):
         'nut', 'ogg', 'ogm', 'ogv', 'omf', 'ps', 'qt', 'ram', 'rm', 'rmvb', \
         'swf', 'ts', 'vfw', 'vid', 'video', 'viv', 'vivo', 'vob', 'vro', \
         'webm', 'wm', 'wmv', 'wmx', 'wrap', 'wvx', 'wx', 'x264', 'xvid']:
-            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype AND invalid file extension):\n- ' + path])
+            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype AND invalid file extension):\n<i>' + path + '</i>'])
             return False
     else:
         fileMimeType = fileMimeType.split('/', 1)
         if fileMimeType[0] != 'video':
-            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype):\n- ' + path])
+            #subprocess.call(['zenity', '--error', '--text=This file is not a video (unknown mimetype):\n<i>' + path + '</i>'])
             return False
     
     return True
@@ -92,7 +92,7 @@ def hashFile(path):
         hash = filesize
         
         if filesize < 65536 * 2:
-            subprocess.call(['zenity', '--error', '--text=File size error while generating hash for this file:\n- ' + path])
+            subprocess.call(['zenity', '--error', '--text=File size error while generating hash for this file:\n<i>' + path + '</i>'])
             return "SizeError"
         
         buffer = f.read(65536)
@@ -110,7 +110,7 @@ def hashFile(path):
         return returnedhash
     
     except IOError:
-        subprocess.call(['zenity', '--error', '--text=Input/Output error while generating hash for this file:\n- ' + path])
+        subprocess.call(['zenity', '--error', '--text=Input/Output error while generating hash for this file:\n<i>' + path + '</i>'])
         return "IOError"
 
 # ==== Get file(s) path(s) =====================================================
@@ -227,7 +227,7 @@ try:
     
     # Print a message if none of the subtitles languages have been found
     if len(subFound) == 0:
-        subprocess.call(['zenity', '--info', '--title=No subtitles found for ' + movieFileName, '--text=No subtitles found for this video:\n- ' + movieFileName])
+        subprocess.call(['zenity', '--info', '--title=No subtitles found for ' + movieFileName, '--text=No subtitles found for this video:\n<i>' + movieFileName + '</i>'])
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
