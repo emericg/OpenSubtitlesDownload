@@ -42,6 +42,20 @@ from xmlrpclib import ServerProxy, Error
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
 SubLanguageIDs = ['eng']
 
+# ==== Settings ================================================================
+# For a complete documentation of these options, please refer to the wiki.
+# You can set different values for the GUI size:
+gui_width  = 800
+gui_height = 320
+# Various options, you can set them to 'on', 'off', or 'auto':
+opt_file_languagecode  = 'off'
+opt_file_forceUTF8     = 'off'
+opt_selection_language = 'auto'
+opt_selection_hi       = 'auto'
+opt_selection_cd       = 'auto'
+opt_selection_rating   = 'auto'
+opt_selection_count    = 'auto'
+
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
@@ -172,6 +186,10 @@ try:
     movieSize = os.path.getsize(moviePath)
     movieFileName = os.path.basename(moviePath)
     
+    # Count languages
+    for SubLanguageID in SubLanguageIDs:
+        searchLanguage += len(SubLanguageID.split(','))
+    
     # Search for subtitles
     for SubLanguageID in SubLanguageIDs:
         
@@ -194,14 +212,53 @@ try:
             # If there is more than one subtitles, let the user decide which one will be downloaded
             if len(subtitlesList['data']) != 1:
                 subtitlesItems = ''
+                columnLn = ''
+                columnCd = ''
+                columnHi = ''
+                columnRate = ''
+                columnCnt = ''
+                
+                # Handle 'auto' options
+                for item in subtitlesList['data']:
+                    if opt_selection_language == 'auto':
+                        if searchLanguage > 1:
+                            opt_selection_language = 'on'
+                    if opt_selection_cd == 'auto':
+                        if item['SubSumCD'] != '1':
+                            opt_selection_cd = 'on'
+                    if opt_selection_hi == 'auto':
+                        if item['SubHearingImpaired'] == '1':
+                            opt_selection_hi = 'on'
+                    if opt_selection_rating == 'auto':
+                        if item['SubRating'] != '0.0':
+                            opt_selection_rating = 'on'
+                    if opt_selection_count == 'auto':
+                        opt_selection_count = 'on'
                 
                 # Generate selection window content
                 for item in subtitlesList['data']:
                     subtitlesItems += '"' + item['SubFileName'] + '" '
-                    subtitlesItems += '"' + item['LanguageName'] + '" '
+                    if opt_selection_language == 'on':
+                        columnLn = '--column="Language" '
+                        subtitlesItems += '"' + item['LanguageName'] + '" '
+                    if opt_selection_cd == 'on':
+                        columnCd = '--column="CD" '
+                        subtitlesItems += '"' + item['SubSumCD'] + '" '
+                    if opt_selection_hi == 'on':
+                        columnHi = '--column="HI" '
+                        if item['SubHearingImpaired'] == '1':
+                            subtitlesItems += '"✓" '
+                        else:
+                            subtitlesItems += '"" '
+                    if opt_selection_rating == 'on':
+                        columnRate = '--column="Rating" '
+                        subtitlesItems += '"' + item['SubRating'] + '" '
+                    if opt_selection_count == 'on':
+                        columnCnt = '--column="Dl count" '
+                        subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
                 
                 # Spawn selection window
-                process_subtitlesSelection = subprocess.Popen('zenity --width=640 --height=320 --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" --column="Available subtitles" --column="Language" ' + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+                process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + ' --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" --column="Available subtitles" ' + columnLn + columnCd + columnHi + columnRate + columnCnt + subtitlesItems, shell=True, stdout=subprocess.PIPE)
                 subtitlesSelected = str(process_subtitlesSelection.communicate()[0]).strip('\n')
                 retcode = process_subtitlesSelection.returncode
             else:
@@ -220,10 +277,15 @@ try:
                     else:
                         subIndexTemp += 1
                 
-                subLangId = subtitlesList['data'][subIndex]['ISO639']
+                subLangId = '_' + subtitlesList['data'][subIndex]['ISO639']
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
-                subPath = moviePath.rsplit('.', 1)[0] + '_' + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                subPath = moviePath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                
+                # Write language code into the filename ?
+                if (opt_file_languagecode == 'on' or \
+                    opt_file_languagecode == 'auto' and searchLanguage > 1):
+                    subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
                 process_subtitlesDownload = subprocess.call('(wget -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>")', shell=True)
