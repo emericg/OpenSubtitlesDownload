@@ -44,12 +44,12 @@ SubLanguageIDs = ['eng']
 
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
-# You can set different values for the GUI size:
-gui_width  = 800
+#
+# You can change the subtitle selection GUI size:
+gui_width  = 700
 gui_height = 320
 # Various options, you can set them to 'on', 'off', or 'auto':
-opt_file_languagecode  = 'off'
-opt_file_forceUTF8     = 'off'
+opt_file_languagecode  = 'auto'
 opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
 opt_selection_cd       = 'auto'
