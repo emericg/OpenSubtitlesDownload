@@ -46,15 +46,15 @@ SubLanguageIDs = ['eng']
 # For a complete documentation of these options, please refer to the wiki.
 #
 # You can change the subtitle selection GUI size:
-gui_width  = 700
+gui_width  = 720
 gui_height = 320
-# Various options, you can set them to 'on', 'off', or 'auto':
-opt_file_languagecode  = 'auto'
+# Various options, you can set them to 'on' or 'off'. The selection options have an 'auto' mode.
+opt_file_languagecode  = 'off'
 opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
 opt_selection_cd       = 'auto'
-opt_selection_rating   = 'auto'
-opt_selection_count    = 'auto'
+opt_selection_rating   = 'off'
+opt_selection_count    = 'off'
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
