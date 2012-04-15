@@ -180,8 +180,8 @@ try:
         subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server.\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
         exit(1)
     
-    searchResult = 0
     searchLanguage = 0
+    searchLanguageResult = 0
     movieHash = hashFile(moviePath)
     movieSize = os.path.getsize(moviePath)
     movieFileName = os.path.basename(moviePath)
@@ -202,7 +202,7 @@ try:
         if subtitlesList['data']:
             
             # Mark search as successful
-            searchResult += 1
+            searchLanguageResult += 1
             
             # Sanitize the title string to avoid parsing errors
             for item in subtitlesList['data']:
@@ -265,7 +265,7 @@ try:
                 subtitlesSelected = ''
                 retcode = 0
             
-            if retcode == 0:
+            if retcode != -1:
                 subIndex = 0
                 subIndexTemp = 0
                 
@@ -284,7 +284,7 @@ try:
                 
                 # Write language code into the filename ?
                 if (opt_file_languagecode == 'on' or \
-                    opt_file_languagecode == 'auto' and searchLanguage > 1):
+                    opt_file_languagecode == 'auto' and searchLanguageResult > 1):
                     subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
@@ -296,7 +296,7 @@ try:
                     exit(1)
     
     # Print a message if none of the subtitles languages have been found
-    if searchResult == 0:
+    if searchLanguageResult == 0:
         subprocess.call(['zenity', '--info', '--title=No subtitles found for ' + movieFileName, '--text=No subtitles found for this video:\n<i>' + movieFileName + '</i>'])
     
     # Disconnect from opensubtitles.org server, then exit
