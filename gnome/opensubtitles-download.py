@@ -37,9 +37,10 @@ else: # python2
 
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
-
+#
 # 1/ You can change the search language here by using either 2-letter (ISO 639-1)
 # or 3-letter (ISO 639-2) language codes.
+#
 # 2/ You can also search for subtitles in several languages ​​at once:
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
