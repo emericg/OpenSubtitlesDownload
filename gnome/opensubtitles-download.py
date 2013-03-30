@@ -1,15 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitles-download / GNOME edition / Version 2.0
-# Automatically find and download subtitles for your favorite videos!
-# https://github.com/emericg/opensubtitles-download
-
-# Contributors:
-# Tomáš Hnyk <tomashnyk@gmail.com> for his work on multiple language download
-# Carlos Acedo <carlos@linux-labs.net> for his work on the original script
-
-# Copyright (c) 2012 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2013 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,31 +16,44 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+# Contributors / special thanks:
+# Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
+# Carlos Acedo <carlos@linux-labs.net> for his work on the original script
+
+# OpenSubtitles-download / GNOME edition / Version 3.0
+# Automatically find and download subtitles for all of your favorite videos!
+# Website: https://github.com/emericg/opensubtitles-download
+
 import os
 import struct
 import mimetypes
 import subprocess
-from sys import argv
-from xmlrpclib import ServerProxy, Error
+import sys
+
+if sys.version_info >= (3,0):
+    from xmlrpc.client import ServerProxy, Error
+else: # python2
+    from xmlrpclib import ServerProxy, Error
 
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
-#
-# You can change the search language here by using either 2-letter (ISO 639-1)
+
+# 1/ You can change the search language here by using either 2-letter (ISO 639-1)
 # or 3-letter (ISO 639-2) language codes.
-#
-# You can also search for subtitles in several languages ​​at once:
+# 2/ You can also search for subtitles in several languages ​​at once:
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
+
 SubLanguageIDs = ['eng']
 
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
-#
-# You can change the subtitle selection GUI size:
+
+# Change the subtitle selection GUI size:
 gui_width  = 720
 gui_height = 320
-# Various options, you can set them to 'on' or 'off'. The selection options have an 'auto' mode.
+
+# Various GUI options. You can set them to 'on' or 'off' and sometimes 'auto' mode.
 opt_file_languagecode  = 'off'
 opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
@@ -171,7 +176,7 @@ else:
 try:
     try:
         # Connection to opensubtitles.org server
-        session = server.LogIn('', '', 'en', 'opensubtitles-download 2.0')
+        session = server.LogIn('', '', 'en', 'opensubtitles-download 3.0')
         if session['status'] != '200 OK':
             subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server: ' + session['status'] + '.\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
             exit(1)
@@ -216,7 +221,7 @@ try:
                 columnCd = ''
                 columnHi = ''
                 columnRate = ''
-                columnCnt = ''
+                columnCount = ''
                 
                 # Handle 'auto' options
                 for item in subtitlesList['data']:
@@ -254,11 +259,11 @@ try:
                         columnRate = '--column="Rating" '
                         subtitlesItems += '"' + item['SubRating'] + '" '
                     if opt_selection_count == 'on':
-                        columnCnt = '--column="Dl count" '
+                        columnCount = '--column="Dl count" '
                         subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
                 
                 # Spawn selection window
-                process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + ' --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" --column="Available subtitles" ' + columnLn + columnCd + columnHi + columnRate + columnCnt + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+                process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + ' --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" --column="Available subtitles" ' + columnLn + columnCd + columnHi + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
                 subtitlesSelected = str(process_subtitlesSelection.communicate()[0]).strip('\n')
                 retcode = process_subtitlesSelection.returncode
             else:
@@ -302,6 +307,7 @@ try:
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
     exit(0)
+
 except Error:
     # If an unknown error occur, say so (and apologize)
     subprocess.call(['zenity', '--error', '--text=An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
