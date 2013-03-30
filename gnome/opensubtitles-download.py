@@ -132,17 +132,23 @@ def hashFile(path):
         subprocess.call(['zenity', '--error', '--text=Input/Output error while generating hash for this file:\n<i>' + path + '</i>'])
         return "IOError"
 
+# ==== Parse script argument(s) ================================================
+
+execPath = str(sys.argv[0])
+sys.argv.pop(0)
+
+if len(sys.argv) == 0:
+    #subprocess.call(['zenity', '--error', '--text=No video file selected.'])
+    print("Usage: \n$ " + execPath + " /path/to/your/video")
+    exit(1)
+
 # ==== Get file(s) path(s) =====================================================
 # Get opensubtitles-download script path, then remove it from argv list
-execPath = argv[0]
-argv.pop(0)
-moviePath = ''
 
-if len(argv) == 0:
-    #subprocess.call(['zenity', '--error', '--text=No file selected.'])
-    exit(1)
-elif argv[0] == '--file':
-    moviePath = argv[1]
+if len(sys.argv) == 1:
+    moviePath = sys.argv[0]
+    if checkFile(moviePath) == False:
+        exit(1)
 else:
     filePathList = []
     moviePathList = []
@@ -152,10 +158,10 @@ else:
         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
     except Exception:
         # Fill filePathList (using program arguments)
-        for i in range(len(argv)):
-            filePathList.append(os.path.abspath(argv[i]))
+        for i in range(len(sys.argv)):
+            filePathList.append(os.path.abspath(sys.argv[i]))
     
-    # Check file(s) type
+    # Check file(s) type and validity
     for filePath in filePathList:
         if checkFile(filePath):
             moviePathList.append(filePath)
@@ -170,7 +176,7 @@ else:
     
     # The remaining file(s) are dispatched to new instance(s) of this script
     for moviePathDispatch in moviePathList:
-        process_movieDispatched = subprocess.Popen([execPath, '--file', moviePathDispatch])
+        process_movieDispatched = subprocess.Popen([execPath, moviePathDispatch])
 
 # ==== Main program ============================================================
 try:
