@@ -248,19 +248,19 @@ try:
                 
                 # Generate selection window content
                 for item in subtitlesList['data']:
-                    subtitlesItems += '"' + item['SubFileName'] + '" '
-                    if opt_selection_language == 'on':
-                        columnLn = '--column="Language" '
-                        subtitlesItems += '"' + item['LanguageName'] + '" '
-                    if opt_selection_cd == 'on':
-                        columnCd = '--column="CD" '
-                        subtitlesItems += '"' + item['SubSumCD'] + '" '
                     if opt_selection_hi == 'on':
                         columnHi = '--column="HI" '
                         if item['SubHearingImpaired'] == '1':
                             subtitlesItems += '"✓" '
                         else:
                             subtitlesItems += '"" '
+                    if opt_selection_language == 'on':
+                        columnLn = '--column="Language" '
+                        subtitlesItems += '"' + item['LanguageName'] + '" '
+                    subtitlesItems += '"' + item['SubFileName'] + '" '
+                    if opt_selection_cd == 'on':
+                        columnCd = '--column="CD" '
+                        subtitlesItems += '"' + item['SubSumCD'] + '" '
                     if opt_selection_rating == 'on':
                         columnRate = '--column="Rating" '
                         subtitlesItems += '"' + item['SubRating'] + '" '
@@ -269,7 +269,9 @@ try:
                         subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
                 
                 # Spawn selection window
-                process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + ' --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" --column="Available subtitles" ' + columnLn + columnCd + columnHi + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+                process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + \
+                    ' --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" ' + \
+                    columnHi + columnLn + '--column="Available subtitles" ' + columnCd + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
                 subtitlesSelected = str(process_subtitlesSelection.communicate()[0]).strip('\n')
                 retcode = process_subtitlesSelection.returncode
             else:
