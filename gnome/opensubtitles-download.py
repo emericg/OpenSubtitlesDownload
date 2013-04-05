@@ -209,6 +209,7 @@ try:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':movieHash, 'moviebytesize':str(movieSize)})
         subtitlesList = server.SearchSubtitles(token, searchList)
+        subtitlesSelected = ''
         
         # Parse the results of the XML-RPC query
         if subtitlesList['data']:
@@ -249,6 +250,7 @@ try:
                 
                 # Generate selection window content
                 for item in subtitlesList['data']:
+                    subtitlesItems += '"' + item['SubFileName'] + '" '
                     if opt_selection_hi == 'on':
                         columnHi = '--column="HI" '
                         if item['SubHearingImpaired'] == '1':
@@ -258,7 +260,6 @@ try:
                     if opt_selection_language == 'on':
                         columnLn = '--column="Language" '
                         subtitlesItems += '"' + item['LanguageName'] + '" '
-                    subtitlesItems += '"' + item['SubFileName'] + '" '
                     if opt_selection_cd == 'on':
                         columnCd = '--column="CD" '
                         subtitlesItems += '"' + item['SubSumCD'] + '" '
@@ -266,20 +267,29 @@ try:
                         columnRate = '--column="Rating" '
                         subtitlesItems += '"' + item['SubRating'] + '" '
                     if opt_selection_count == 'on':
-                        columnCount = '--column="Dl count" '
+                        columnCount = '--column="Downloads" '
                         subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
                 
-                # Spawn selection window
+                # Spawn zenity "list" dialog
                 process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + \
-                    ' --list --title="' + item['MovieName'] + ' (' + movieFileName + ')" ' + \
-                    columnHi + columnLn + '--column="Available subtitles" ' + columnCd + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
-                subtitlesSelected = str(process_subtitlesSelection.communicate()[0]).strip('\n')
-                retcode = process_subtitlesSelection.returncode
-            else:
-                subtitlesSelected = ''
-                retcode = 0
+                    ' --list --title="' + item['MovieName'] + ' (file: ' + movieFileName + ')"' + \
+                    ' --column="Available subtitles" ' + columnHi + columnLn + columnCd + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+                
+                # Get back the results
+                result_subtitlesSelection = process_subtitlesSelection.communicate()
+                
+                # The results contain a subtitles ?
+                if result_subtitlesSelection[0]:
+                    if sys.version_info >= (3,0):
+                        subtitlesSelected = str(result_subtitlesSelection[0], 'ascii').strip("\n")
+                    else: # python2
+                        subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
+                else:
+                    if process_subtitlesSelection.returncode == 0:
+                        subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
-            if retcode != -1:
+            # If a subtitle has been auto-selected, or manually selected by the user
+            if subtitlesSelected:
                 subIndex = 0
                 subIndexTemp = 0
                 
