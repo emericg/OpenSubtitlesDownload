@@ -140,7 +140,7 @@ sys.argv.pop(0)
 
 if len(sys.argv) == 0:
     #subprocess.call(['zenity', '--error', '--text=No video file selected.'])
-    print("Usage: \n$ " + execPath + " /path/to/your/video")
+    print("> opensubtitles-download.py script usage:\n$ " + execPath + " /path/to/your/video")
     exit(1)
 
 # ==== Get file(s) path(s) =====================================================
@@ -222,8 +222,12 @@ try:
                 item['MovieName'] = item['MovieName'].replace('"', '\\"')
                 item['MovieName'] = item['MovieName'].replace("'", "\'")
             
+            # If there is only one subtitles, auto-select it
+            if len(subtitlesList['data']) == 1:
+                subtitlesSelected = subtitlesList['data'][0]['SubFileName']
+            
             # If there is more than one subtitles, let the user decide which one will be downloaded
-            if len(subtitlesList['data']) != 1:
+            if len(subtitlesList['data']) > 1:
                 subtitlesItems = ''
                 columnLn = ''
                 columnCd = ''
@@ -281,14 +285,14 @@ try:
                 # The results contain a subtitles ?
                 if result_subtitlesSelection[0]:
                     if sys.version_info >= (3,0):
-                        subtitlesSelected = str(result_subtitlesSelection[0], 'ascii').strip("\n")
+                        subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
                     else: # python2
                         subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
                 else:
                     if process_subtitlesSelection.returncode == 0:
                         subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
-            # If a subtitle has been auto-selected, or manually selected by the user
+            # If a subtitle has been auto or manually selected, download it
             if subtitlesSelected:
                 subIndex = 0
                 subIndexTemp = 0
