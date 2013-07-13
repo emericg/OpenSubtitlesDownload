@@ -1,3 +1,5 @@
-This little software written in python is build to help you finding and downloading subtitles for your favorite videos! It can be used as a nautilus script, or as a simple software working under GNOME or KDE desktop environments. You can also use it in full console mode!
+This little software, written in python, is built to help you quickly find and download subtitles for your favorite videos. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full console mode!
 
-The subtitles are downloaded from www.opensubtitles.org. The search is done by identifying your videos by extracting a hash from the files, and not by using the file names. This way you have more chance to get the correct subtitles for your videos, avoiding text and audio synchronization problems.
+The subtitles are downloaded from www.OpenSubtitles.org. The search is done by precisely identifying your videos using a hash computed from your files, and not by using filenames. This way, you have more chance to get the exact subtitles corresponding to your videos, avoiding synchronization problems between the subtitles and the soundtrack.
+
+Subtitles service is powered by www.OpenSubtitles.org. Big thanks to their hard work on this amazing project! Be sure to give them your support if you appreciate the service provided.
