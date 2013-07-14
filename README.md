@@ -8,8 +8,8 @@ Subtitles service is powered by www.opensubtitles.org. Big thanks to their hard 
 
 ## Installation
 
-### Installation as a nautilus script, under Gnome 3 desktop environment
+### Installation as a nautilus script with Gnome 3
 
-mkdir -p ~/.local/share/nautilus/scripts/
-cp gnome/opensubtitles-download.py ~/.local/share/nautilus/scripts/opensubtitles-download.py
-chmod u+x ~/.local/share/nautilus/scripts/opensubtitles-download.py
+$ mkdir -p ~/.local/share/nautilus/scripts/
+$ cp gnome/opensubtitles-download.py ~/.local/share/nautilus/scripts/opensubtitles-download.py
+$ chmod u+x ~/.local/share/nautilus/scripts/opensubtitles-download.py
