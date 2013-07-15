@@ -141,7 +141,7 @@ sys.argv.pop(0)
 if len(sys.argv) == 0:
     #subprocess.call(['zenity', '--error', '--text=No video file selected.'])
     print("> opensubtitles-download.py script usage:\n$ " + execPath + " /path/to/your/video")
-    exit(1)
+    sys.exit(1)
 
 # ==== Get file(s) path(s) =====================================================
 # Get opensubtitles-download script path, then remove it from argv list
@@ -149,7 +149,7 @@ if len(sys.argv) == 0:
 if len(sys.argv) == 1:
     moviePath = sys.argv[0]
     if checkFile(moviePath) == False:
-        exit(1)
+        sys.exit(1)
 else:
     filePathList = []
     moviePathList = []
@@ -169,7 +169,7 @@ else:
     
     # If moviePathList is empty, abort
     if len(moviePathList) == 0:
-        exit(1)
+        sys.exit(1)
     
     # The first file will be processed immediatly
     moviePath = moviePathList[0]
@@ -186,11 +186,11 @@ try:
         session = server.LogIn('', '', 'en', 'opensubtitles-download 3.0')
         if session['status'] != '200 OK':
             subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server: ' + session['status'] + '.\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
-            exit(1)
+            sys.exit(1)
         token = session['token']
     except Exception:
         subprocess.call(['zenity', '--error', '--text=Unable to reach opensubtitles.org server.\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
-        exit(1)
+        sys.exit(1)
     
     searchLanguage = 0
     searchLanguageResult = 0
@@ -321,7 +321,7 @@ try:
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
                     subprocess.call(['zenity', '--error', '--text=An error occurred while downloading or writing <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>".'])
-                    exit(1)
+                    sys.exit(1)
     
     # Print a message if none of the subtitles languages have been found
     if searchLanguageResult == 0:
@@ -329,9 +329,9 @@ try:
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
-    exit(0)
+    sys.exit(0)
 
 except Error:
     # If an unknown error occur, say so (and apologize)
     subprocess.call(['zenity', '--error', '--text=An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability'])
-    exit(1)
+    sys.exit(1)
