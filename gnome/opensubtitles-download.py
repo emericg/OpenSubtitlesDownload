@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+## OpenSubtitles-download / GNOME edition / Version 3.0
+## Automatically find and download subtitles for all of your favorite videos!
+## Website: https://github.com/emericg/opensubtitles-download
+
 # Copyright (c) 2013 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -20,15 +24,11 @@
 # Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
-# OpenSubtitles-download / GNOME edition / Version 3.0
-# Automatically find and download subtitles for all of your favorite videos!
-# Website: https://github.com/emericg/opensubtitles-download
-
 import os
+import sys
 import struct
 import mimetypes
 import subprocess
-import sys
 
 if sys.version_info >= (3,0):
     from xmlrpc.client import ServerProxy, Error
@@ -50,7 +50,7 @@ SubLanguageIDs = ['eng']
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
 
-# Change the subtitle selection GUI size:
+# Change the subtitles selection GUI size:
 gui_width  = 720
 gui_height = 320
 
@@ -292,7 +292,7 @@ try:
                     if process_subtitlesSelection.returncode == 0:
                         subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
-            # If a subtitle has been auto or manually selected, download it
+            # If a subtitles has been auto or manually selected, download it
             if subtitlesSelected:
                 subIndex = 0
                 subIndexTemp = 0
