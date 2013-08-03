@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 ## OpenSubtitles-download / GNOME edition / Version 3.0
-## Automatically find and download subtitles for all of your favorite videos!
+## Designed to help you find and download subtitles for your favorite videos!
 ## Website: https://github.com/emericg/opensubtitles-download
 
 # Copyright (c) 2013 by Emeric GRANGE <emeric.grange@gmail.com>
@@ -288,6 +288,10 @@ try:
                         subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
                     else: # python2
                         subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
+                    
+                    # Hack against recent zenity version ?
+                    if subtitlesSelected.split("|")[0] == subtitlesSelected.split("|")[1]:
+                        subtitlesSelected = subtitlesSelected.split("|")[0]
                 else:
                     if process_subtitlesSelection.returncode == 0:
                         subtitlesSelected = subtitlesList['data'][0]['SubFileName']
