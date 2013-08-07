@@ -50,7 +50,7 @@ SubLanguageIDs = ['eng']
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
 
-# Change the default interface mode:
+# Change the gui (zenity, kdialog or terminal):
 # This functionality is a work in progress...
 interface = 'terminal'
 
@@ -78,11 +78,33 @@ server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
     if interface == 'zenity':
-        subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
-    elif interface == 'kdialog':
-        print(message)
+        if title:
+            subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
+        else:
+            subprocess.call(['zenity', '--' + priority, '--text=' + message])
+    
     else:
-        print(message)
+        # Clean up the tags from the message
+        message = message.replace("\n\n", "\n")
+        message = message.replace("<i>", "")
+        message = message.replace("</i>", "")
+        message = message.replace("<b>", "")
+        message = message.replace("</b>", "")
+        
+        # Print message
+        if interface == 'kdialog':
+            if priority == 'warning':
+                priority = 'sorry'
+            elif priority == 'info':
+                priority = 'msgbox'
+            
+            if title:
+                subprocess.call(['kdialog', '--' + priority, '--title=' + title, '--text=' + message])
+            else:
+                subprocess.call(['kdialog', '--' + priority, '--text=' + message])
+        
+        else: # terminal
+            print(message)
 
 # ==== Check file path & file ==================================================
 def checkFile(path):
@@ -364,8 +386,9 @@ try:
                 if interface == 'zenity':
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>")', shell=True)
                 elif interface == 'kdialog':
-                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>")', shell=True)
+                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1', shell=True)
                 else: # terminal
+                    print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + subtitlesList['data'][subIndex]['MovieName'] + "'")
                     process_subtitlesDownload = subprocess.call('wget -nv -O - ' + subURL + ' | gunzip > "' + subPath + '"', shell=True)
                 
                 # If an error occur, say so
