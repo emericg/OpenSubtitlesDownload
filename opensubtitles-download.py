@@ -64,7 +64,6 @@ gui_height = 320
 opt_file_languagecode  = 'off'
 opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
-opt_selection_cd       = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
@@ -198,9 +197,6 @@ def selectionGnome(subtitlesList):
         if opt_selection_language == 'on':
             columnLn = '--column="Language" '
             subtitlesItems += '"' + item['LanguageName'] + '" '
-        if opt_selection_cd == 'on':
-            columnCd = '--column="CD" '
-            subtitlesItems += '"' + item['SubSumCD'] + '" '
         if opt_selection_rating == 'on':
             columnRate = '--column="Rating" '
             subtitlesItems += '"' + item['SubRating'] + '" '
@@ -342,9 +338,6 @@ try:
                     if opt_selection_language == 'auto':
                         if searchLanguage > 1:
                             opt_selection_language = 'on'
-                    if opt_selection_cd == 'auto':
-                        if item['SubSumCD'] != '1':
-                            opt_selection_cd = 'on'
                     if opt_selection_hi == 'auto':
                         if item['SubHearingImpaired'] == '1':
                             opt_selection_hi = 'on'
@@ -381,8 +374,7 @@ try:
                 subPath = moviePath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Write language code into the filename ?
-                if (opt_file_languagecode == 'on' or \
-                    opt_file_languagecode == 'auto' and searchLanguageResult > 1):
+                if opt_file_languagecode != 'off' and searchLanguageResult > 1:
                     subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
