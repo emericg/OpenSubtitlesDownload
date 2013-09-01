@@ -1,0 +1,16 @@
+[Desktop Entry]
+Type=Application
+Icon=text
+NoDisplay=true
+Terminal=true
+MimeType=video/avi;video/mpeg;video/mp4;video/ogg;video/quicktime;video/msvideo;video/webm;video/x-matroska;video/x-mpeg;video/x-ms-wmv;video/x-msvideo;video/x-flv;application/ogg;
+Categories=AudioVideo;
+
+Name=OpenSubtitles-download
+GenericName=Automatic subtitles downloader
+GenericName[fr]=Téléchargeur automatique de sous-titres
+Comment=Download subtitles from opensubtitles.org
+Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
+
+OnlyShowIn=GNOME;LXDE;Unity;XFCE;
+Exec=opensubtitles-download.py "%F"

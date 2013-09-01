@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-## OpenSubtitles-download / GNOME edition / Version 3.0
-## Designed to help you find and download subtitles for your favorite videos!
-## Website: https://github.com/emericg/opensubtitles-download
+## OpenSubtitles-download / Version 3.0
+## https://github.com/emericg/opensubtitles-download
+## This software is designed to help you find and download subtitles for your favorite videos!
 
 # Copyright (c) 2013 by Emeric GRANGE <emeric.grange@gmail.com>
 #
@@ -52,7 +52,7 @@ SubLanguageIDs = ['eng']
 
 # Change the gui (zenity, kdialog or terminal):
 # This functionality is a work in progress...
-interface = 'terminal'
+interface = 'zenity'
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
