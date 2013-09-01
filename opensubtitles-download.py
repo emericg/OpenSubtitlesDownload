@@ -50,9 +50,11 @@ SubLanguageIDs = ['eng']
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
 
-# Change the gui (zenity, kdialog or terminal):
-# This functionality is a work in progress...
-interface = 'zenity'
+# Select your gui: (this functionality is a work in progress)
+# - gnome (using 'zenity' backend)
+# - kde (using 'kdialog' backend)
+# - terminal (no dependency)
+gui = 'terminal'
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
@@ -77,7 +79,7 @@ server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 # verbose: is this message important ?
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
-    if interface == 'zenity':
+    if gui == 'gnome':
         if title:
             subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
         else:
@@ -92,7 +94,7 @@ def superPrint(priority, title, message):
         message = message.replace("</b>", "")
         
         # Print message
-        if interface == 'kdialog':
+        if gui == 'kde':
             if priority == 'warning':
                 priority = 'sorry'
             elif priority == 'info':
@@ -104,7 +106,7 @@ def superPrint(priority, title, message):
                 subprocess.call(['kdialog', '--' + priority, '--text=' + message])
         
         else: # terminal
-            print(message)
+            print(">> " + message)
 
 # ==== Check file path & file ==================================================
 def checkFile(path):
@@ -173,9 +175,9 @@ def hashFile(path):
         superPrint("error", "", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
 
-# ==== Zenity selection window =================================================
-def selectionZenity(subtitlesList):
-    """Subtitles selection window using zenity"""
+# ==== Gnome selection window ==================================================
+def selectionGnome(subtitlesList):
+    """Gnome subtitles selection window using zenity"""
     subtitlesSelected = ''
     subtitlesItems = ''
     columnLn = ''
@@ -230,9 +232,9 @@ def selectionZenity(subtitlesList):
     
     return subtitlesSelected
 
-# ==== Kdialog selection window ================================================
-def selectionKdialog(subtitlesList):
-    """Subtitles selection window using kdialog"""
+# ==== KDE selection window ====================================================
+def selectionGnome(subtitlesList):
+    """KDE subtitles selection window using kdialog"""
     return "error"
 
 # ==== Terminal selection window ===============================================
@@ -241,6 +243,7 @@ def selectionTerminal(subtitlesList):
     return "error"
 
 # ==== Parse script argument(s) ================================================
+# Get opensubtitles-download script path, then remove it from argv list
 
 execPath = str(sys.argv[0])
 sys.argv.pop(0)
@@ -250,7 +253,7 @@ if len(sys.argv) == 0:
     sys.exit(1)
 
 # ==== Get file(s) path(s) =====================================================
-# Get opensubtitles-download script path, then remove it from argv list
+# Go through argv list and extract all valid video path
 
 if len(sys.argv) == 1:
     moviePath = sys.argv[0]
@@ -352,10 +355,10 @@ try:
                         opt_selection_count = 'on'
                 
                 # Selection window
-                if interface == 'zenity':
-                    subtitlesSelected = selectionZenity(subtitlesList)
-                elif interface == 'kdialog':
-                    subtitlesSelected = selectionKdialog(subtitlesList)
+                if gui == 'gnome':
+                    subtitlesSelected = selectionGnome(subtitlesList)
+                elif gui == 'kde':
+                    subtitlesSelected = selectionKde(subtitlesList)
                 else: # terminal
                     subtitlesSelected = selectionTerminal(subtitlesList)
             
@@ -383,9 +386,9 @@ try:
                     subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
-                if interface == 'zenity':
+                if gui == 'gnome':
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>")', shell=True)
-                elif interface == 'kdialog':
+                elif gui == 'kde':
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1', shell=True)
                 else: # terminal
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + subtitlesList['data'][subIndex]['MovieName'] + "'")
