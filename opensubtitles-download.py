@@ -50,17 +50,17 @@ SubLanguageIDs = ['eng']
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
 
-# Select your gui: (this functionality is a work in progress)
+# Select your gui (can be overriden at run time with '--gui=xxx'):
 # - gnome (using 'zenity' backend)
 # - kde (using 'kdialog' backend)
 # - terminal (no dependency)
-gui = 'terminal'
+gui = 'gnome'
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
 gui_height = 320
 
-# Various GUI options. You can set them to 'on' or 'off' and sometimes 'auto' mode.
+# Various GUI options. You can set them to 'on', 'off' or 'auto' mode.
 opt_file_languagecode  = 'off'
 opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
@@ -228,7 +228,7 @@ def selectionGnome(subtitlesList):
     return subtitlesSelected
 
 # ==== KDE selection window ====================================================
-def selectionGnome(subtitlesList):
+def selectionKde(subtitlesList):
     """KDE subtitles selection window using kdialog"""
     return "error"
 
@@ -238,50 +238,52 @@ def selectionTerminal(subtitlesList):
     return "error"
 
 # ==== Parse script argument(s) ================================================
-# Get opensubtitles-download script path, then remove it from argv list
 
+filePathList = []
+moviePathList = []
+
+# Get opensubtitles-download script path, then remove it from argv list
 execPath = str(sys.argv[0])
 sys.argv.pop(0)
 
-if len(sys.argv) == 0:
-    print("> opensubtitles-download.py script usage:\n$ " + execPath + " /path/to/your/video")
-    sys.exit(1)
+# Go through 'argv' list and extract all options or valid video paths
+for i in range(len(sys.argv)):
+    if sys.argv[i][0:2] == '--':
+        # option ?
+        if sys.argv[i][2:6] == 'gui=':
+            if sys.argv[i][6:] in ['gnome','kde','terminal']:
+                gui = sys.argv[i][6:]
+    else:
+        # valid video path ?
+        if checkFile(os.path.abspath(sys.argv[i])):
+            moviePathList.append(os.path.abspath(sys.argv[i]))
 
 # ==== Get file(s) path(s) =====================================================
-# Go through argv list and extract all valid video path
+# Empty moviePathList? Try selected file(s) from nautilus
 
-if len(sys.argv) == 1:
-    moviePath = sys.argv[0]
-    if checkFile(moviePath) == False:
-        sys.exit(1)
-else:
-    filePathList = []
-    moviePathList = []
-    
-    try:
-        # Fill filePathList (using nautilus script)
-        filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
-    except Exception:
-        # Fill filePathList (using program arguments)
-        for i in range(len(sys.argv)):
-            filePathList.append(os.path.abspath(sys.argv[i]))
-    
-    # Check file(s) type and validity
-    for filePath in filePathList:
-        if checkFile(filePath):
-            moviePathList.append(filePath)
-    
-    # If moviePathList is empty, abort
-    if len(moviePathList) == 0:
-        sys.exit(1)
-    
-    # The first file will be processed immediatly
-    moviePath = moviePathList[0]
-    moviePathList.pop(0)
-    
-    # The remaining file(s) are dispatched to new instance(s) of this script
-    for moviePathDispatch in moviePathList:
-        process_movieDispatched = subprocess.Popen([execPath, moviePathDispatch])
+# if gui == 'gnome':
+#     if not moviePathList:
+#         # Get file(s) from nautilus
+#         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
+#         # Check file(s) type and validity
+#         for filePath in filePathList:
+#             if checkFile(filePath):
+#                 moviePathList.append(filePath)
+
+# ==== Dispatcher ==============================================================
+
+# If moviePathList is empty, abort!
+if not moviePathList:
+    print(">> opensubtitles-download.py script usage:\n$ " + execPath + " /path/to/your/video")
+    sys.exit(1)
+
+# The first file will be processed by this instance
+moviePath = moviePathList[0]
+moviePathList.pop(0)
+
+# The remaining file(s) are dispatched to new instance(s) of this script
+for moviePathDispatch in moviePathList:
+    process_movieDispatched = subprocess.Popen([execPath, '--gui=' + gui, moviePathDispatch])
 
 # ==== Main program ============================================================
 try:
@@ -306,10 +308,8 @@ try:
     for SubLanguageID in SubLanguageIDs:
         searchLanguage += len(SubLanguageID.split(','))
     
-    # Search for subtitles:
+    # Search for available subtitles (using file hash and size)
     for SubLanguageID in SubLanguageIDs:
-        
-        # Search for available subtitles (using file hash and size)
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':movieHash, 'moviebytesize':str(movieSize)})
         subtitlesList = server.SearchSubtitles(token, searchList)

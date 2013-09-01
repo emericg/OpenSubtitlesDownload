@@ -13,4 +13,4 @@ Comment=Download subtitles from opensubtitles.org
 Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
 
 OnlyShowIn=GNOME;LXDE;Unity;XFCE;
-Exec=opensubtitles-download.py "%F"
+Exec=opensubtitles-download.py --gui=gnome "%F"
