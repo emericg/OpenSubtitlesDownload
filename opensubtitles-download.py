@@ -180,7 +180,6 @@ def selectionGnome(subtitlesList):
     subtitlesSelected = ''
     subtitlesItems = ''
     columnLn = ''
-    columnCd = ''
     columnHi = ''
     columnRate = ''
     columnCount = ''
@@ -207,7 +206,7 @@ def selectionGnome(subtitlesList):
     # Spawn zenity "list" dialog
     process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + \
         ' --list --title="' + item['MovieName'] + ' (file: ' + movieFileName + ')"' + \
-        ' --column="Available subtitles" ' + columnHi + columnLn + columnCd + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+        ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
     
     # Get back the results
     result_subtitlesSelection = process_subtitlesSelection.communicate()
