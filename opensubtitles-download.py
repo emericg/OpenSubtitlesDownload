@@ -50,11 +50,12 @@ SubLanguageIDs = ['eng']
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
 
-# Select your gui (can be overriden at run time with '--gui=xxx'):
+# Select your gui. Can be overriden at run time with '--gui=xxx'.
+# - auto (autodetect, fallback on terminal)
 # - gnome (using 'zenity' backend)
 # - kde (using 'kdialog' backend)
 # - terminal (no dependency)
-gui = 'gnome'
+gui = 'auto'
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
@@ -237,7 +238,7 @@ def selectionTerminal(subtitlesList):
     """Subtitles selection inside your current terminal"""
     return "error"
 
-# ==== Parse script argument(s) ================================================
+# ==== Parse script argument(s)  and get file paths ============================
 
 filePathList = []
 moviePathList = []
@@ -258,9 +259,7 @@ for i in range(len(sys.argv)):
         if checkFile(os.path.abspath(sys.argv[i])):
             moviePathList.append(os.path.abspath(sys.argv[i]))
 
-# ==== Get file(s) path(s) =====================================================
 # Empty moviePathList? Try selected file(s) from nautilus
-
 # if gui == 'gnome':
 #     if not moviePathList:
 #         # Get file(s) from nautilus
@@ -269,6 +268,17 @@ for i in range(len(sys.argv)):
 #         for filePath in filePathList:
 #             if checkFile(filePath):
 #                 moviePathList.append(filePath)
+
+# ==== GUI auto detection ======================================================
+
+if gui == 'auto':
+    gui = 'terminal'
+    ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
+    for line in ps:
+        if 'gnome-session' or 'mate-session' or 'xfce-mcs-manage' in line:
+            gui = 'gnome'
+        elif 'ksmserver' in line:
+            gui = 'kde'
 
 # ==== Dispatcher ==============================================================
 
