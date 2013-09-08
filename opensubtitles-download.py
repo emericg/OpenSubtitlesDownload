@@ -68,6 +68,9 @@ opt_selection_hi       = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
+# Subtitles selection mode. Can be 'manual' or 'auto'.
+subtitles_selection = 'manual'
+
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
@@ -209,7 +212,7 @@ def selectionGnome(subtitlesList):
         ' --list --title="' + item['MovieName'] + ' (file: ' + movieFileName + ')"' + \
         ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
     
-    # Get back the results
+    # Get back the result
     result_subtitlesSelection = process_subtitlesSelection.communicate()
     
     # The results contain a subtitles ?
@@ -231,12 +234,53 @@ def selectionGnome(subtitlesList):
 # ==== KDE selection window ====================================================
 def selectionKde(subtitlesList):
     """KDE subtitles selection window using kdialog"""
-    return "error"
+    return selectionAuto(subtitlesList)
 
 # ==== Terminal selection window ===============================================
 def selectionTerminal(subtitlesList):
     """Subtitles selection inside your current terminal"""
-    return "error"
+    subtitlesIndex = 0
+    subtitlesItem = ''
+    
+    # Print subtitles list on the terminal
+    print(">> Available subtitles:")
+    for item in subtitlesList['data']:
+        subtitlesIndex += 1
+        subtitlesItem = '"' + item['SubFileName'] + '" '
+        if opt_selection_hi == 'on':
+            if item['SubHearingImpaired'] == '1':
+                subtitlesItem += '"HI" '
+        if opt_selection_language == 'on':
+            subtitlesItem += '"LanguageName: ' + item['LanguageName'] + '" '
+        if opt_selection_rating == 'on':
+            subtitlesItem += '"SubRating: ' + item['SubRating'] + '" '
+        if opt_selection_count == 'on':
+            subtitlesItem += '"SubDownloadsCnt: ' + item['SubDownloadsCnt'] + '" '
+        print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+    
+    # Ask user selection
+    sub_selection = 0
+    while( sub_selection < 1 or sub_selection > subtitlesIndex ):
+        try:
+            sub_selection = int(input(">> Enter your choice (1-" + str(subtitlesIndex) + "): "))
+        except:
+            sub_selection = 0
+    
+    return subtitlesList['data'][sub_selection-1]['SubFileName']
+
+# ==== Automatic selection mode ================================================
+def selectionAuto(subtitlesList):
+    """Automatic subtitles selection using donwload count"""
+    """todo: handle filename match instead of download count?"""
+    subtitlesSelected = ''
+    subtitlesScore = 0
+    
+    for item in subtitlesList['data']:
+        if item['SubDownloadsCnt'] > subtitlesScore:
+            subtitlesScore = item['SubDownloadsCnt']
+            subtitlesSelected = item['SubFileName']
+    
+    return subtitlesSelected
 
 # ==== Parse script argument(s)  and get file paths ============================
 
@@ -335,34 +379,39 @@ try:
             if len(subtitlesList['data']) == 1:
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
-            # If there is more than one subtitles, let the user decide which one will be downloaded
+            # If there is more than one subtitles and selection_mode != 'auto',
+            # then let the user decide which one will be downloaded
             if len(subtitlesList['data']) > 1:
                 
-                # Go through the list of subtitles
-                for item in subtitlesList['data']:
-                    # Sanitize the title string to avoid handling errors (gui only)
-                    item['MovieName'] = item['MovieName'].replace('"', '\\"')
-                    item['MovieName'] = item['MovieName'].replace("'", "\'")
-                    # Handle 'auto' options
-                    if opt_selection_language == 'auto':
-                        if searchLanguage > 1:
-                            opt_selection_language = 'on'
-                    if opt_selection_hi == 'auto':
-                        if item['SubHearingImpaired'] == '1':
-                            opt_selection_hi = 'on'
-                    if opt_selection_rating == 'auto':
-                        if item['SubRating'] != '0.0':
-                            opt_selection_rating = 'on'
-                    if opt_selection_count == 'auto':
-                        opt_selection_count = 'on'
-                
-                # Selection window
-                if gui == 'gnome':
-                    subtitlesSelected = selectionGnome(subtitlesList)
-                elif gui == 'kde':
-                    subtitlesSelected = selectionKde(subtitlesList)
-                else: # terminal
-                    subtitlesSelected = selectionTerminal(subtitlesList)
+                # Automatic subtitles selection?
+                if subtitles_selection == 'auto':
+                    subtitlesSelected = selectionAuto(subtitlesList)
+                else:
+                    # Go through the list of subtitles
+                    for item in subtitlesList['data']:
+                        # Sanitize the title string to avoid handling errors (gui only)
+                        item['MovieName'] = item['MovieName'].replace('"', '\\"')
+                        item['MovieName'] = item['MovieName'].replace("'", "\'")
+                        # Handle 'auto' options
+                        if opt_selection_language == 'auto':
+                            if searchLanguage > 1:
+                                opt_selection_language = 'on'
+                        if opt_selection_hi == 'auto':
+                            if item['SubHearingImpaired'] == '1':
+                                opt_selection_hi = 'on'
+                        if opt_selection_rating == 'auto':
+                            if item['SubRating'] != '0.0':
+                                opt_selection_rating = 'on'
+                        if opt_selection_count == 'auto':
+                            opt_selection_count = 'on'
+                    
+                    # Selection window
+                    if gui == 'gnome':
+                        subtitlesSelected = selectionGnome(subtitlesList)
+                    elif gui == 'kde':
+                        subtitlesSelected = selectionKde(subtitlesList)
+                    else: # terminal
+                        subtitlesSelected = selectionTerminal(subtitlesList)
             
             # If a subtitles has been auto or manually selected, download it
             if subtitlesSelected:
