@@ -26,9 +26,9 @@ Requirements
 ------------
 
 - python (version 2 or 3)
-- wget & gzip
-- zenity (only for Gnome 2/3 or Xfce desktop environments)
-- kdialog (only for KDE desktop environment)
+- wget & gzip (subtitles download), ps & grep (gui autodetection)
+- zenity (only for Gnome based desktop environments)
+- kdialog (only for KDE based desktop environments)
 
 Installation
 ------------
