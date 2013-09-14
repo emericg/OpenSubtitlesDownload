@@ -29,11 +29,33 @@ import sys
 import struct
 import mimetypes
 import subprocess
+import argparse
 
 if sys.version_info >= (3,0):
     from xmlrpc.client import ServerProxy, Error
 else: # python2
     from xmlrpclib import ServerProxy, Error
+
+# ==== Argument parsing  =======================================================
+# 
+parser = argparse.ArgumentParser(description="""This program can be used to automatically download subtitles for a movie.""",
+    formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument('movie_files',  help="The movie file for which subtitles should be searched", nargs='+')
+parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, terminal (default: auto)", default='auto')
+parser.add_argument('-a', '--auto',help="Automatically choose the best subtitle (default: you will be asked to choose)", default='manual')
+parser.add_argument('-l', '--lang',
+    help="""Specify the language in which the subtitle should be downloaded.
+The syntax is the following:
+    -l eng,fre : download the first language available, in french or english
+    -l eng fre : download both language subtitles""", 
+    default='eng',
+    nargs='?', 
+    action='append')
+parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
+
+
+result = parser.parse_args()
 
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
@@ -45,7 +67,7 @@ else: # python2
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
 
-SubLanguageIDs = ['eng']
+SubLanguageIDs = result.lang
 
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
@@ -55,7 +77,7 @@ SubLanguageIDs = ['eng']
 # - gnome (using 'zenity' backend)
 # - kde (using 'kdialog' backend)
 # - terminal (no dependency)
-gui = 'auto'
+gui = result.gui
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
@@ -69,7 +91,7 @@ opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
 # Subtitles selection mode. Can be 'manual' or 'auto'.
-subtitles_selection = 'manual'
+subtitles_selection = result.auto
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
@@ -289,19 +311,11 @@ moviePathList = []
 
 # Get opensubtitles-download script path, then remove it from argv list
 execPath = str(sys.argv[0])
-sys.argv.pop(0)
 
 # Go through 'argv' list and extract all options or valid video paths
-for i in range(len(sys.argv)):
-    if sys.argv[i][0:2] == '--':
-        # option ?
-        if sys.argv[i][2:6] == 'gui=':
-            if sys.argv[i][6:] in ['gnome','kde','terminal']:
-                gui = sys.argv[i][6:]
-    else:
-        # valid video path ?
-        if checkFile(os.path.abspath(sys.argv[i])):
-            moviePathList.append(os.path.abspath(sys.argv[i]))
+for i in result.movie_files:
+    if checkFile(os.path.abspath(i)):
+        moviePathList.append(os.path.abspath(i))
 
 # Empty moviePathList? Try selected file(s) from nautilus
 # if gui == 'gnome':
@@ -319,16 +333,22 @@ if gui == 'auto':
     gui = 'terminal'
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
-        if 'gnome-session' or 'mate-session' or 'xfce-mcs-manage' in line:
+        if ('gnome-session' in line) or ('mate-session' in line) or ('xfce-mcs-manage' in line):
             gui = 'gnome'
+            break
         elif 'ksmserver' in line:
             gui = 'kde'
+            break
+
 
 # ==== Dispatcher ==============================================================
 
 # If moviePathList is empty, abort!
-if not moviePathList:
-    print(">> opensubtitles-download.py script usage:\n$ " + execPath + " /path/to/your/video")
+if len(moviePathList) == 0:
+    parser.print_help()
+    sys.exit(1)
+if len(moviePathList) > 1 and gui == 'terminal':
+    print "The terminal gui of the script doesn't support multiple files"
     sys.exit(1)
 
 # The first file will be processed by this instance
