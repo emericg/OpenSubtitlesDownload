@@ -36,27 +36,6 @@ if sys.version_info >= (3,0):
 else: # python2
     from xmlrpclib import ServerProxy, Error
 
-# ==== Argument parsing  =======================================================
-# 
-parser = argparse.ArgumentParser(description="""This program can be used to automatically download subtitles for a movie.""",
-    formatter_class=argparse.RawTextHelpFormatter)
-
-parser.add_argument('movie_files',  help="The movie file for which subtitles should be searched", nargs='+')
-parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, terminal (default: auto)", default='auto')
-parser.add_argument('-a', '--auto',help="Automatically choose the best subtitle (default: you will be asked to choose)", default='manual')
-parser.add_argument('-l', '--lang',
-    help="""Specify the language in which the subtitle should be downloaded.
-The syntax is the following:
-    -l eng,fre : download the first language available, in french or english
-    -l eng fre : download both language subtitles""", 
-    default='eng',
-    nargs='?', 
-    action='append')
-parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
-
-
-result = parser.parse_args()
-
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
 #
@@ -67,7 +46,7 @@ result = parser.parse_args()
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
 
-SubLanguageIDs = result.lang
+SubLanguageIDs = ['eng']
 
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
@@ -77,7 +56,7 @@ SubLanguageIDs = result.lang
 # - gnome (using 'zenity' backend)
 # - kde (using 'kdialog' backend)
 # - terminal (no dependency)
-gui = result.gui
+gui = 'auto'
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
@@ -91,7 +70,7 @@ opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
 # Subtitles selection mode. Can be 'manual' or 'auto'.
-subtitles_selection = result.auto
+subtitles_selection = 'manual'
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
@@ -298,11 +277,35 @@ def selectionAuto(subtitlesList):
     subtitlesScore = 0
     
     for item in subtitlesList['data']:
-        if item['SubDownloadsCnt'] > subtitlesScore:
-            subtitlesScore = item['SubDownloadsCnt']
+        if int(item['SubDownloadsCnt']) > subtitlesScore:
+            subtitlesScore = int(item['SubDownloadsCnt'])
             subtitlesSelected = item['SubFileName']
     
     return subtitlesSelected
+
+# ==== Argument parsing  =======================================================
+
+parser = argparse.ArgumentParser(
+    description="""This software is designed to help you find and download subtitles for your favorite videos!""",
+    formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument('movie_files', help="The movie file for which subtitles should be searched", nargs='+')
+parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
+parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, terminal (default: auto)")
+parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles (default: you will be asked to choose)")
+parser.add_argument('-l', '--lang', help="""Specify the language in which the subtitles should be downloaded. Syntax: 
+    -l eng,fre : download the first language available, in french or english
+    -l eng fre : download both language subtitles""",
+    nargs='?', action='append')
+
+result = parser.parse_args()
+
+if result.gui:
+    gui = result.gui
+if result.lang:
+    SubLanguageIDs = result.lang
+if result.auto:
+    subtitles_selection = result.auto
 
 # ==== Parse script argument(s)  and get file paths ============================
 
@@ -340,15 +343,11 @@ if gui == 'auto':
             gui = 'kde'
             break
 
-
 # ==== Dispatcher ==============================================================
 
 # If moviePathList is empty, abort!
 if len(moviePathList) == 0:
     parser.print_help()
-    sys.exit(1)
-if len(moviePathList) > 1 and gui == 'terminal':
-    print "The terminal gui of the script doesn't support multiple files"
     sys.exit(1)
 
 # The first file will be processed by this instance
@@ -357,7 +356,12 @@ moviePathList.pop(0)
 
 # The remaining file(s) are dispatched to new instance(s) of this script
 for moviePathDispatch in moviePathList:
-    process_movieDispatched = subprocess.Popen([execPath, '--gui=' + gui, moviePathDispatch])
+    if gui == 'terminal' and selection_mode == 'manual':
+        # Synchronous call
+        process_movieDispatched = subprocess.call([execPath, '--gui=' + gui, moviePathDispatch])
+    else:
+        # Asynchronous call
+        process_movieDispatched = subprocess.Popen([execPath, '--gui=' + gui, moviePathDispatch])
 
 # ==== Main program ============================================================
 try:
