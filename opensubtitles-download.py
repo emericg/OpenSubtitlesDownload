@@ -51,26 +51,30 @@ SubLanguageIDs = ['eng']
 # ==== Settings ================================================================
 # For a complete documentation of these options, please refer to the wiki.
 
-# Select your gui. Can be overriden at run time with '--gui=xxx'.
-# - auto (autodetect, fallback on terminal)
+# Select your GUI. Can be overriden at run time with '--gui=xxx'.
+# - auto (autodetect, fallback on CLI)
 # - gnome (using 'zenity' backend)
 # - kde (using 'kdialog' backend)
-# - terminal (no dependency)
+# - CLI (Command Line Interface)
 gui = 'auto'
 
 # Change the subtitles selection GUI size:
 gui_width  = 720
 gui_height = 320
 
-# Various GUI options. You can set them to 'on', 'off' or 'auto' mode.
-opt_file_languagecode  = 'off'
+# Various GUI options. You can set them to 'on', 'off' or 'auto'.
 opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
-# Subtitles selection mode. Can be 'manual' or 'auto'.
-subtitles_selection = 'manual'
+# Subtitles selection mode:
+# - manual (in case of multiple results, let you choose the subtitles you want)
+# - auto (automatically select the most downloaded subtitles)
+opt_selection_mode = 'manual'
+
+# Write language code at the end of the filename? ('on', 'off' or 'auto')
+opt_write_languagecode = 'off'
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
@@ -80,7 +84,7 @@ server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 # priority: info, warning, error
 # title: only for zenity messages
 # message: full text, with tags and breaks (tag cleanup for terminal)
-# verbose: is this message important ?
+# verbose: is this message important?
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
     if gui == 'gnome':
@@ -96,6 +100,7 @@ def superPrint(priority, title, message):
         message = message.replace("</i>", "")
         message = message.replace("<b>", "")
         message = message.replace("</b>", "")
+        message = message.replace('\\"', '"')
         
         # Print message
         if gui == 'kde':
@@ -109,7 +114,7 @@ def superPrint(priority, title, message):
             else:
                 subprocess.call(['kdialog', '--' + priority, '--text=' + message])
         
-        else: # terminal
+        else: # CLI
             print(">> " + message)
 
 # ==== Check file path & file ==================================================
@@ -216,14 +221,14 @@ def selectionGnome(subtitlesList):
     # Get back the result
     result_subtitlesSelection = process_subtitlesSelection.communicate()
     
-    # The results contain a subtitles ?
+    # The results contain a subtitles?
     if result_subtitlesSelection[0]:
         if sys.version_info >= (3,0):
             subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
         else: # python2
             subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
         
-        # Hack against recent zenity version ?
+        # Hack against recent zenity version?
         if subtitlesSelected.split("|")[0] == subtitlesSelected.split("|")[1]:
             subtitlesSelected = subtitlesSelected.split("|")[0]
     else:
@@ -237,9 +242,9 @@ def selectionKde(subtitlesList):
     """KDE subtitles selection window using kdialog"""
     return selectionAuto(subtitlesList)
 
-# ==== Terminal selection window ===============================================
-def selectionTerminal(subtitlesList):
-    """Subtitles selection inside your current terminal"""
+# ==== CLI selection mode ======================================================
+def selectionCLI(subtitlesList):
+    """Command Line Interface, subtitles selection inside your current terminal"""
     subtitlesIndex = 0
     subtitlesItem = ''
     
@@ -291,7 +296,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('movie_files', help="The movie file for which subtitles should be searched", nargs='+')
 parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
-parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, terminal (default: auto)")
+parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, CLI (default: auto)")
 parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles (default: you will be asked to choose)")
 parser.add_argument('-l', '--lang', help="""Specify the language in which the subtitles should be downloaded. Syntax: 
     -l eng,fre : download the first language available, in french or english
@@ -320,7 +325,7 @@ for i in result.movie_files:
     if checkFile(os.path.abspath(i)):
         moviePathList.append(os.path.abspath(i))
 
-# Empty moviePathList? Try selected file(s) from nautilus
+# Empty moviePathList? Try selected file(s) from nautilus environment variable
 # if gui == 'gnome':
 #     if not moviePathList:
 #         # Get file(s) from nautilus
@@ -333,7 +338,7 @@ for i in result.movie_files:
 # ==== GUI auto detection ======================================================
 
 if gui == 'auto':
-    gui = 'terminal'
+    gui = 'CLI'
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
         if ('gnome-session' in line) or ('mate-session' in line) or ('xfce-mcs-manage' in line):
@@ -408,7 +413,7 @@ try:
             if len(subtitlesList['data']) > 1:
                 
                 # Automatic subtitles selection?
-                if subtitles_selection == 'auto':
+                if opt_selection_mode == 'auto':
                     subtitlesSelected = selectionAuto(subtitlesList)
                 else:
                     # Go through the list of subtitles
@@ -434,8 +439,8 @@ try:
                         subtitlesSelected = selectionGnome(subtitlesList)
                     elif gui == 'kde':
                         subtitlesSelected = selectionKde(subtitlesList)
-                    else: # terminal
-                        subtitlesSelected = selectionTerminal(subtitlesList)
+                    else: # CLI
+                        subtitlesSelected = selectionCLI(subtitlesList)
             
             # If a subtitles has been auto or manually selected, download it
             if subtitlesSelected:
@@ -455,8 +460,8 @@ try:
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subPath = moviePath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
-                # Write language code into the filename ?
-                if opt_file_languagecode != 'off' and searchLanguageResult > 1:
+                # Write language code into the filename?
+                if opt_write_languagecode != 'off' and searchLanguageResult > 1:
                     subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
@@ -464,7 +469,7 @@ try:
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>")', shell=True)
                 elif gui == 'kde':
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1', shell=True)
-                else: # terminal
+                else: # CLI
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + subtitlesList['data'][subIndex]['MovieName'] + "'")
                     process_subtitlesDownload = subprocess.call('wget -nv -O - ' + subURL + ' | gunzip > "' + subPath + '"', shell=True)
                 
