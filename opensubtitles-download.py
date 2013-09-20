@@ -290,6 +290,10 @@ def selectionAuto(subtitlesList):
 
 # ==== Argument parsing  =======================================================
 
+# Get opensubtitles-download script path
+execPath = str(sys.argv[0])
+
+# Handle other arguments
 parser = argparse.ArgumentParser(
     description="""This software is designed to help you find and download subtitles for your favorite videos!""",
     formatter_class=argparse.RawTextHelpFormatter)
@@ -297,7 +301,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument('movie_files', help="The movie file for which subtitles should be searched", nargs='+')
 parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
 parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, CLI (default: auto)")
-parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles (default: you will be asked to choose)")
+parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction", action='store_true')
 parser.add_argument('-l', '--lang', help="""Specify the language in which the subtitles should be downloaded. Syntax: 
     -l eng,fre : download the first language available, in french or english
     -l eng fre : download both language subtitles""",
@@ -310,30 +314,7 @@ if result.gui:
 if result.lang:
     SubLanguageIDs = result.lang
 if result.auto:
-    subtitles_selection = result.auto
-
-# ==== Parse script argument(s)  and get file paths ============================
-
-filePathList = []
-moviePathList = []
-
-# Get opensubtitles-download script path, then remove it from argv list
-execPath = str(sys.argv[0])
-
-# Go through 'argv' list and extract all options or valid video paths
-for i in result.movie_files:
-    if checkFile(os.path.abspath(i)):
-        moviePathList.append(os.path.abspath(i))
-
-# Empty moviePathList? Try selected file(s) from nautilus environment variable
-# if gui == 'gnome':
-#     if not moviePathList:
-#         # Get file(s) from nautilus
-#         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
-#         # Check file(s) type and validity
-#         for filePath in filePathList:
-#             if checkFile(filePath):
-#                 moviePathList.append(filePath)
+    subtitles_selection = 'auto'
 
 # ==== GUI auto detection ======================================================
 
@@ -348,6 +329,26 @@ if gui == 'auto':
             gui = 'kde'
             break
 
+# ==== Get valid movie paths ===================================================
+
+filePathList = []
+moviePathList = []
+
+# Go through the paths taken from arguments and extract all valid video paths
+for i in result.movie_files:
+    if checkFile(os.path.abspath(i)):
+        moviePathList.append(os.path.abspath(i))
+
+# Empty moviePathList? Try selected file(s) from nautilus environment variable
+# if gui == 'gnome':
+#     if not moviePathList:
+#         # Get file(s) from nautilus
+#         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
+#         # Check file(s) type and validity
+#         for filePath in filePathList:
+#             if checkFile(filePath):
+#                 moviePathList.append(filePath)
+
 # ==== Dispatcher ==============================================================
 
 # If moviePathList is empty, abort!
@@ -361,12 +362,17 @@ moviePathList.pop(0)
 
 # The remaining file(s) are dispatched to new instance(s) of this script
 for moviePathDispatch in moviePathList:
-    if gui == 'terminal' and selection_mode == 'manual':
+    command = execPath + " " + moviePathDispatch + " -g " + gui
+    if opt_selection_mode == 'auto': command += " -a "
+    if result.verbose == 'verbose': command += " -v "
+    print('command: ' + command)
+    
+    if gui == 'CLI' and opt_selection_mode == 'manual':
         # Synchronous call
-        process_movieDispatched = subprocess.call([execPath, '--gui=' + gui, moviePathDispatch])
+        process_movieDispatched = subprocess.call(command.split())
     else:
         # Asynchronous call
-        process_movieDispatched = subprocess.Popen([execPath, '--gui=' + gui, moviePathDispatch])
+        process_movieDispatched = subprocess.Popen(command.split())
 
 # ==== Main program ============================================================
 try:
@@ -408,7 +414,7 @@ try:
             if len(subtitlesList['data']) == 1:
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
-            # If there is more than one subtitles and selection_mode != 'auto',
+            # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
             if len(subtitlesList['data']) > 1:
                 
@@ -418,7 +424,7 @@ try:
                 else:
                     # Go through the list of subtitles
                     for item in subtitlesList['data']:
-                        # Sanitize the title string to avoid handling errors (gui only)
+                        # Sanitize the title string to avoid handling errors (gui only?)
                         item['MovieName'] = item['MovieName'].replace('"', '\\"')
                         item['MovieName'] = item['MovieName'].replace("'", "\'")
                         # Handle 'auto' options
@@ -442,7 +448,7 @@ try:
                     else: # CLI
                         subtitlesSelected = selectionCLI(subtitlesList)
             
-            # If a subtitles has been auto or manually selected, download it
+            # If a subtitles has been selected at this point, download it!
             if subtitlesSelected:
                 subIndex = 0
                 subIndexTemp = 0
