@@ -362,17 +362,18 @@ moviePathList.pop(0)
 
 # The remaining file(s) are dispatched to new instance(s) of this script
 for moviePathDispatch in moviePathList:
-    command = execPath + " " + moviePathDispatch + " -g " + gui
+    command = execPath + " -g " + gui
     if opt_selection_mode == 'auto': command += " -a "
     if result.verbose == 'verbose': command += " -v "
-    print('command: ' + command)
+    command_splitted = command.split()
+    command_splitted.append(moviePathDispatch) # do not risk moviePath to be 'splitted'
     
     if gui == 'CLI' and opt_selection_mode == 'manual':
         # Synchronous call
-        process_movieDispatched = subprocess.call(command.split())
+        process_movieDispatched = subprocess.call(command_splitted)
     else:
         # Asynchronous call
-        process_movieDispatched = subprocess.Popen(command.split())
+        process_movieDispatched = subprocess.Popen(command_splitted)
 
 # ==== Main program ============================================================
 try:
