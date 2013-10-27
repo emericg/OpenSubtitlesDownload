@@ -229,8 +229,9 @@ def selectionGnome(subtitlesList):
             subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
         
         # Hack against recent zenity version?
-        if subtitlesSelected.split("|")[0] == subtitlesSelected.split("|")[1]:
-            subtitlesSelected = subtitlesSelected.split("|")[0]
+        if len(subtitlesSelected.split("|")) > 1:
+            if subtitlesSelected.split("|")[0] == subtitlesSelected.split("|")[1]:
+                subtitlesSelected = subtitlesSelected.split("|")[0]
     else:
         if process_subtitlesSelection.returncode == 0:
             subtitlesSelected = subtitlesList['data'][0]['SubFileName']
