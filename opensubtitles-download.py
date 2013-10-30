@@ -53,8 +53,8 @@ SubLanguageIDs = ['eng']
 
 # Select your GUI. Can be overriden at run time with '--gui=xxx'.
 # - auto (autodetect, fallback on CLI)
-# - gnome (using 'zenity' backend)
-# - kde (using 'kdialog' backend)
+# - gnome (GNOME/GTK based environments, using 'zenity' backend)
+# - kde (KDE/Qt based environments, using 'kdialog' backend)
 # - CLI (Command Line Interface)
 gui = 'auto'
 
@@ -321,9 +321,10 @@ if result.auto:
 
 if gui == 'auto':
     gui = 'CLI'
+    # Note: "ps cax" only output the first 15 characters of the executable's names
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
-        if ('gnome-session' in line) or ('mate-session' in line) or ('xfce-mcs-manage' in line):
+        if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce-mcs-manage' in line):
             gui = 'gnome'
             break
         elif 'ksmserver' in line:
