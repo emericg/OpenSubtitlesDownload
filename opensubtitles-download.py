@@ -1,9 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-## OpenSubtitles-download / Version 3.0
-## https://github.com/emericg/opensubtitles-download
-## This software is designed to help you find and download subtitles for your favorite videos!
+# OpenSubtitles-download / Version 3.0
+# https://github.com/emericg/opensubtitles-download
+# This software is designed to help you find and download subtitles for your favorite videos!
 
 # Copyright (c) 2013 by Emeric GRANGE <emeric.grange@gmail.com>
 #
@@ -21,6 +21,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Contributors / special thanks:
+# Gui13 for his work on the arguments parsing
 # Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
@@ -78,6 +79,7 @@ opt_write_languagecode = 'off'
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
+
 server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
 # ==== Super Print =============================================================
@@ -85,6 +87,7 @@ server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 # title: only for zenity messages
 # message: full text, with tags and breaks (tag cleanup for terminal)
 # verbose: is this message important?
+
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
     if gui == 'gnome':
@@ -118,6 +121,7 @@ def superPrint(priority, title, message):
             print(">> " + message)
 
 # ==== Check file path & file ==================================================
+
 def checkFile(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
@@ -149,6 +153,7 @@ def checkFile(path):
 # ==== Hashing algorithm =======================================================
 # Infos: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
 # This particular implementation is coming from SubDownloader: http://subdownloader.net/
+
 def hashFile(path):
     """Produce a hash for a video file: size + 64bit chksum of the first and 
     last 64k (even if they overlap because the file is smaller than 128k)"""
@@ -185,6 +190,7 @@ def hashFile(path):
         return "IOError"
 
 # ==== Gnome selection window ==================================================
+
 def selectionGnome(subtitlesList):
     """Gnome subtitles selection window using zenity"""
     subtitlesSelected = ''
@@ -239,11 +245,13 @@ def selectionGnome(subtitlesList):
     return subtitlesSelected
 
 # ==== KDE selection window ====================================================
+
 def selectionKde(subtitlesList):
     """KDE subtitles selection window using kdialog"""
     return selectionAuto(subtitlesList)
 
 # ==== CLI selection mode ======================================================
+
 def selectionCLI(subtitlesList):
     """Command Line Interface, subtitles selection inside your current terminal"""
     subtitlesIndex = 0
@@ -276,6 +284,7 @@ def selectionCLI(subtitlesList):
     return subtitlesList['data'][sub_selection-1]['SubFileName']
 
 # ==== Automatic selection mode ================================================
+
 def selectionAuto(subtitlesList):
     """Automatic subtitles selection using donwload count"""
     """todo: handle filename match instead of download count?"""
@@ -378,6 +387,7 @@ for moviePathDispatch in moviePathList:
         process_movieDispatched = subprocess.Popen(command_splitted)
 
 # ==== Main program ============================================================
+
 try:
     try:
         # Connection to opensubtitles.org server
