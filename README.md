@@ -15,7 +15,7 @@ Features
 
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
 - Query subtitles in multiple languages at once.
-- Use a gtk or qt GUI depending on your desktop environment, or just use the CLI!
+- Use a GNOME/GTK or KDE/Qt GUI depending on your desktop environment, or just use the CLI!
 - Select multiple video files to search their subtitles simultaneously.
 - Select different target languages to search them simultaneously.
 - Detect valid video files (using mime types and file extensions).
