@@ -46,11 +46,15 @@ else: # python2
 # 2/ You can also search for subtitles in several languages ​​at once:
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
 # - SubLanguageIDs = ['eng','fre'] to download all selected languages
-
 SubLanguageIDs = ['eng']
 
+# Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
+# If you are regularly searching for several language at once, you sould use 'on'.
+opt_write_languagecode = 'auto'
+
 # ==== Settings ================================================================
-# For a complete documentation of these options, please refer to the wiki.
+# For a complete documentation, please use the wiki:
+# https://github.com/emericg/opensubtitles-download/wiki
 
 # Select your GUI. Can be overriden at run time with '--gui=xxx'.
 # - auto (autodetect, fallback on CLI)
@@ -63,19 +67,16 @@ gui = 'auto'
 gui_width  = 720
 gui_height = 320
 
-# Various GUI options. You can set them to 'on', 'off' or 'auto'.
-opt_selection_language = 'auto'
-opt_selection_hi       = 'auto'
-opt_selection_rating   = 'off'
-opt_selection_count    = 'off'
-
 # Subtitles selection mode:
 # - manual (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the most downloaded subtitles)
 opt_selection_mode = 'manual'
 
-# Write language code at the end of the filename? ('on', 'off' or 'auto')
-opt_write_languagecode = 'off'
+# Various GUI options. You can set them to 'on', 'off' or 'auto'.
+opt_selection_language = 'auto'
+opt_selection_hi       = 'auto'
+opt_selection_rating   = 'off'
+opt_selection_count    = 'off'
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
@@ -318,16 +319,20 @@ parser.add_argument('-v', '--verbose', help="Enables verbose output", action='st
 parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, CLI (default: auto)")
 parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction", action='store_true')
 parser.add_argument('-l', '--lang', help="""Specify the language in which the subtitles should be downloaded. Syntax: 
-    -l eng,fre : download the first language available, in french or english
-    -l eng fre : download both language subtitles""",
-    nargs='?', action='append')
+                     -l eng,fre : search in both language
+                     -l eng -l fre : download both language""",
+                     nargs='?', action='append')
 
 result = parser.parse_args()
 
 if result.gui:
     gui = result.gui
 if result.lang:
-    SubLanguageIDs = result.lang
+    if SubLanguageIDs != result.lang:
+        SubLanguageIDs = result.lang
+        opt_selection_language = 'on'
+        if opt_write_languagecode != 'off':
+            opt_write_languagecode = 'on'
 if result.auto:
     subtitles_selection = 'auto'
 
@@ -378,9 +383,15 @@ moviePathList.pop(0)
 
 # The remaining file(s) are dispatched to new instance(s) of this script
 for moviePathDispatch in moviePathList:
+    
+    # Handle current options
     command = execPath + " -g " + gui
     if opt_selection_mode == 'auto': command += " -a "
     if result.verbose == 'verbose': command += " -v "
+    if result.lang:
+        for resultlangs in result.lang:
+            command += " -l " + resultlangs
+    
     command_splitted = command.split()
     command_splitted.append(moviePathDispatch) # do not risk moviePath to be 'splitted'
     
@@ -485,7 +496,8 @@ try:
                 subPath = moviePath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Write language code into the filename?
-                if opt_write_languagecode != 'off' and searchLanguageResult > 1:
+                if ((opt_write_languagecode == 'on') or
+                    (opt_write_languagecode == 'auto' and searchLanguageResult > 1)):
                     subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
