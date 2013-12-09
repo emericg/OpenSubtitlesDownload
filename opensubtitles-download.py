@@ -259,29 +259,34 @@ def selectionCLI(subtitlesList):
     
     # Print subtitles list on the terminal
     print(">> Available subtitles:")
+    print("\033[91m[0]\033[0m Cancel search")
     for item in subtitlesList['data']:
         subtitlesIndex += 1
         subtitlesItem = '"' + item['SubFileName'] + '" '
         if opt_selection_hi == 'on':
             if item['SubHearingImpaired'] == '1':
-                subtitlesItem += '"HI" '
+                subtitlesItem += '> "HI" '
         if opt_selection_language == 'on':
-            subtitlesItem += '"LanguageName: ' + item['LanguageName'] + '" '
+            subtitlesItem += '> "LanguageName: ' + item['LanguageName'] + '" '
         if opt_selection_rating == 'on':
-            subtitlesItem += '"SubRating: ' + item['SubRating'] + '" '
+            subtitlesItem += '> "SubRating: ' + item['SubRating'] + '" '
         if opt_selection_count == 'on':
-            subtitlesItem += '"SubDownloadsCnt: ' + item['SubDownloadsCnt'] + '" '
+            subtitlesItem += '> "SubDownloadsCnt: ' + item['SubDownloadsCnt'] + '" '
         print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
     
     # Ask user selection
-    sub_selection = 0
-    while( sub_selection < 1 or sub_selection > subtitlesIndex ):
+    sub_selection = -1
+    while( sub_selection < 0 or sub_selection > subtitlesIndex ):
         try:
-            sub_selection = int(input(">> Enter your choice (1-" + str(subtitlesIndex) + "): "))
+            sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
         except:
-            sub_selection = 0
+            sub_selection = -1
     
-    return subtitlesList['data'][sub_selection-1]['SubFileName']
+    if sub_selection == 0:
+        print("Cancelling search...")
+        return
+    else:
+        return subtitlesList['data'][sub_selection-1]['SubFileName']
 
 # ==== Automatic selection mode ================================================
 
