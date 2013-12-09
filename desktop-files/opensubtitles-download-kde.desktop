@@ -5,6 +5,7 @@ NoDisplay=true
 Terminal=true
 MimeType=video/avi;video/mpeg;video/mp4;video/ogg;video/quicktime;video/msvideo;video/webm;video/x-matroska;video/x-mpeg;video/x-ms-wmv;video/x-msvideo;video/x-flv;application/ogg;
 Categories=AudioVideo;
+ServiceTypes=KonqPopupMenu/Plugin,video/*
 
 Name=OpenSubtitles-download
 GenericName=Automatic subtitles downloader
@@ -13,4 +14,4 @@ Comment=Download subtitles from opensubtitles.org
 Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
 
 OnlyShowIn=KDE;MATE;Razor;TDE;
-Exec=opensubtitles-download.py --gui=gnome "%F"
+Exec=opensubtitles-download.py --gui=kde "%F"
