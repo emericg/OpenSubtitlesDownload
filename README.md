@@ -15,6 +15,7 @@ Features
 
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
 - Query subtitles in multiple languages at once.
+- Use a gtk or qt GUI depending on your desktop environment, or just use the CLI!
 - Select multiple video files to search their subtitles simultaneously.
 - Select different target languages to search them simultaneously.
 - Detect valid video files (using mime types and file extensions).
@@ -26,14 +27,14 @@ Requirements
 ------------
 
 - python (version 2 or 3)
-- wget & gzip (subtitles download), ps & grep (gui autodetection)
-- zenity (only for Gnome based desktop environments)
+- zenity (only for GNOME based desktop environments)
 - kdialog (only for KDE based desktop environments)
+- basic unix tools: wget & gzip (subtitles download), ps & grep (gui autodetection)
 
 Installation
 ------------
 
-Quick installation as a nautilus script, under Gnome 3 desktop environment:
+Quick installation as a nautilus script, under GNOME 3 desktop environment:
 
 > $ git clone https://github.com/emericg/opensubtitles-download.git  
 > $ mkdir -p ~/.local/share/nautilus/scripts/  
