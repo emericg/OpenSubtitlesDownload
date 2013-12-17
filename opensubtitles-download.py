@@ -60,7 +60,7 @@ opt_write_languagecode = 'auto'
 # - auto (autodetect, fallback on CLI)
 # - gnome (GNOME/GTK based environments, using 'zenity' backend)
 # - kde (KDE/Qt based environments, using 'kdialog' backend)
-# - CLI (Command Line Interface)
+# - cli (Command Line Interface)
 gui = 'auto'
 
 # Change the subtitles selection GUI size:
@@ -244,6 +244,7 @@ def selectionGnome(subtitlesList):
         if process_subtitlesSelection.returncode == 0:
             subtitlesSelected = subtitlesList['data'][0]['SubFileName']
     
+    # Return the result
     return subtitlesSelected
 
 # ==== KDE selection window ====================================================
@@ -259,9 +260,12 @@ def selectionCLI(subtitlesList):
     subtitlesIndex = 0
     subtitlesItem = ''
     
+    # Print video infos
+    print("\n>> Title: " + subtitlesList['data'][0]['MovieName'])
+    print(">> Filename: " + movieFileName)
+    
     # Print subtitles list on the terminal
     print(">> Available subtitles:")
-    print("\033[91m[0]\033[0m Cancel search")
     for item in subtitlesList['data']:
         subtitlesIndex += 1
         subtitlesItem = '"' + item['SubFileName'] + '" '
@@ -277,6 +281,7 @@ def selectionCLI(subtitlesList):
         print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
     
     # Ask user selection
+    print("\033[91m[0]\033[0m Cancel search")
     sub_selection = -1
     while( sub_selection < 0 or sub_selection > subtitlesIndex ):
         try:
@@ -284,6 +289,7 @@ def selectionCLI(subtitlesList):
         except:
             sub_selection = -1
     
+    # Return the result
     if sub_selection == 0:
         print("Cancelling search...")
         return
@@ -317,7 +323,7 @@ parser = argparse.ArgumentParser(
 
 parser.add_argument('movie_files', help="The movie file for which subtitles should be searched", nargs='+')
 parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
-parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, CLI (default: auto)")
+parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
 parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction", action='store_true')
 parser.add_argument('-l', '--lang', help="""Specify the language in which the subtitles should be downloaded. Syntax: 
                      -l eng,fre : search in both language
@@ -326,21 +332,21 @@ parser.add_argument('-l', '--lang', help="""Specify the language in which the su
 
 result = parser.parse_args()
 
+# Save results
 if result.gui:
     gui = result.gui
+if result.auto:
+    subtitles_selection = 'auto'
 if result.lang:
     if SubLanguageIDs != result.lang:
         SubLanguageIDs = result.lang
         opt_selection_language = 'on'
         if opt_write_languagecode != 'off':
             opt_write_languagecode = 'on'
-if result.auto:
-    subtitles_selection = 'auto'
 
 # ==== GUI auto detection ======================================================
 
 if gui == 'auto':
-    gui = 'CLI'
     # Note: "ps cax" only output the first 15 characters of the executable's names
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
@@ -350,6 +356,12 @@ if gui == 'auto':
         elif 'ksmserver' in line:
             gui = 'kde'
             break
+
+# Fallback
+if gui not in ['gnome', 'kde', 'cli']:
+    gui = 'cli'
+    subtitles_selection = 'auto'
+    print("Unknow GUI, falling back to automatique CLI mode")
 
 # ==== Get valid movie paths ===================================================
 
@@ -396,7 +408,7 @@ for moviePathDispatch in moviePathList:
     command_splitted = command.split()
     command_splitted.append(moviePathDispatch) # do not risk moviePath to be 'splitted'
     
-    if gui == 'CLI' and opt_selection_mode == 'manual':
+    if gui == 'cli' and opt_selection_mode == 'manual':
         # Synchronous call
         process_movieDispatched = subprocess.call(command_splitted)
     else:
