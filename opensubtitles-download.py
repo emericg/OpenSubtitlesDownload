@@ -344,7 +344,7 @@ if gui == 'auto':
     # Note: "ps cax" only output the first 15 characters of the executable's names
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
-        if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce-mcs-manage' in line):
+        if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce4-session' in line):
             gui = 'gnome'
             break
         elif 'ksmserver' in line:
