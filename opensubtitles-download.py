@@ -1,11 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitles-download / Version 3.0
-# https://github.com/emericg/opensubtitles-download
+# OpenSubtitlesDownload.py / Version 3.0
+# https://github.com/emericg/OpenSubtitlesDownload
 # This software is designed to help you find and download subtitles for your favorite videos!
 
-# Copyright (c) 2013 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2014 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -54,7 +54,7 @@ opt_write_languagecode = 'auto'
 
 # ==== Settings ================================================================
 # For a complete documentation, please use the wiki:
-# https://github.com/emericg/opensubtitles-download/wiki
+# https://github.com/emericg/OpenSubtitlesDownload/wiki
 
 # Select your GUI. Can be overriden at run time with '--gui=xxx'.
 # - auto (autodetect, fallback on CLI)
@@ -313,7 +313,7 @@ def selectionAuto(subtitlesList):
 
 # ==== Argument parsing  =======================================================
 
-# Get opensubtitles-download script path
+# Get OpenSubtitlesDownload.py script path
 execPath = str(sys.argv[0])
 
 # Handle other arguments
@@ -422,11 +422,11 @@ try:
         # Connection to opensubtitles.org server
         session = server.LogIn('', '', 'en', 'opensubtitles-download 3.0')
         if session['status'] != '200 OK':
-            superPrint("error", "", "Unable to reach opensubtitles.org server: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability")
+            superPrint("error", "", "Unable to reach opensubtitles.org servers: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
             sys.exit(1)
         token = session['token']
     except Exception:
-        superPrint("error", "", "Unable to reach opensubtitles.org server.\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability")
+        superPrint("error", "", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
         sys.exit(1)
     
     searchLanguage = 0
@@ -537,5 +537,5 @@ try:
 
 except Error:
     # If an unknown error occur, say so (and apologize)
-    superPrint("error", "", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability")
+    superPrint("error", "", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
     sys.exit(1)
