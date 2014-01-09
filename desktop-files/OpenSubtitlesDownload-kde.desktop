@@ -7,11 +7,11 @@ MimeType=video/avi;video/mpeg;video/mp4;video/ogg;video/quicktime;video/msvideo;
 Categories=AudioVideo;
 ServiceTypes=KonqPopupMenu/Plugin,video/*
 
-Name=OpenSubtitles-download
+Name=OpenSubtitlesDownload
 GenericName=Automatic subtitles downloader
 GenericName[fr]=Téléchargeur automatique de sous-titres
 Comment=Download subtitles from opensubtitles.org
 Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
 
 OnlyShowIn=KDE;MATE;Razor;TDE;
-Exec=opensubtitles-download.py --gui=kde "%F"
+Exec=openSubtitlesDownload.py --gui=kde "%F"
