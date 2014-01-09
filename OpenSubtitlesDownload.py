@@ -223,7 +223,7 @@ def selectionGnome(subtitlesList):
     # Spawn zenity "list" dialog
     process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + \
         ' --list --title="Subtitles for: ' + item['MovieName'] + '"' + \
-        ' --text="<b>Title:</b> ' + item['MovieName'] + '\n<b>Filename:</b> ' + movieFileName + '"' + \
+        ' --text="<b>Title:</b> ' + item['MovieName'] + '\n<b>Filename:</b> ' + videoFileName + '"' + \
         ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
     
     # Get back the result
@@ -262,7 +262,7 @@ def selectionCLI(subtitlesList):
     
     # Print video infos
     print("\n>> Title: " + subtitlesList['data'][0]['MovieName'])
-    print(">> Filename: " + movieFileName)
+    print(">> Filename: " + videoFileName)
     
     # Print subtitles list on the terminal
     print(">> Available subtitles:")
@@ -321,7 +321,7 @@ parser = argparse.ArgumentParser(
     description="""This software is designed to help you find and download subtitles for your favorite videos!""",
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('movie_files', help="The movie file for which subtitles should be searched", nargs='+')
+parser.add_argument('filePathListArguments', help="The video file for which subtitles should be searched", nargs='+')
 parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
 parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
 parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction", action='store_true')
@@ -353,7 +353,7 @@ if gui == 'auto':
         if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce4-session' in line):
             gui = 'gnome'
             break
-        elif 'ksmserver' in line:
+        elif ('ksmserver' in line):
             gui = 'kde'
             break
 
@@ -361,59 +361,61 @@ if gui == 'auto':
 if gui not in ['gnome', 'kde', 'cli']:
     gui = 'cli'
     subtitles_selection = 'auto'
-    print("Unknow GUI, falling back to automatique CLI mode")
+    print("Unknow GUI, falling back to an automatic CLI mode")
 
-# ==== Get valid movie paths ===================================================
+# ==== Get valid video paths ===================================================
 
-filePathList = []
-moviePathList = []
+videoPathList = []
 
-# Go through the paths taken from arguments and extract all valid video paths
-for i in result.movie_files:
+# Go through the paths taken from arguments, and extract only valid video paths
+for i in result.filePathListArguments:
     if checkFile(os.path.abspath(i)):
-        moviePathList.append(os.path.abspath(i))
+        videoPathList.append(os.path.abspath(i))
 
-# Empty moviePathList? Try selected file(s) from nautilus environment variable
+# Empty videoPathList? Try selected file(s) from nautilus environment variable
+#filePathListEnvironment = []
 # if gui == 'gnome':
-#     if not moviePathList:
+#     if not videoPathList:
 #         # Get file(s) from nautilus
-#         filePathList = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
+#         filePathListEnvironment = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
 #         # Check file(s) type and validity
-#         for filePath in filePathList:
+#         for filePath in filePathListEnvironment:
 #             if checkFile(filePath):
-#                 moviePathList.append(filePath)
+#                 videoPathList.append(filePath)
 
 # ==== Dispatcher ==============================================================
 
-# If moviePathList is empty, abort!
-if len(moviePathList) == 0:
+# If videoPathList is empty, abort!
+if len(videoPathList) == 0:
     parser.print_help()
     sys.exit(1)
 
-# The first file will be processed by this instance
-moviePath = moviePathList[0]
-moviePathList.pop(0)
+# The first video file will be processed by this instance
+videoPath = videoPathList[0]
+videoPathList.pop(0)
 
 # The remaining file(s) are dispatched to new instance(s) of this script
-for moviePathDispatch in moviePathList:
+for videoPathDispatch in videoPathList:
     
     # Handle current options
     command = execPath + " -g " + gui
-    if opt_selection_mode == 'auto': command += " -a "
-    if result.verbose == 'verbose': command += " -v "
+    if opt_selection_mode == 'auto':
+        command += " -a "
+    if result.verbose == 'verbose':
+        command += " -v "
     if result.lang:
         for resultlangs in result.lang:
             command += " -l " + resultlangs
     
     command_splitted = command.split()
-    command_splitted.append(moviePathDispatch) # do not risk moviePath to be 'splitted'
+    command_splitted.append(videoPathDispatch) # do not risk videoPath to be 'splitted'
     
     if gui == 'cli' and opt_selection_mode == 'manual':
         # Synchronous call
-        process_movieDispatched = subprocess.call(command_splitted)
+        process_videoDispatched = subprocess.call(command_splitted)
     else:
         # Asynchronous call
-        process_movieDispatched = subprocess.Popen(command_splitted)
+        process_videoDispatched = subprocess.Popen(command_splitted)
 
 # ==== Main program ============================================================
 
@@ -431,9 +433,9 @@ try:
     
     searchLanguage = 0
     searchLanguageResult = 0
-    movieHash = hashFile(moviePath)
-    movieSize = os.path.getsize(moviePath)
-    movieFileName = os.path.basename(moviePath)
+    videoHash = hashFile(videoPath)
+    videoSize = os.path.getsize(videoPath)
+    videoFileName = os.path.basename(videoPath)
     
     # Count languages marked for this search
     for SubLanguageID in SubLanguageIDs:
@@ -442,7 +444,7 @@ try:
     # Search for available subtitles (using file hash and size)
     for SubLanguageID in SubLanguageIDs:
         searchList = []
-        searchList.append({'sublanguageid':SubLanguageID, 'moviehash':movieHash, 'moviebytesize':str(movieSize)})
+        searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
         subtitlesList = server.SearchSubtitles(token, searchList)
         subtitlesSelected = ''
         
@@ -506,12 +508,12 @@ try:
                 subLangId = '_' + subtitlesList['data'][subIndex]['ISO639']
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
-                subPath = moviePath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Write language code into the filename?
                 if ((opt_write_languagecode == 'on') or
                     (opt_write_languagecode == 'auto' and searchLanguageResult > 1)):
-                    subPath = moviePath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                    subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 
                 # Download and unzip the selected subtitles (with progressbar)
                 if gui == 'gnome':
@@ -529,7 +531,7 @@ try:
     
     # Print a message if none of the subtitles languages have been found
     if searchLanguageResult == 0:
-        superPrint("info", "No subtitles found for " + movieFileName, 'No subtitles found for this video:\n<i>' + movieFileName + '</i>')
+        superPrint("info", "No subtitles found for " + videoFileName, 'No subtitles found for this video:\n<i>' + videoFileName + '</i>')
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
