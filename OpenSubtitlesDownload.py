@@ -468,9 +468,11 @@ try:
                 else:
                     # Go through the list of subtitles
                     for item in subtitlesList['data']:
-                        # Sanitize the title string to avoid handling errors (gui only?)
-                        item['MovieName'] = item['MovieName'].replace('"', '\\"')
-                        item['MovieName'] = item['MovieName'].replace("'", "\'")
+                        # Sanitize the title string to avoid zenity/kdialog handling errors
+                        if gui != 'cli':
+                            item['MovieName'] = item['MovieName'].replace('"', '\\"')
+                            item['MovieName'] = item['MovieName'].replace("'", "\'")
+                            item['MovieName'] = item['MovieName'].replace("&", "&amp;")
                         # Handle 'auto' options
                         if opt_selection_language == 'auto':
                             if searchLanguage > 1:
