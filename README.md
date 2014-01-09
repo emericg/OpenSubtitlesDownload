@@ -4,7 +4,7 @@ OpenSubtitlesDownload.py
 Introduction
 ------------
 
-OpenSubtitlesDownload.py is a small software written in python, built to help you quickly find and download subtitles for your favorite videos. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI (Command Line Interface) mode!
+OpenSubtitlesDownload.py is a small Linux software written in python, built to help you quickly find and download subtitles for your favorite videos. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI (Command Line Interface) mode!
 
 The subtitles search is done by precisely identifying your videos files, not by using filename but by generating a unique hash signature from your files. This way, you have more chance to find the exact subtitles corresponding to your videos, avoiding synchronization problems between the subtitles and the soundtrack.
 
@@ -13,15 +13,22 @@ The subtitles search and download service is powered by [opensubtitles.org](http
 Features
 --------
 
+- Use a GNOME/GTK or KDE/Qt GUI depending on your desktop environment, or just use the CLI!
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
 - Query subtitles in multiple languages at once.
-- Use a GNOME/GTK or KDE/Qt GUI depending on your desktop environment, or just use the CLI!
-- Select multiple video files to search their subtitles simultaneously.
-- Select different target languages to search them simultaneously.
+- Query subtitles for multiple video files at once.
 - Detect valid video files (using mime types and file extensions).
 - Detect correct video titles by computing hash file signatures, not by reading the filenames.
 - Download subtitles automatically if only one is available, select the one you want otherwise.
 - Rename downloaded subtitles to match source video file. Possibility to append the language code to the file name (ex: movie_en.srt).
+
+Requirements
+------------
+
+- python (version 2 or 3)
+- zenity (only for GNOME based desktop environments)
+- kdialog (only for KDE based desktop environments)
+- basic unix tools: wget & gzip (subtitles downloading), ps & grep (gui autodetection)
 
 Installation
 ------------
@@ -33,19 +40,12 @@ Quick installation as a nautilus script, under GNOME 3 desktop environment:
 > $ cp OpenSubtitlesDownload/OpenSubtitlesDownload.py ~/.local/share/nautilus/scripts/OpenSubtitlesDownload.py  
 > $ chmod u+x ~/.local/share/nautilus/scripts/OpenSubtitlesDownload.py  
 
-Requirements
-------------
-
-- python (version 2 or 3)
-- zenity (only for GNOME based desktop environments)
-- kdialog (only for KDE based desktop environments)
-- basic unix tools: wget & gzip (subtitles downloading), ps & grep (gui autodetection)
-
 Website
 -------
 
 You can browse the project's website at <http://emericg.github.io/OpenSubtitlesDownload>.  
-You can browse the project's GitHub page and wiki at <https://github.com/emericg/OpenSubtitlesDownload>.  
+You can browse the project's GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>.  
+Learn much more about OpenSubtitlesDownload.py installation and configuration on its wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>.  
 
 Contributors
 ------------
