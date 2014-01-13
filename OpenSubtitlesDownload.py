@@ -336,7 +336,7 @@ result = parser.parse_args()
 if result.gui:
     gui = result.gui
 if result.auto:
-    subtitles_selection = 'auto'
+    opt_selection_mode = 'auto'
 if result.lang:
     if SubLanguageIDs != result.lang:
         SubLanguageIDs = result.lang
@@ -360,7 +360,7 @@ if gui == 'auto':
 # Fallback
 if gui not in ['gnome', 'kde', 'cli']:
     gui = 'cli'
-    subtitles_selection = 'auto'
+    opt_selection_mode = 'auto'
     print("Unknow GUI, falling back to an automatic CLI mode")
 
 # ==== Get valid video paths ===================================================
