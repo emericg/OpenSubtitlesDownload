@@ -533,7 +533,7 @@ try:
     
     # Print a message if none of the subtitles languages have been found
     if searchLanguageResult == 0:
-        superPrint("info", "No subtitles found for " + videoFileName, 'No subtitles found for this video:\n<i>' + videoFileName + '</i>')
+        superPrint("info", "No synchronized subtitles found for " + videoFileName, 'No synchronized subtitles found for this video:\n<i>' + videoFileName + '</i>')
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(token)
@@ -541,5 +541,5 @@ try:
 
 except Error:
     # If an unknown error occur, say so (and apologize)
-    superPrint("error", "", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+    superPrint("error", "", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit")
     sys.exit(1)
