@@ -322,13 +322,10 @@ parser = argparse.ArgumentParser(
     formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('filePathListArguments', help="The video file for which subtitles should be searched", nargs='+')
-parser.add_argument('-v', '--verbose', help="Enables verbose output", action='store_true')
+parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
+parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
 parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
-parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction", action='store_true')
-parser.add_argument('-l', '--lang', help="""Specify the language in which the subtitles should be downloaded. Syntax: 
-                     -l eng,fre : search in both language
-                     -l eng -l fre : download both language""",
-                     nargs='?', action='append')
+parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
 
 result = parser.parse_args()
 
