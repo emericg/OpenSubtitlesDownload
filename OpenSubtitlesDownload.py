@@ -222,8 +222,8 @@ def selectionGnome(subtitlesList):
     
     # Spawn zenity "list" dialog
     process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + \
-        ' --list --title="Subtitles for: ' + item['MovieName'] + '"' + \
-        ' --text="<b>Title:</b> ' + item['MovieName'] + '\n<b>Filename:</b> ' + videoFileName + '"' + \
+        ' --list --title="Subtitles for: ' + videoTitle + '"' + \
+        ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
         ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
     
     # Get back the result
@@ -261,7 +261,7 @@ def selectionCLI(subtitlesList):
     subtitlesItem = ''
     
     # Print video infos
-    print("\n>> Title: " + subtitlesList['data'][0]['MovieName'])
+    print("\n>> Title: " + videoTitle)
     print(">> Filename: " + videoFileName)
     
     # Print subtitles list on the terminal
@@ -433,6 +433,7 @@ try:
     
     searchLanguage = 0
     searchLanguageResult = 0
+    videoTitle = 'Unknow video'
     videoHash = hashFile(videoPath)
     videoSize = os.path.getsize(videoPath)
     videoFileName = os.path.basename(videoPath)
@@ -458,6 +459,13 @@ try:
             if len(subtitlesList['data']) == 1:
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
+            # Get video title. If needed sanitize the string to avoid zenity/kdialog handling errors
+            videoTitle = subtitlesList['data'][0]['MovieName']
+            if gui != 'cli':
+                videoTitle = videoTitle.replace('"', '\\"')
+                videoTitle = videoTitle.replace("'", "\'")
+                videoTitle = videoTitle.replace("&", "&amp;")
+            
             # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
             if len(subtitlesList['data']) > 1:
@@ -468,11 +476,6 @@ try:
                 else:
                     # Go through the list of subtitles
                     for item in subtitlesList['data']:
-                        # Sanitize the title string to avoid zenity/kdialog handling errors
-                        if gui != 'cli':
-                            item['MovieName'] = item['MovieName'].replace('"', '\\"')
-                            item['MovieName'] = item['MovieName'].replace("'", "\'")
-                            item['MovieName'] = item['MovieName'].replace("&", "&amp;")
                         # Handle 'auto' options
                         if opt_selection_language == 'auto':
                             if searchLanguage > 1:
@@ -519,16 +522,16 @@ try:
                 
                 # Download and unzip the selected subtitles (with progressbar)
                 if gui == 'gnome':
-                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + subtitlesList['data'][subIndex]['MovieName'] + '</b>")', shell=True)
+                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>")', shell=True)
                 elif gui == 'kde':
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1', shell=True)
                 else: # CLI
-                    print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + subtitlesList['data'][subIndex]['MovieName'] + "'")
+                    print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
                     process_subtitlesDownload = subprocess.call('wget -nv -O - ' + subURL + ' | gunzip > "' + subPath + '"', shell=True)
                 
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
-                    superPrint("error", "", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + subtitlesList['data'][subIndex]['MovieName'] + "</b>.")
+                    superPrint("error", "", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
                     sys.exit(1)
     
     # Print a message if none of the subtitles languages have been found
