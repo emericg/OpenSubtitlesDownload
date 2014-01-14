@@ -187,7 +187,7 @@ def hashFile(path):
         return returnedhash
     
     except IOError:
-        superPrint("error", "", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
+        superPrint("error", "I/O error", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
 
 # ==== Gnome selection window ==================================================
@@ -423,12 +423,13 @@ try:
     try:
         # Connection to opensubtitles.org server
         session = server.LogIn('', '', 'en', 'opensubtitles-download 3.1')
+        
+        # Failed connection attempt?
         if session['status'] != '200 OK':
-            superPrint("error", "", "Unable to reach opensubtitles.org servers: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
             sys.exit(1)
-        token = session['token']
     except Exception:
-        superPrint("error", "", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+        superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
         sys.exit(1)
     
     searchLanguage = 0
@@ -446,7 +447,7 @@ try:
     for SubLanguageID in SubLanguageIDs:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
-        subtitlesList = server.SearchSubtitles(token, searchList)
+        subtitlesList = server.SearchSubtitles(session['token'], searchList)
         subtitlesSelected = ''
         
         # Parse the results of the XML-RPC query
@@ -539,10 +540,14 @@ try:
         superPrint("info", "No synchronized subtitles found for " + videoFileName, 'No synchronized subtitles found for this video:\n<i>' + videoFileName + '</i>')
     
     # Disconnect from opensubtitles.org server, then exit
-    server.LogOut(token)
+    server.LogOut(session['token'])
     sys.exit(0)
 
-except Error:
-    # If an unknown error occur, say so (and apologize)
-    superPrint("error", "", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit")
+except Exception:
+    # Disconnect from opensubtitles.org server, if still connected only
+    if session['token']:
+        server.LogOut(session['token'])
+    
+    # An unknown error occur, let's apologize before exiting
+    superPrint("error", "Unknown error", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n- You are using the latest version of this software")
     sys.exit(1)
