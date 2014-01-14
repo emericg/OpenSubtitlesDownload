@@ -301,13 +301,16 @@ def selectionCLI(subtitlesList):
 def selectionAuto(subtitlesList):
     """Automatic subtitles selection using donwload count"""
     """todo: handle filename match instead of download count?"""
-    subtitlesSelected = ''
-    subtitlesScore = 0
     
-    for item in subtitlesList['data']:
-        if int(item['SubDownloadsCnt']) > subtitlesScore:
-            subtitlesScore = int(item['SubDownloadsCnt'])
-            subtitlesSelected = item['SubFileName']
+    # Auto-select the first subtitles
+    subtitlesSelected = subtitlesList['data'][0]['SubFileName']
+    
+    ## Auto-select the most downloaded subtitles
+    #subtitlesScore = 0
+    #for item in subtitlesList['data']:
+    #    if int(item['SubDownloadsCnt']) > subtitlesScore:
+    #        subtitlesScore = int(item['SubDownloadsCnt'])
+    #        subtitlesSelected = item['SubFileName']
     
     return subtitlesSelected
 
