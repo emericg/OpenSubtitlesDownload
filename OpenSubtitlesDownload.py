@@ -523,7 +523,7 @@ try:
                 
                 # Download and unzip the selected subtitles (with progressbar)
                 if gui == 'gnome':
-                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>")', shell=True)
+                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif gui == 'kde':
                     process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1', shell=True)
                 else: # CLI
@@ -537,7 +537,7 @@ try:
     
     # Print a message if none of the subtitles languages have been found
     if searchLanguageResult == 0:
-        superPrint("info", "No synchronized subtitles found for " + videoFileName, 'No synchronized subtitles found for this video:\n<i>' + videoFileName + '</i>')
+        superPrint("info", "No synchronized subtitles found for " + videoFileName, 'No <b>synchronized</b> subtitles found for this video:\n<i>' + videoFileName + '</i>')
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(session['token'])
