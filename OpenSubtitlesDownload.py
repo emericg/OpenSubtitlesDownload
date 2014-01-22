@@ -31,6 +31,7 @@ import struct
 import mimetypes
 import subprocess
 import argparse
+import time
 
 if sys.version_info >= (3,0):
     from xmlrpc.client import ServerProxy, Error
@@ -416,6 +417,9 @@ for videoPathDispatch in videoPathList:
     else:
         # Asynchronous call
         process_videoDispatched = subprocess.Popen(command_splitted)
+    
+    # Do not rush too many instances at the same time
+    time.sleep(0.33)
 
 # ==== Main program ============================================================
 
@@ -423,18 +427,25 @@ try:
     try:
         # Connection to opensubtitles.org server
         session = server.LogIn('', '', 'en', 'opensubtitles-download 3.1')
-        
-        # Failed connection attempt?
-        if session['status'] != '200 OK':
-            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
-            sys.exit(1)
     except Exception:
-        superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+        # Retry once, it could be a momentary overloaded server?
+        time.sleep(2)
+        try:
+            # Connection to opensubtitles.org server
+            session = server.LogIn('', '', 'en', 'opensubtitles-download 3.1')
+        except Exception:
+            # Failed connection attempts?
+            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+            sys.exit(1)
+    
+    # Connection refused?
+    if session['status'] != '200 OK':
+        superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit")
         sys.exit(1)
     
     searchLanguage = 0
     searchLanguageResult = 0
-    videoTitle = 'Unknow video'
+    videoTitle = 'Unknown video'
     videoHash = hashFile(videoPath)
     videoSize = os.path.getsize(videoPath)
     videoFileName = os.path.basename(videoPath)
@@ -447,14 +458,22 @@ try:
     for SubLanguageID in SubLanguageIDs:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
-        subtitlesList = server.SearchSubtitles(session['token'], searchList)
-        subtitlesSelected = ''
+        try:
+            subtitlesList = server.SearchSubtitles(session['token'], searchList)
+        except Exception:
+            # Retry once, we are already connected, the server is probably momentary overloaded
+            time.sleep(1)
+            try:
+                subtitlesList = server.SearchSubtitles(session['token'], searchList)
+            except Exception:
+                superPrint("error", "Dual search error!", "Unable to reach opensubtitles.org servers!\n<b>Dual search error</b>")
         
         # Parse the results of the XML-RPC query
         if subtitlesList['data']:
             
             # Mark search as successful
             searchLanguageResult += 1
+            subtitlesSelected = ''
             
             # If there is only one subtitles, auto-select it
             if len(subtitlesList['data']) == 1:
@@ -533,6 +552,7 @@ try:
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
                     superPrint("error", "", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
+                    server.LogOut(session['token'])
                     sys.exit(1)
     
     # Print a message if none of the subtitles languages have been found
