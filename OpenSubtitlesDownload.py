@@ -479,12 +479,17 @@ try:
             if len(subtitlesList['data']) == 1:
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
             
-            # Get video title. If needed sanitize the string to avoid zenity/kdialog handling errors
+            # Get video title
             videoTitle = subtitlesList['data'][0]['MovieName']
+            
+            # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
             if gui != 'cli':
                 videoTitle = videoTitle.replace('"', '\\"')
                 videoTitle = videoTitle.replace("'", "\'")
                 videoTitle = videoTitle.replace("&", "&amp;")
+                videoFileName = videoFileName.replace('"', '\\"')
+                videoFileName = videoFileName.replace("'", "\'")
+                videoFileName = videoFileName.replace("&", "&amp;")
             
             # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
