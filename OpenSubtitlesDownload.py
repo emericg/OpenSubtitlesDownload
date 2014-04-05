@@ -428,7 +428,7 @@ try:
         session = server.LogIn('', '', 'en', 'opensubtitles-download 3.2')
     except Exception:
         # Retry once, it could be a momentary overloaded server?
-        time.sleep(2)
+        time.sleep(3)
         try:
             # Connection to opensubtitles.org server
             session = server.LogIn('', '', 'en', 'opensubtitles-download 3.2')
@@ -461,7 +461,7 @@ try:
             subtitlesList = server.SearchSubtitles(session['token'], searchList)
         except Exception:
             # Retry once, we are already connected, the server is probably momentary overloaded
-            time.sleep(1)
+            time.sleep(3)
             try:
                 subtitlesList = server.SearchSubtitles(session['token'], searchList)
             except Exception:
