@@ -27,6 +27,7 @@
 
 import os
 import sys
+import struct
 import mimetypes
 import subprocess
 import argparse
