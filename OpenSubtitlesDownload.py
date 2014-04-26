@@ -362,7 +362,7 @@ if gui == 'auto':
 if gui not in ['gnome', 'kde', 'cli']:
     gui = 'cli'
     opt_selection_mode = 'auto'
-    print("Unknow GUI, falling back to an automatic CLI mode")
+    print("Unknown GUI, falling back to an automatic CLI mode")
 
 # ==== Get valid video paths ===================================================
 
