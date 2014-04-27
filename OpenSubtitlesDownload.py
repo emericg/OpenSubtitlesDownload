@@ -26,6 +26,7 @@
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
 import os
+import re
 import sys
 import struct
 import mimetypes
@@ -34,8 +35,10 @@ import argparse
 import time
 
 if sys.version_info >= (3,0):
+    import urllib.request
     from xmlrpc.client import ServerProxy, Error
 else: # python2
+    import urllib2
     from xmlrpclib import ServerProxy, Error
 
 # ==== Language selection ======================================================
@@ -97,7 +100,6 @@ def superPrint(priority, title, message):
             subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
         else:
             subprocess.call(['zenity', '--' + priority, '--text=' + message])
-    
     else:
         # Clean up the tags from the message
         message = message.replace("\n\n", "\n")
@@ -315,37 +317,42 @@ def selectionAuto(subtitlesList):
     
     return subtitlesSelected
 
-# ==== Argument parsing  =======================================================
+# ==== Main program (execution starts here) ====================================
+# ==============================================================================
+
+# ==== Argument parsing
 
 # Get OpenSubtitlesDownload.py script path
 execPath = str(sys.argv[0])
 
-# Handle other arguments
-parser = argparse.ArgumentParser(
-    description="""This software is designed to help you find and download subtitles for your favorite videos!""",
-    formatter_class=argparse.RawTextHelpFormatter)
+if len(sys.argv) > 1:
+    # Setup parser
+    parser = argparse.ArgumentParser(
+        description="""This software is designed to help you find and download subtitles for your favorite videos!""",
+        formatter_class=argparse.RawTextHelpFormatter)
+    
+    parser.add_argument('filePathListArguments', help="The video file for which subtitles should be searched", nargs='+')
+    parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
+    parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
+    parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
+    parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
+    
+    # Parsing
+    result = parser.parse_args()
+    
+    # Save results
+    if result.gui:
+        gui = result.gui
+    if result.auto:
+        opt_selection_mode = 'auto'
+    if result.lang:
+        if SubLanguageIDs != result.lang:
+            SubLanguageIDs = result.lang
+            opt_selection_language = 'on'
+            if opt_write_languagecode != 'off':
+                opt_write_languagecode = 'on'
 
-parser.add_argument('filePathListArguments', help="The video file for which subtitles should be searched", nargs='+')
-parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
-parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
-parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
-parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
-
-result = parser.parse_args()
-
-# Save results
-if result.gui:
-    gui = result.gui
-if result.auto:
-    opt_selection_mode = 'auto'
-if result.lang:
-    if SubLanguageIDs != result.lang:
-        SubLanguageIDs = result.lang
-        opt_selection_language = 'on'
-        if opt_write_languagecode != 'off':
-            opt_write_languagecode = 'on'
-
-# ==== GUI auto detection ======================================================
+# ==== GUI auto detection
 
 if gui == 'auto':
     # Note: "ps cax" only output the first 15 characters of the executable's names
@@ -364,27 +371,34 @@ if gui not in ['gnome', 'kde', 'cli']:
     opt_selection_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
 
-# ==== Get valid video paths ===================================================
+# ==== Get valid video paths
 
 videoPathList = []
 
 # Go through the paths taken from arguments, and extract only valid video paths
-for i in result.filePathListArguments:
-    if checkFile(os.path.abspath(i)):
-        videoPathList.append(os.path.abspath(i))
+try:
+    for i in result.filePathListArguments:
+        if checkFile(os.path.abspath(i)):
+            videoPathList.append(os.path.abspath(i))
+except Exception:
+    # Empty videoPathList? Try selected file(s) from nautilus environment variables:
+    # $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS (only for local storage)
+    # $NAUTILUS_SCRIPT_SELECTED_URIS
+    if gui == 'gnome':
+        # Get file(s) from nautilus
+        filePathListEnvironment = os.environ['NAUTILUS_SCRIPT_SELECTED_URIS'].splitlines()
+        # Check file(s) type and validity
+        for filePath in filePathListEnvironment:
+            # Work a little bit of magic (Make sure we have a clean and absolute path, even from an URI)
+            filePath = os.path.abspath(os.path.basename(filePath))
+            if sys.version_info >= (3,0):
+                filePath = urllib.request.url2pathname(filePath)
+            else: # python2
+                filePath = urllib2.url2pathname(filePath)
+            if checkFile(filePath):
+                videoPathList.append(filePath)
 
-# Empty videoPathList? Try selected file(s) from nautilus environment variable
-#filePathListEnvironment = []
-# if gui == 'gnome':
-#     if not videoPathList:
-#         # Get file(s) from nautilus
-#         filePathListEnvironment = os.environ['NAUTILUS_SCRIPT_SELECTED_FILE_PATHS'].splitlines()
-#         # Check file(s) type and validity
-#         for filePath in filePathListEnvironment:
-#             if checkFile(filePath):
-#                 videoPathList.append(filePath)
-
-# ==== Dispatcher ==============================================================
+# ==== Instances dispatcher
 
 # If videoPathList is empty, abort!
 if len(videoPathList) == 0:
@@ -397,16 +411,19 @@ videoPathList.pop(0)
 
 # The remaining file(s) are dispatched to new instance(s) of this script
 for videoPathDispatch in videoPathList:
-    
+
     # Handle current options
     command = execPath + " -g " + gui
     if opt_selection_mode == 'auto':
         command += " -a "
-    if result.verbose == 'verbose':
-        command += " -v "
-    if result.lang:
-        for resultlangs in result.lang:
-            command += " -l " + resultlangs
+    try:
+        if result.verbose == 'verbose':
+            command += " -v "
+        if result.lang:
+            for resultlangs in result.lang:
+                command += " -l " + resultlangs
+    except:
+        pass
     
     command_splitted = command.split()
     command_splitted.append(videoPathDispatch) # do not risk videoPath to be 'splitted'
@@ -421,7 +438,7 @@ for videoPathDispatch in videoPathList:
     # Do not rush too many instances at the same time
     time.sleep(0.33)
 
-# ==== Main program ============================================================
+# ==== Search and download
 
 try:
     try:
@@ -484,11 +501,9 @@ try:
             
             # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
             if gui != 'cli':
-                videoTitle = videoTitle.replace('"', '\\"')
-                videoTitle = videoTitle.replace("'", "\'")
+                videoTitle = re.escape(videoTitle)
                 videoTitle = videoTitle.replace("&", "&amp;")
-                videoFileName = videoFileName.replace('"', '\\"')
-                videoFileName = videoFileName.replace("'", "\'")
+                videoFileName = re.escape(videoFileName)
                 videoFileName = videoFileName.replace("&", "&amp;")
             
             # If there is more than one subtitles and opt_selection_mode != 'auto',
@@ -539,6 +554,7 @@ try:
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                subPath = re.escape(subPath)
                 
                 # Write language code into the filename?
                 if ((opt_write_languagecode == 'on') or
@@ -547,12 +563,12 @@ try:
                 
                 # Download and unzip the selected subtitles (with progressbar)
                 if gui == 'gnome':
-                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1 | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
+                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif gui == 'kde':
-                    process_subtitlesDownload = subprocess.call('(wget -q -O - ' + subURL + ' | gunzip > "' + subPath + '") 2>&1', shell=True)
+                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
                 else: # CLI
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
-                    process_subtitlesDownload = subprocess.call('wget -nv -O - ' + subURL + ' | gunzip > "' + subPath + '"', shell=True)
+                    process_subtitlesDownload = subprocess.call("wget -nv -O - " + subURL + " | gunzip > " + subPath, shell=True)
                 
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
