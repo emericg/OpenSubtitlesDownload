@@ -41,6 +41,11 @@ else: # python2
     import urllib2
     from xmlrpclib import ServerProxy, Error
 
+# ==== Server selection ========================================================
+# XML-RPC server domain for opensubtitles.org:
+
+server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
 #
@@ -60,8 +65,8 @@ opt_write_languagecode = 'auto'
 # For a complete documentation, please use the wiki:
 # https://github.com/emericg/OpenSubtitlesDownload/wiki
 
-# Select your GUI. Can be overriden at run time with '--gui=xxx'.
-# - auto (autodetect, fallback on CLI)
+# Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
+# - auto (autodetection, fallback on CLI)
 # - gnome (GNOME/GTK based environments, using 'zenity' backend)
 # - kde (KDE/Qt based environments, using 'kdialog' backend)
 # - cli (Command Line Interface)
@@ -71,10 +76,10 @@ gui = 'auto'
 gui_width  = 720
 gui_height = 320
 
-# Subtitles selection mode:
+# Subtitles selection mode. Can be overridden at run time with '-a' argument.
 # - manual (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the most downloaded subtitles)
-opt_selection_mode = 'manual'
+opt_selection_mode     = 'manual'
 
 # Various GUI options. You can set them to 'on', 'off' or 'auto'.
 opt_selection_language = 'auto'
@@ -82,10 +87,8 @@ opt_selection_hi       = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
-# ==== Server selection ========================================================
-# XML-RPC server domain for opensubtitles.org:
-
-server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+# Enables extra output. Can be overridden at run time with '-v' argument.
+opt_verbose            = 'off'
 
 # ==== Super Print =============================================================
 # priority: info, warning, error
@@ -101,7 +104,7 @@ def superPrint(priority, title, message):
         else:
             subprocess.call(['zenity', '--' + priority, '--text=' + message])
     else:
-        # Clean up the tags from the message
+        # Clean up formating tags from the zenity messages
         message = message.replace("\n\n", "\n")
         message = message.replace("<i>", "")
         message = message.replace("</i>", "")
@@ -325,26 +328,31 @@ def selectionAuto(subtitlesList):
 # Get OpenSubtitlesDownload.py script path
 execPath = str(sys.argv[0])
 
+# Setup parser
+parser = argparse.ArgumentParser(
+    prog='OpenSubtitlesDownload.py',
+    description='This software is designed to help you find and download subtitles for your favorite videos!',
+    formatter_class=argparse.RawTextHelpFormatter)
+
+parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
+parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
+parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
+parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
+parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
+
+# Only use ArgumentParser if we have arguments...
 if len(sys.argv) > 1:
-    # Setup parser
-    parser = argparse.ArgumentParser(
-        description="""This software is designed to help you find and download subtitles for your favorite videos!""",
-        formatter_class=argparse.RawTextHelpFormatter)
-    
-    parser.add_argument('filePathListArguments', help="The video file for which subtitles should be searched", nargs='+')
-    parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
-    parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
-    parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
-    parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
-    
+
     # Parsing
     result = parser.parse_args()
     
-    # Save results
+    # Handle results
     if result.gui:
         gui = result.gui
     if result.auto:
         opt_selection_mode = 'auto'
+    if result.verbose:
+        opt_verbose = 'on'
     if result.lang:
         if SubLanguageIDs != result.lang:
             SubLanguageIDs = result.lang
@@ -375,28 +383,29 @@ if gui not in ['gnome', 'kde', 'cli']:
 
 videoPathList = []
 
-# Go through the paths taken from arguments, and extract only valid video paths
-try:
-    for i in result.filePathListArguments:
+if 'result' in locals():
+    # Go through the paths taken from arguments, and extract only valid video paths
+    for i in result.filePathListArg:
         if checkFile(os.path.abspath(i)):
             videoPathList.append(os.path.abspath(i))
-except Exception:
-    # Empty videoPathList? Try selected file(s) from nautilus environment variables:
+else:
+    # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
     # $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS (only for local storage)
     # $NAUTILUS_SCRIPT_SELECTED_URIS
     if gui == 'gnome':
-        # Get file(s) from nautilus
-        filePathListEnvironment = os.environ['NAUTILUS_SCRIPT_SELECTED_URIS'].splitlines()
-        # Check file(s) type and validity
-        for filePath in filePathListEnvironment:
-            # Work a little bit of magic (Make sure we have a clean and absolute path, even from an URI)
-            filePath = os.path.abspath(os.path.basename(filePath))
-            if sys.version_info >= (3,0):
-                filePath = urllib.request.url2pathname(filePath)
-            else: # python2
-                filePath = urllib2.url2pathname(filePath)
-            if checkFile(filePath):
-                videoPathList.append(filePath)
+        # Try to get file(s) provided by nautilus
+        filePathListEnv = os.environ.get('NAUTILUS_SCRIPT_SELECTED_URIS')
+        if filePathListEnv != None:
+            # Check file(s) type and validity
+            for filePath in filePathListEnv.splitlines():
+                # Work a little bit of magic (Make sure we have a clean and absolute path, even from an URI)
+                filePath = os.path.abspath(os.path.basename(filePath))
+                if sys.version_info >= (3,0):
+                    filePath = urllib.request.url2pathname(filePath)
+                else: # python2
+                    filePath = urllib2.url2pathname(filePath)
+                if checkFile(filePath):
+                    videoPathList.append(filePath)
 
 # ==== Instances dispatcher
 
@@ -416,17 +425,16 @@ for videoPathDispatch in videoPathList:
     command = execPath + " -g " + gui
     if opt_selection_mode == 'auto':
         command += " -a "
-    try:
-        if result.verbose == 'verbose':
-            command += " -v "
-        if result.lang:
-            for resultlangs in result.lang:
-                command += " -l " + resultlangs
-    except:
-        pass
+    if opt_verbose == 'on':
+        command += " -v "
+    if not (len(SubLanguageIDs) == 1 and SubLanguageIDs[0] == 'eng'):
+        for resultlangs in SubLanguageIDs:
+            command += " -l " + resultlangs
     
+    # Split command string
     command_splitted = command.split()
-    command_splitted.append(videoPathDispatch) # do not risk videoPath to be 'splitted'
+    # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
+    command_splitted.append(videoPathDispatch)
     
     if gui == 'cli' and opt_selection_mode == 'manual':
         # Synchronous call
@@ -435,10 +443,10 @@ for videoPathDispatch in videoPathList:
         # Asynchronous call
         process_videoDispatched = subprocess.Popen(command_splitted)
     
-    # Do not rush too many instances at the same time
+    # Do not spawn too many instances at the same time
     time.sleep(0.33)
 
-# ==== Search and download
+# ==== Search and download subtitles
 
 try:
     try:
@@ -501,7 +509,6 @@ try:
             
             # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
             if gui != 'cli':
-                videoTitle = re.escape(videoTitle)
                 videoTitle = videoTitle.replace("&", "&amp;")
                 videoFileName = re.escape(videoFileName)
                 videoFileName = videoFileName.replace("&", "&amp;")
@@ -578,7 +585,7 @@ try:
     
     # Print a message if none of the subtitles languages have been found
     if searchLanguageResult == 0:
-        superPrint("info", "No synchronized subtitles found for " + videoFileName, 'No <b>synchronized</b> subtitles found for this video:\n<i>' + videoFileName + '</i>')
+        superPrint("info", "No synchronized subtitles found for: " + videoFileName, 'No <b>synchronized</b> subtitles found for this video:\n<i>' + videoFileName + '</i>')
     
     # Disconnect from opensubtitles.org server, then exit
     server.LogOut(session['token'])
