@@ -305,18 +305,23 @@ def selectionCLI(subtitlesList):
 # ==== Automatic selection mode ================================================
 
 def selectionAuto(subtitlesList):
-    """Automatic subtitles selection using donwload count"""
-    """todo: handle filename match instead of download count?"""
+    """Automatic subtitles selection using filename match"""
+
+    videoFileParts = videoFileName.replace('-','.').replace(' ','.').replace('_','.').lower().split('.')
+    maxScore = -1
     
-    # Auto-select the first subtitles
-    subtitlesSelected = subtitlesList['data'][0]['SubFileName']
-    
-    ## Auto-select the most downloaded subtitles
-    #subtitlesScore = 0
-    #for item in subtitlesList['data']:
-    #    if int(item['SubDownloadsCnt']) > subtitlesScore:
-    #        subtitlesScore = int(item['SubDownloadsCnt'])
-    #        subtitlesSelected = item['SubFileName']
+    for subtitle in subtitlesList['data']:
+        subFileParts = subtitle['SubFileName'].replace('-','.').replace(' ','.').replace('_','.').lower().split('.');
+        score = 0
+        if subtitle['MatchedBy'] == 'moviehash':
+            score = score + 1 #extra point if the sub is found by hash, which is the preferred way to find subs
+        for subPart in subFileParts:
+            for filePart in videoFileParts:
+                if subPart == filePart:
+                    score = score + 1
+        if score > maxScore:
+            maxScore = score
+            subtitlesSelected = subtitle['SubFileName']
     
     return subtitlesSelected
 
@@ -483,6 +488,7 @@ try:
     for SubLanguageID in SubLanguageIDs:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
+        searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName}) #maybe good idea to add this search option based on an input argument? or in a new iteration when no subs are found with the moviehash?
         try:
             subtitlesList = server.SearchSubtitles(session['token'], searchList)
         except Exception:
