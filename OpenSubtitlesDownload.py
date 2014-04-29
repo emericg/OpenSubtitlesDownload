@@ -509,8 +509,13 @@ try:
             
             # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
             if gui != 'cli':
+                videoTitle = videoTitle.replace('"', '\\"')
+                videoTitle = videoTitle.replace("'", "\'")
+                videoTitle = videoTitle.replace('`', '\`')
                 videoTitle = videoTitle.replace("&", "&amp;")
-                videoFileName = re.escape(videoFileName)
+                videoFileName = videoFileName.replace('"', '\\"')
+                videoFileName = videoFileName.replace("'", "\'")
+                videoFileName = videoFileName.replace('`', '\`')
                 videoFileName = videoFileName.replace("&", "&amp;")
             
             # If there is more than one subtitles and opt_selection_mode != 'auto',
@@ -561,12 +566,14 @@ try:
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
-                subPath = re.escape(subPath)
                 
                 # Write language code into the filename?
                 if ((opt_write_languagecode == 'on') or
                     (opt_write_languagecode == 'auto' and searchLanguageResult > 1)):
                     subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                
+                # Escape non-alphanumeric characters from the subtitles path
+                subPath = re.escape(subPath)
                 
                 # Download and unzip the selected subtitles (with progressbar)
                 if gui == 'gnome':
