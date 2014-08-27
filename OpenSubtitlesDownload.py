@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitlesDownload.py / Version 3.2
+# OpenSubtitlesDownload.py / Version 4.0
 # https://github.com/emericg/OpenSubtitlesDownload
 # This software is designed to help you find and download subtitles for your favorite videos!
 
@@ -162,7 +162,7 @@ def checkFile(path):
 # This particular implementation is coming from SubDownloader: http://subdownloader.net/
 
 def hashFile(path):
-    """Produce a hash for a video file: size + 64bit chksum of the first and 
+    """Produce a hash for a video file: size + 64bit chksum of the first and
     last 64k (even if they overlap because the file is smaller than 128k)"""
     try:
         longlongformat = 'Q' # unsigned long long little endian
@@ -446,18 +446,19 @@ for videoPathDispatch in videoPathList:
     # Do not spawn too many instances at the same time
     time.sleep(0.33)
 
+# ==== Main program ============================================================
 # ==== Search and download subtitles
 
 try:
     try:
         # Connection to opensubtitles.org server
-        session = server.LogIn('', '', 'en', 'opensubtitles-download 3.2')
+        session = server.LogIn('', '', 'en', 'opensubtitles-download 4.0')
     except Exception:
         # Retry once, it could be a momentary overloaded server?
         time.sleep(3)
         try:
             # Connection to opensubtitles.org server
-            session = server.LogIn('', '', 'en', 'opensubtitles-download 3.2')
+            session = server.LogIn('', '', 'en', 'opensubtitles-download 4.0')
         except Exception:
             # Failed connection attempts?
             superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
