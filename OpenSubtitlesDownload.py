@@ -37,9 +37,16 @@ import time
 if sys.version_info >= (3,0):
     import urllib.request
     from xmlrpc.client import ServerProxy, Error
+    import configparser
 else: # python2
     import urllib2
     from xmlrpclib import ServerProxy, Error
+    import ConfigParser
+
+try:
+    from PyQt4 import QtCore, QtGui
+except ImportError:
+    print("PyQt4 is not available on your system, falling back to GTK.")
 
 # ==== Server selection ========================================================
 # XML-RPC server domain for opensubtitles.org:
@@ -98,7 +105,9 @@ opt_verbose            = 'off'
 
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
-    if gui == 'gnome':
+    if gui == 'qt':
+        QtGui.QMessageBox.about(widget, title, message)
+    elif gui == 'gnome':
         if title:
             subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
         else:
@@ -126,6 +135,195 @@ def superPrint(priority, title, message):
         
         else: # CLI
             print(">> " + message)
+
+# New version of superPrint with Qt (keep the old one too until selection window in qt)
+def superQPrint(widget, title, message):
+    """Print messages through terminal, zenity or kdialog"""
+    if gui == 'cli':
+        print(">> " + message)
+    else:
+        QtGui.QMessageBox.about(widget, title, message)
+
+# ==== Settings Management =======================================================
+# If config file does not exists create it, put the default values and print the
+# settings window, then get the values and write the config file.
+#
+# If config file does exists parse it and get the values.
+
+subLang=[("Mandarin","mdr"),("English","eng"),("Spanish","spa"),("Hindi","hin"),("Arabic","ara"),("Russian","rus"),("Bengali","ben"),("Portuguese","por"),("Indonesian","ind"),("Swahili","swa"),("Japanese","jpn"),("French","fre"),("German","ger"),("Filipino","fil"),("Urdu","urd"),("Italian","ita"),("Turkish","tur"),("Vietnamese","vie"),("Korean","kor"),("Persian","per"),("Cantonese","yue")]
+
+# ===========================
+
+class settingsWindow(QtGui.QDialog):
+    def __init__(self,parent=None):
+        super(settingsWindow,self).__init__(parent)
+        QtGui.QMainWindow.__init__(self)
+        self.setWindowTitle('OpenSubtitlesDownload: Settings Window ')
+        self.setWindowIcon(QtGui.QIcon.fromTheme("document-properties"))
+
+        # Languages selection gui (puchbuttons)
+        self.langLabel = QtGui.QLabel("1/ Select the languages you need:")
+        titleFont = QtGui.QFont()
+        titleFont.setBold(True)
+        titleFont.setUnderline(True)
+        self.langLabel.setFont(titleFont)
+
+        # Preferences selection gui (comboboxes)
+        self.prefLabel = QtGui.QLabel("2/ Select your preferences:")
+        self.prefLabel.setFont(titleFont)
+        self.optLabel = QtGui.QLabel("Write 2-letter language code (ex: _en) at the end of the subtitles file ?")
+        self.optBox = QtGui.QComboBox()
+        self.optBox.setMaximumWidth(100)
+        self.optBox.addItems(['auto','on','off'])
+        self.modeLabel = QtGui.QLabel("Subtitles selection mode :")
+        self.modeBox = QtGui.QComboBox()
+        self.modeBox.setMaximumWidth(100)
+        self.modeBox.addItems(['manual','auto'])
+
+        # Columns in selection window (checkboxes)
+        self.columnLabel = QtGui.QLabel("3/ Select the colums to show in the selection window:")
+        self.columnLabel.setFont(titleFont)
+        self.langBox = QtGui.QCheckBox("Subtitles language")
+        self.langBox.setCheckState(True)
+        self.hiBox = QtGui.QCheckBox("Hearing impaired version")
+        self.rateBox = QtGui.QCheckBox("Users rating")
+        self.countBox = QtGui.QCheckBox("Downloads count")
+        self.countBox.setCheckState(True)
+
+        # Help / Link to the wiki
+        self.helpLabel = QtGui.QLabel("If you have some troubles: <a href=https://github.com/emericg/OpenSubtitlesDownload/wiki> Documentation </a> ")
+        self.helpLabel.setOpenExternalLinks(True)
+
+        # Finish button and its function
+        self.finish = QtGui.QPushButton("Finish",self)
+        self.connect(self.finish, QtCore.SIGNAL("clicked()"), self.dofinish)
+
+        self.vbox = QtGui.QVBoxLayout()    # Main vertical layout
+        self.grid = QtGui.QGridLayout()    # Grid layout for the languages buttons
+
+        # Languege section :
+        self.vbox.addWidget(self.langLabel)
+        self.vbox.addSpacing(30)
+
+        # Create the buttons for language with the list and add them to the layout
+        x=0
+        y=0
+        self.pushLang=[]
+        for i in range(0,len(subLang)) :
+           self.pushLang.append(QtGui.QPushButton(subLang[i][0],self))
+           self.pushLang[i].setCheckable(True)
+           self.grid.addWidget(self.pushLang[i],x,y)
+           y=(y+1)%3 # Coz we want 3 columns
+           if y==0 : x=x+1
+
+        self.vbox.addLayout(self.grid)
+
+        # Add the other widgets to the layout vertical
+        self.vbox.addSpacing(20)
+        self.vbox.addWidget(self.prefLabel)
+        self.vbox.addWidget(self.optLabel)
+        self.vbox.addWidget(self.optBox)
+        self.vbox.addWidget(self.modeLabel)
+        self.vbox.addWidget(self.modeBox)
+        self.vbox.addSpacing(30)
+        self.vbox.addWidget(self.columnLabel)
+        self.vbox.addWidget(self.langBox)
+        self.vbox.addWidget(self.hiBox)
+        self.vbox.addWidget(self.rateBox)
+        self.vbox.addWidget(self.countBox)
+        self.vbox.addSpacing(20)
+        self.vbox.addWidget(self.helpLabel)
+        self.vbox.addWidget(self.finish)
+
+        self.setLayout(self.vbox)
+
+    def dofinish(self):
+        global SubLanguageIDs,opt_write_languagecode, opt_selection_mode, opt_selection_language, opt_selection_hi, opt_selection_rating, opt_selection_count
+        SubLanguageIDs = []
+        # Get the values of the comboboxes and put them in the global ones :
+        opt_write_languagecode = self.optBox.currentText()
+        opt_selection_mode = self.modeBox.currentText()
+
+        # Same for the checkboxes :
+        if self.langBox.isChecked() : opt_selection_language="auto"
+        else : opt_selection_language="off"
+        if self.hiBox.isChecked() : opt_selection_hi='auto'
+        else : opt_selection_hi='off'
+        if self.rateBox.isChecked() : opt_selection_rating='auto'
+        else : opt_selection_rating='off'
+        if self.countBox.isChecked() : opt_selection_count='auto'
+        else : opt_selection_count='off'
+
+        # Get all the selected languages and construct the IDsList:
+        check = 0
+        for i in range(0,len(subLang)):
+            if self.pushLang[i].isChecked() :
+                SubLanguageIDs.append(subLang[i][1])
+                check = 1
+        print(SubLanguageIDs)
+
+        # Close the window when its all saved (and if at least one lang is selected)
+        if check == 1 : self.close()
+        else : superQPrint(self,self.windowTitle(),"Cannot save with those settings : choose at least one language please")
+
+def config():
+    # Try to get the xdg folder for the config file, if not we use $HOME/.config
+    if os.getenv("XDG_CONFIG_HOME"):
+        confdir = os.path.join (os.getenv("XDG_CONFIG_HOME"), "OpenSubtitlesDownload")
+        confpath = os.path.join (confdir, "OpenSubtitlesDownload.conf")
+    else:
+        confdir = os.path.join (os.getenv("HOME"), ".config/OpenSubtitlesDownload/")
+        confpath = os.path.join (confdir, "OpenSubtitlesDownload.conf")
+
+    if sys.version_info >= (3,0):
+        confparser = configparser.SafeConfigParser()
+    else: # python2
+        confparser = ConfigParser.SafeConfigParser()
+
+    if not os.path.isfile(confpath):
+        # Create the conf folder if it doesn't exist :
+        try:
+            os.stat(confdir)
+        except:
+            os.mkdir(confdir)
+
+        # Print the settings window :
+        app = QtGui.QApplication(sys.argv)
+        main = settingsWindow()
+        main.show()
+        app.exec_()
+
+        # Write the conf file with the parser :
+        global SubLanguageIDs, opt_write_languagecode, opt_selection_mode, opt_selection_language, opt_selection_hi, opt_selection_rating, opt_selection_count
+        confparser.add_section('languagesIDs')
+        i = 0
+        for ids in SubLanguageIDs :
+            confparser.set ('languagesIDs', 'sublanguageids'+str(i),ids)
+            i+=1
+
+        confparser.add_section('settings')
+        confparser.set ('settings', 'opt_write_languagecode', str(opt_write_languagecode))
+        confparser.set ('settings', 'opt_selection_mode', str(opt_selection_mode))
+        confparser.set ('settings', 'opt_selection_language', str(opt_selection_language))
+        confparser.set ('settings', 'opt_selection_hi', str(opt_selection_hi))
+        confparser.set ('settings', 'opt_selection_rating', str(opt_selection_rating))
+        confparser.set ('settings', 'opt_selection_count', str(opt_selection_count))
+
+        with open(confpath, 'w') as confile:
+            confparser.write(confile)
+
+    else:
+        confparser.read(confpath)
+        SubLanguageIDs=[]
+        for i in range(0,len(confparser.items('languagesIDs'))) :
+            SubLanguageIDs.append(confparser.get('languagesIDs', 'sublanguageids'+str(i)))
+
+        opt_write_languagecode = confparser.get ('settings', 'opt_write_languagecode')
+        opt_selection_mode = confparser.get ('settings', 'opt_selection_mode')
+        opt_selection_language = confparser.get ('settings', 'opt_selection_language')
+        opt_selection_hi = confparser.get ('settings', 'opt_selection_hi')
+        opt_selection_rating = confparser.get ('settings', 'opt_selection_rating')
+        opt_selection_count = confparser.get ('settings', 'opt_selection_count')
 
 # ==== Check file path & file ==================================================
 
@@ -448,6 +646,8 @@ for videoPathDispatch in videoPathList:
 
 # ==== Main program ============================================================
 # ==== Search and download subtitles
+
+config()
 
 try:
     try:
