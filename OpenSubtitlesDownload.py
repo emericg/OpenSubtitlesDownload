@@ -48,10 +48,15 @@ try:
 except ImportError:
     print("PyQt4 is not available on your system, falling back to GTK.")
 
-# ==== Server selection ========================================================
-# XML-RPC server domain for opensubtitles.org:
+# ==== Opensubtitles.org settings ==============================================
 
-server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+# XML-RPC server domain for opensubtitles.org:
+osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+
+# You can use your opensubtitles.org account to avoid "in-subtitles" advertisment and bypass download limits
+# Be careful about your password security, because it will be kept stored in plain text here...
+osd_username = ''
+osd_password = ''
 
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
@@ -652,13 +657,13 @@ config()
 try:
     try:
         # Connection to opensubtitles.org server
-        session = server.LogIn('', '', 'en', 'opensubtitles-download 4.0')
+        session = osd_server.LogIn(osd_username, osd_password, 'en', 'opensubtitles-download 4.0')
     except Exception:
         # Retry once, it could be a momentary overloaded server?
         time.sleep(3)
         try:
             # Connection to opensubtitles.org server
-            session = server.LogIn('', '', 'en', 'opensubtitles-download 4.0')
+            session = osd_server.LogIn(osd_username, osd_password, 'en', 'opensubtitles-download 4.0')
         except Exception:
             # Failed connection attempts?
             superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
@@ -685,12 +690,12 @@ try:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
         try:
-            subtitlesList = server.SearchSubtitles(session['token'], searchList)
+            subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
         except Exception:
             # Retry once, we are already connected, the server is probably momentary overloaded
             time.sleep(3)
             try:
-                subtitlesList = server.SearchSubtitles(session['token'], searchList)
+                subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
             except Exception:
                 superPrint("error", "Dual search error!", "Unable to reach opensubtitles.org servers!\n<b>Dual search error</b>")
         
@@ -788,7 +793,7 @@ try:
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
                     superPrint("error", "", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
-                    server.LogOut(session['token'])
+                    osd_server.LogOut(session['token'])
                     sys.exit(1)
     
     # Print a message if none of the subtitles languages have been found
@@ -796,13 +801,13 @@ try:
         superPrint("info", "No synchronized subtitles found for: " + videoFileName, 'No <b>synchronized</b> subtitles found for this video:\n<i>' + videoFileName + '</i>')
     
     # Disconnect from opensubtitles.org server, then exit
-    server.LogOut(session['token'])
+    osd_server.LogOut(session['token'])
     sys.exit(0)
 
 except Exception:
     # Disconnect from opensubtitles.org server, if still connected only
     if session['token']:
-        server.LogOut(session['token'])
+        osd_server.LogOut(session['token'])
     
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unknown error", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n- You are using the latest version of this software")
