@@ -624,10 +624,13 @@ try:
     server.LogOut(session['token'])
     sys.exit(0)
 
-except Exception:
+except OSError:
     # Disconnect from opensubtitles.org server, if still connected only
     if session['token']:
         server.LogOut(session['token'])
+    
+    # Learn more about the current error
+    # print ("Unknown error: ", sys.exc_info()[0])
     
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unknown error", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n- You are using the latest version of this software")
