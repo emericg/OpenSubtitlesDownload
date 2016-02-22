@@ -54,8 +54,8 @@ server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 # or 3-letter (ISO 639-2) language codes.
 #
 # 2/ You can also search for subtitles in several languages ​​at once:
+# - SubLanguageIDs = ['eng','fre'] to search for subtitles in multiple languages. Highly recommended.
 # - SubLanguageIDs = ['eng,fre'] to download the first language available only
-# - SubLanguageIDs = ['eng','fre'] to download all selected languages
 SubLanguageIDs = ['eng']
 
 # Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
@@ -163,7 +163,7 @@ def checkFile(path):
 # This particular implementation is coming from SubDownloader: http://subdownloader.net/
 
 def hashFile(path):
-    """Produce a hash for a video file: size + 64bit chksum of the first and 
+    """Produce a hash for a video file: size + 64bit chksum of the first and
     last 64k (even if they overlap because the file is smaller than 128k)"""
     try:
         longlongformat = 'Q' # unsigned long long little endian
@@ -335,12 +335,11 @@ def selectionAuto(subtitlesList):
 execPath = str(sys.argv[0])
 
 # Setup parser
-parser = argparse.ArgumentParser(
-    prog='OpenSubtitlesDownload.py',
+parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
     description='This software is designed to help you find and download subtitles for your favorite videos!',
     formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('-g', '--gui', help="Select the gui type, from these options: auto, kde, gnome, cli (default: auto)")
+parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
 parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
 parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
 parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
