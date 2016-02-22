@@ -28,7 +28,7 @@ Requirements
 - python (version 2 or 3)
 - zenity (only for GNOME based desktop environments)
 - kdialog (only for KDE based desktop environments)
-- basic unix tools: wget & gzip (subtitles downloading), ps & grep (gui autodetection)
+- common unix tools: wget & gzip (subtitles downloading), ps & grep (GUI autodetection)
 
 Installation
 ------------
@@ -50,7 +50,8 @@ Learn much more about OpenSubtitlesDownload.py installation and configuration on
 Contributors
 ------------
 
-- Emeric Grange <emeric.grange@gmail.com> lead developer & maintainer
+- Emeric Grange <emeric.grange@gmail.com> maintainer
+- jeroenvdw for his work on the subtitle 'auto selection' + search by filename
 - Gui13 for his work on the arguments parsing
 - Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
 - Carlos Acedo <carlos@linux-labs.net> for his work on the original script
