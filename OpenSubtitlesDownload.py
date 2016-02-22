@@ -36,6 +36,7 @@ import argparse
 import time
 
 if sys.version_info >= (3,0):
+    import shutil
     import urllib.request
     from xmlrpc.client import ServerProxy, Error
 else: # python2
@@ -326,6 +327,20 @@ def selectionAuto(subtitlesList):
     
     return subtitlesSelected
 
+# ==== Check dependencies ======================================================
+
+def dependencyChecker():
+    """Check the availability of tools used as dependencies"""
+
+    if sys.version_info >= (3,3):
+        for tool in ['gunzip', 'wget']:
+            path = shutil.which(tool)
+            if path is None:
+                superPrint("error", "Missing dependency", "The <b>'" + tool + "'</b> tool is not available, please install it!")
+                return False
+
+    return True
+
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
 
@@ -383,6 +398,11 @@ if gui not in ['gnome', 'kde', 'cli']:
     gui = 'cli'
     opt_selection_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
+
+# ==== Check for the necessary tools (must be done after GUI auto detection)
+
+if dependencyChecker() == False:
+    sys.exit(1)
 
 # ==== Get valid video paths
 
