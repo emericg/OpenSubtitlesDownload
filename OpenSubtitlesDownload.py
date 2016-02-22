@@ -140,15 +140,11 @@ def checkFile(path):
     fileMimeType, encoding = mimetypes.guess_type(path)
     if fileMimeType == None:
         fileExtension = path.rsplit('.', 1)
-        if fileExtension[1] not in ['3g2', '3gp', '3gp2', '3gpp', 'ajp', \
-        'asf', 'asx', 'avchd', 'avi', 'bik', 'bix', 'box', 'cam', 'dat', \
-        'divx', 'dmf', 'dv', 'dvr-ms', 'evo', 'flc', 'fli', 'flic', 'flv', \
-        'flx', 'gvi', 'gvp', 'h264', 'm1v', 'm2p', 'm2ts', 'm2v', 'm4e', \
-        'm4v', 'mjp', 'mjpeg', 'mjpg', 'mkv', 'moov', 'mov', 'movhd', 'movie', \
-        'movx', 'mp4', 'mpe', 'mpeg', 'mpg', 'mpv', 'mpv2', 'mxf', 'nsv', \
-        'nut', 'ogg', 'ogm', 'ogv', 'omf', 'ps', 'qt', 'ram', 'rm', 'rmvb', \
-        'swf', 'ts', 'vfw', 'vid', 'video', 'viv', 'vivo', 'vob', 'vro', \
-        'webm', 'wm', 'wmv', 'wmx', 'wrap', 'wvx', 'wx', 'x264', 'xvid']:
+        if fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
+        'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
+        'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
+        'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
+        'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
             superPrint("error", "", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
