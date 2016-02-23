@@ -43,10 +43,16 @@ else: # python2
     import urllib2
     from xmlrpclib import ServerProxy, Error
 
-# ==== Server selection ========================================================
+# ==== Opensubtitles.org server settings =======================================
 # XML-RPC server domain for opensubtitles.org:
+osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
-server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+# You can use your opensubtitles.org account to avoid "in-subtitles" advertisment and bypass download limits
+# Be careful about your password security, it will be stored right here in plain text...
+# You can also change opensubtitles.org language, it will be used for error codes and stuff
+osd_username = ''
+osd_password = ''
+osd_language = 'en'
 
 # ==== Language selection ======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
@@ -472,13 +478,13 @@ for videoPathDispatch in videoPathList:
 try:
     try:
         # Connection to opensubtitles.org server
-        session = server.LogIn('', '', 'en', 'opensubtitles-download 3.3')
+        session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.3')
     except Exception:
         # Retry once, it could be a momentary overloaded server?
         time.sleep(3)
         try:
             # Connection to opensubtitles.org server
-            session = server.LogIn('', '', 'en', 'opensubtitles-download 3.3')
+            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.3')
         except Exception:
             # Failed connection attempts?
             superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
@@ -506,12 +512,12 @@ try:
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
         searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName}) #maybe good idea to add this search option based on an input argument? or in a new iteration when no subs are found with the moviehash?
         try:
-            subtitlesList = server.SearchSubtitles(session['token'], searchList)
+            subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
         except Exception:
             # Retry once, we are already connected, the server is probably momentary overloaded
             time.sleep(3)
             try:
-                subtitlesList = server.SearchSubtitles(session['token'], searchList)
+                subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
             except Exception:
                 superPrint("error", "Dual search error!", "Unable to reach opensubtitles.org servers!\n<b>Dual search error</b>")
 
@@ -609,7 +615,7 @@ try:
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
                     superPrint("error", "", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
-                    server.LogOut(session['token'])
+                    osd_server.LogOut(session['token'])
                     sys.exit(1)
 
     # Print a message if none of the subtitles languages have been found
@@ -617,13 +623,13 @@ try:
         superPrint("info", "No synchronized subtitles found for: " + videoFileName, 'No <b>synchronized</b> subtitles found for this video:\n<i>' + videoFileName + '</i>')
 
     # Disconnect from opensubtitles.org server, then exit
-    server.LogOut(session['token'])
+    osd_server.LogOut(session['token'])
     sys.exit(0)
 
 except OSError:
     # Disconnect from opensubtitles.org server, if still connected only
     if session['token']:
-        server.LogOut(session['token'])
+        osd_server.LogOut(session['token'])
 
     # Learn more about the current error
     # print ("Unknown error: ", sys.exc_info()[0])
