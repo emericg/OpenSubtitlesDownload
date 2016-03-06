@@ -60,35 +60,33 @@ osd_username = ''
 osd_password = ''
 osd_language = 'en'
 
-# ==== Language selection ======================================================
+# ==== Language settings =======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
 #
 # 1/ You can change the search language here by using either 2-letter (ISO 639-1)
 # or 3-letter (ISO 639-2) language codes.
 #
 # 2/ You can also search for subtitles in several languages ​​at once:
-# - SubLanguageIDs = ['eng','fre'] to search for subtitles in multiple languages. Highly recommended.
-# - SubLanguageIDs = ['eng,fre'] to download the first language available only
-SubLanguageIDs = ['eng']
+# - opt_languages = ['eng','fre'] to search for subtitles in multiple languages. Highly recommended.
+# - opt_languages = ['eng,fre'] to download the first language available only
+opt_languages = ['eng']
 
 # Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
 # If you are regularly searching for several language at once, you sould use 'on'.
-opt_write_languagecode = 'auto'
+opt_language_suffix = 'auto'
 
-# ==== Settings ================================================================
-# For a complete documentation, please use the wiki:
-# https://github.com/emericg/OpenSubtitlesDownload/wiki
+# ==== GUI settings ============================================================
 
 # Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
 # - auto (autodetection, fallback on CLI)
 # - gnome (GNOME/GTK based environments, using 'zenity' backend)
 # - kde (KDE/Qt based environments, using 'kdialog' backend)
 # - cli (Command Line Interface)
-gui = 'auto'
+opt_gui = 'auto'
 
 # Change the subtitles selection GUI size:
-gui_width  = 720
-gui_height = 320
+opt_gui_width  = 720
+opt_gui_height = 320
 
 # If the search by movie hash fails, search by file name will be used as backup
 opt_backup_searchbyname = 'on'
@@ -115,7 +113,7 @@ opt_verbose            = 'off'
 
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
-    if gui == 'gnome':
+    if opt_gui == 'gnome':
         if title:
             subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
         else:
@@ -130,7 +128,7 @@ def superPrint(priority, title, message):
         message = message.replace('\\"', '"')
 
         # Print message
-        if gui == 'kde':
+        if opt_gui == 'kde':
             if priority == 'warning':
                 priority = 'sorry'
             elif priority == 'info':
@@ -390,34 +388,34 @@ if len(sys.argv) > 1:
 
     # Handle results
     if result.gui:
-        gui = result.gui
+        opt_gui = result.gui
     if result.auto:
         opt_selection_mode = 'auto'
     if result.verbose:
         opt_verbose = 'on'
     if result.lang:
-        if SubLanguageIDs != result.lang:
-            SubLanguageIDs = result.lang
+        if opt_languages != result.lang:
+            opt_languages = result.lang
             opt_selection_language = 'on'
-            if opt_write_languagecode != 'off':
-                opt_write_languagecode = 'on'
+            if opt_language_suffix != 'off':
+                opt_language_suffix = 'on'
 
 # ==== GUI auto detection
 
-if gui == 'auto':
+if opt_gui == 'auto':
     # Note: "ps cax" only output the first 15 characters of the executable's names
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
         if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce4-session' in line):
-            gui = 'gnome'
+            opt_gui = 'gnome'
             break
         elif ('ksmserver' in line):
-            gui = 'kde'
+            opt_gui = 'kde'
             break
 
 # Fallback
-if gui not in ['gnome', 'kde', 'cli']:
-    gui = 'cli'
+if opt_gui not in ['gnome', 'kde', 'cli']:
+    opt_gui = 'cli'
     opt_selection_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
 
@@ -439,7 +437,7 @@ else:
     # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
     # $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS (only for local storage)
     # $NAUTILUS_SCRIPT_SELECTED_URIS
-    if gui == 'gnome':
+    if opt_gui == 'gnome':
         # Try to get file(s) provided by nautilus
         filePathListEnv = os.environ.get('NAUTILUS_SCRIPT_SELECTED_URIS')
         if filePathListEnv != None:
@@ -469,13 +467,13 @@ videoPathList.pop(0)
 for videoPathDispatch in videoPathList:
 
     # Handle current options
-    command = execPath + " -g " + gui
+    command = execPath + " -g " + opt_gui
     if opt_selection_mode == 'auto':
         command += " -a "
     if opt_verbose == 'on':
         command += " -v "
-    if not (len(SubLanguageIDs) == 1 and SubLanguageIDs[0] == 'eng'):
-        for resultlangs in SubLanguageIDs:
+    if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
+        for resultlangs in opt_languages:
             command += " -l " + resultlangs
 
     # Split command string
@@ -483,7 +481,7 @@ for videoPathDispatch in videoPathList:
     # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
     command_splitted.append(videoPathDispatch)
 
-    if gui == 'cli' and opt_selection_mode == 'manual':
+    if opt_gui == 'cli' and opt_selection_mode == 'manual':
         # Synchronous call
         process_videoDispatched = subprocess.call(command_splitted)
     else:
@@ -523,11 +521,11 @@ try:
     videoFileName = os.path.basename(videoPath)
 
     # Count languages marked for this search
-    for SubLanguageID in SubLanguageIDs:
+    for SubLanguageID in opt_languages:
         searchLanguage += len(SubLanguageID.split(','))
 
     # Search for available subtitles using file hash and size
-    for SubLanguageID in SubLanguageIDs:
+    for SubLanguageID in opt_languages:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
         try:
@@ -571,7 +569,7 @@ try:
             videoTitle = subtitlesList['data'][0]['MovieName']
 
             # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
-            if gui != 'cli':
+            if opt_gui != 'cli':
                 videoTitle = videoTitle.replace('"', '\\"')
                 videoTitle = videoTitle.replace("'", "\'")
                 videoTitle = videoTitle.replace('`', '\`')
@@ -603,9 +601,9 @@ try:
                             opt_selection_count = 'on'
 
                     # Spaw selection window
-                    if gui == 'gnome':
+                    if opt_gui == 'gnome':
                         subtitlesSelected = selectionGnome(subtitlesList)
-                    elif gui == 'kde':
+                    elif opt_gui == 'kde':
                         subtitlesSelected = selectionKde(subtitlesList)
                     else: # CLI
                         subtitlesSelected = selectionCLI(subtitlesList)
@@ -629,17 +627,17 @@ try:
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Write language code into the filename?
-                if ((opt_write_languagecode == 'on') or
-                    (opt_write_languagecode == 'auto' and searchLanguageResult > 1)):
+                if ((opt_language_suffix == 'on') or
+                    (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
                     subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
                 subPath = re.escape(subPath)
 
                 # Download and unzip the selected subtitles (with progressbar)
-                if gui == 'gnome':
+                if opt_gui == 'gnome':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
-                elif gui == 'kde':
+                elif opt_gui == 'kde':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
                 else: # CLI
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
