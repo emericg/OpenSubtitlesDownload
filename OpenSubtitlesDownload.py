@@ -90,6 +90,9 @@ gui = 'auto'
 gui_width  = 720
 gui_height = 320
 
+# If the search by movie hash fails, search by file name will be used as backup
+opt_backup_searchbyname = 'on'
+
 # Subtitles selection mode. Can be overridden at run time with '-a' argument.
 # - manual (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the most downloaded subtitles)
@@ -210,6 +213,7 @@ def hashFile(path):
 
 def selectionGnome(subtitlesList):
     """Gnome subtitles selection window using zenity"""
+    searchMode = 'moviehash'
     subtitlesSelected = ''
     subtitlesItems = ''
     columnLn = ''
@@ -219,11 +223,13 @@ def selectionGnome(subtitlesList):
 
     # Generate selection window content
     for item in subtitlesList['data']:
+        if item['MatchedBy'] != 'moviehash':
+            searchMode = item['MatchedBy']
         subtitlesItems += '"' + item['SubFileName'] + '" '
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
             if item['SubHearingImpaired'] == '1':
-                subtitlesItems += '"✓" '
+                subtitlesItems += '"✔" '
             else:
                 subtitlesItems += '"" '
         if opt_selection_language == 'on':
@@ -237,10 +243,18 @@ def selectionGnome(subtitlesList):
             subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
 
     # Spawn zenity "list" dialog
-    process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(gui_width) + ' --height=' + str(gui_height) + \
-        ' --list --title="Subtitles for: ' + videoTitle + '"' + \
-        ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
-        ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+    if searchMode == 'moviehash':
+        process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
+            ' --list --title="Synchronized subtitles for: ' + videoTitle + '"' + \
+            ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
+            ' --column="Available subtitles (synchronized)" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems,
+            shell=True, stdout=subprocess.PIPE)
+    else:
+        process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
+            ' --list --title="Subtitles found!"' + \
+            ' --text="<b>Filename:</b> ' + videoFileName + '\n<b>>> These results comes from search by file name (not using movie hash) and may be unreliable...</b>"' + \
+            ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems,
+            shell=True, stdout=subprocess.PIPE)
 
     # Get back the result
     result_subtitlesSelection = process_subtitlesSelection.communicate()
@@ -516,7 +530,6 @@ try:
     for SubLanguageID in SubLanguageIDs:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
-        searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName}) #maybe good idea to add this search option based on an input argument? or in a new iteration when no subs are found with the moviehash?
         try:
             subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
         except Exception:
@@ -527,6 +540,22 @@ try:
             except Exception:
                 superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
+        # No results using search by hash? Retry with filename
+        if (not subtitlesList['data']) and (opt_backup_searchbyname == 'on'):
+            searchList = []
+            searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
+            try:
+                subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
+            except Exception:
+                # Retry once, we are already connected, the server is probably momentary overloaded
+                time.sleep(3)
+                try:
+                    subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
+                except Exception:
+                    superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
+        else:
+            opt_backup_searchbyname = 'off'
+
         # Parse the results of the XML-RPC query
         if subtitlesList['data']:
 
@@ -535,7 +564,7 @@ try:
             subtitlesSelected = ''
 
             # If there is only one subtitles, which wasn't found by filename, auto-select it
-            if len(subtitlesList['data']) == 1:
+            if (len(subtitlesList['data']) == 1) and (opt_backup_searchbyname == 'off'):
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
 
             # Get video title
@@ -554,8 +583,7 @@ try:
 
             # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
-            if len(subtitlesList['data']) > 1:
-
+            if subtitlesSelected == '':
                 # Automatic subtitles selection?
                 if opt_selection_mode == 'auto':
                     subtitlesSelected = selectionAuto(subtitlesList)
