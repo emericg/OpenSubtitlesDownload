@@ -622,17 +622,16 @@ try:
         superPrint("info", "No subtitles found for: " + videoFileName, '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
 
     # Disconnect from opensubtitles.org server, then exit
-    osd_server.LogOut(session['token'])
+    if session['token']: osd_server.LogOut(session['token'])
     sys.exit(0)
 
-except OSError:
-    # Disconnect from opensubtitles.org server, if still connected only
-    if session['token']:
-        osd_server.LogOut(session['token'])
-
-    # Learn more about the current error
-    # print ("Unknown error: ", sys.exc_info()[0])
+except (RuntimeError, TypeError, NameError, IOError, OSError):
 
     # An unknown error occur, let's apologize before exiting
-    superPrint("error", "Unknown error", "An <b>unknown error</b> occurred, sorry about that...\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n- You are using the latest version of this software")
+    superPrint("error", "Unknown error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
+               "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n\n" + \
+               "Just to be safe, please check:\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n- Your Internet connection status\n- That are using the latest version of this software ;-)")
+
+    # Disconnect from opensubtitles.org server, then exit
+    if session['token']: osd_server.LogOut(session['token'])
     sys.exit(1)
