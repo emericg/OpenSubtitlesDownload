@@ -140,7 +140,7 @@ def superPrint(priority, title, message):
 def checkFile(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
-        superPrint("error", "", "This is not a file:\n<i>" + path + "</i>")
+        superPrint("error", "File type error!", "This is not a file:\n<i>" + path + "</i>")
         return False
 
     fileMimeType, encoding = mimetypes.guess_type(path)
@@ -151,12 +151,12 @@ def checkFile(path):
         'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
         'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
         'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
-            superPrint("error", "", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
+            superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
         fileMimeType = fileMimeType.split('/', 1)
         if fileMimeType[0] != 'video':
-            superPrint("error", "", "This file is not a video (unknown mimetype):\n<i>" + path + "</i>")
+            superPrint("error", "File type error!", "This file is not a video (unknown mimetype):\n<i>" + path + "</i>")
             return False
 
     return True
@@ -179,7 +179,7 @@ def hashFile(path):
         hash = filesize
 
         if filesize < 65536 * 2:
-            superPrint("error", "", "File size error while generating hash for this file:\n<i>" + path + "</i>")
+            superPrint("error", "File size error!", "File size error while generating hash for this file:\n<i>" + path + "</i>")
             return "SizeError"
 
         buffer = f.read(65536)
@@ -197,7 +197,7 @@ def hashFile(path):
         return returnedhash
 
     except IOError:
-        superPrint("error", "I/O error", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
+        superPrint("error", "I/O error!", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
 
 # ==== Gnome selection window ==================================================
@@ -318,7 +318,7 @@ def selectionAuto(subtitlesList):
         subFileParts = subtitle['SubFileName'].replace('-','.').replace(' ','.').replace('_','.').lower().split('.');
         score = 0
         if subtitle['MatchedBy'] == 'moviehash':
-            score = score + 1 #extra point if the sub is found by hash, which is the preferred way to find subs
+            score = score + 1 # extra point if the sub is found by hash, which is the preferred way to find subs
         for subPart in subFileParts:
             for filePart in videoFileParts:
                 if subPart == filePart:
@@ -338,7 +338,7 @@ def dependencyChecker():
         for tool in ['gunzip', 'wget']:
             path = shutil.which(tool)
             if path is None:
-                superPrint("error", "Missing dependency", "The <b>'" + tool + "'</b> tool is not available, please install it!")
+                superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
                 return False
 
     return True
@@ -487,7 +487,7 @@ try:
             session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.3')
         except Exception:
             # Failed connection attempts?
-            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
             sys.exit(1)
 
     # Connection refused?
@@ -497,7 +497,7 @@ try:
 
     searchLanguage = 0
     searchLanguageResult = 0
-    videoTitle = 'Unknown video'
+    videoTitle = 'Unknown video title'
     videoHash = hashFile(videoPath)
     videoSize = os.path.getsize(videoPath)
     videoFileName = os.path.basename(videoPath)
@@ -506,7 +506,7 @@ try:
     for SubLanguageID in SubLanguageIDs:
         searchLanguage += len(SubLanguageID.split(','))
 
-    # Search for available subtitles (using file hash and size)
+    # Search for available subtitles using file hash and size
     for SubLanguageID in SubLanguageIDs:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
@@ -519,7 +519,7 @@ try:
             try:
                 subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
             except Exception:
-                superPrint("error", "Dual search error!", "Unable to reach opensubtitles.org servers!\n<b>Dual search error</b>")
+                superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
         # Parse the results of the XML-RPC query
         if subtitlesList['data']:
@@ -528,7 +528,7 @@ try:
             searchLanguageResult += 1
             subtitlesSelected = ''
 
-            # If there is only one subtitles, auto-select it
+            # If there is only one subtitles, which wasn't found by filename, auto-select it
             if len(subtitlesList['data']) == 1:
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
 
@@ -554,9 +554,8 @@ try:
                 if opt_selection_mode == 'auto':
                     subtitlesSelected = selectionAuto(subtitlesList)
                 else:
-                    # Go through the list of subtitles
+                    # Go through the list of subtitles and handle 'auto' settings activation
                     for item in subtitlesList['data']:
-                        # Handle 'auto' options
                         if opt_selection_language == 'auto':
                             if searchLanguage > 1:
                                 opt_selection_language = 'on'
@@ -569,7 +568,7 @@ try:
                         if opt_selection_count == 'auto':
                             opt_selection_count = 'on'
 
-                    # Selection window
+                    # Spaw selection window
                     if gui == 'gnome':
                         subtitlesSelected = selectionGnome(subtitlesList)
                     elif gui == 'kde':
@@ -614,13 +613,13 @@ try:
 
                 # If an error occur, say so
                 if process_subtitlesDownload != 0:
-                    superPrint("error", "", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
+                    superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
                     osd_server.LogOut(session['token'])
                     sys.exit(1)
 
-    # Print a message if none of the subtitles languages have been found
+    # Print a message if no subtitles have been found, for any of the languages
     if searchLanguageResult == 0:
-        superPrint("info", "No synchronized subtitles found for: " + videoFileName, 'No <b>synchronized</b> subtitles found for this video:\n<i>' + videoFileName + '</i>')
+        superPrint("info", "No subtitles found for: " + videoFileName, '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
 
     # Disconnect from opensubtitles.org server, then exit
     osd_server.LogOut(session['token'])
