@@ -27,7 +27,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Contributors / special thanks:
-# jeroenvdw for his work on the subtitle 'auto selection' + search by filename
+# jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
 # Gui13 for his work on the arguments parsing
 # Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
