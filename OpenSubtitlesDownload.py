@@ -659,6 +659,10 @@ try:
 
 except (RuntimeError, TypeError, NameError, IOError, OSError):
 
+    # Do not warn about remote disconnection # bug/feature of python 3.5
+    if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
+        sys.exit(1)
+
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unknown error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
                "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n\n" + \
@@ -666,4 +670,5 @@ except (RuntimeError, TypeError, NameError, IOError, OSError):
 
     # Disconnect from opensubtitles.org server, then exit
     if session['token']: osd_server.LogOut(session['token'])
+
     sys.exit(1)
