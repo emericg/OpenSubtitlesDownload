@@ -445,7 +445,7 @@ if "PyQt4" in sys.modules :
             self.subTable.horizontalHeader().setStretchLastSection(True)
 
             ## Set col and lines nunbers depending on on the user's choices and the number of item in the list 
-            self.hLabels = QtCore.QString("Available subtitles (synchronized)")
+            self.hLabels = "Available subtitles (synchronized)"
             self.colCount = 1 
 
             # Build the colums an their labels, depending on the user's choices
