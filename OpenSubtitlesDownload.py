@@ -27,7 +27,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Contributors / special thanks:
-# LenuX for his work on Qt configuration panel
+# LenuX for his work on the Qt GUI
 # jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
 # Gui13 for his work on the arguments parsing
 # Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
@@ -41,6 +41,8 @@ import mimetypes
 import subprocess
 import argparse
 import time
+import StringIO
+import gzip
 
 if sys.version_info >= (3,0):
     import shutil
@@ -57,27 +59,16 @@ try:
 except ImportError:
     print("PyQt4 is not available on your system, falling back to GTK.")
 
-# ==== Opensubtitles.org settings ==============================================
-
-<<<<<<< HEAD
-=======
 # ==== Opensubtitles.org server settings =======================================
->>>>>>> master
 # XML-RPC server domain for opensubtitles.org:
 osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
 # You can use your opensubtitles.org account to avoid "in-subtitles" advertisment and bypass download limits
-<<<<<<< HEAD
-# Be careful about your password security, because it will be kept stored in plain text here...
-osd_username = ''
-osd_password = ''
-=======
 # Be careful about your password security, it will be stored right here in plain text...
 # You can also change opensubtitles.org language, it will be used for error codes and stuff
 osd_username = ''
 osd_password = ''
 osd_language = 'en'
->>>>>>> master
 
 # ==== Language settings =======================================================
 # Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
@@ -98,6 +89,7 @@ opt_language_suffix = 'auto'
 
 # Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
 # - auto (autodetection, fallback on CLI)
+# - qt (pyQt4 interface)
 # - gnome (GNOME/GTK based environments, using 'zenity' backend)
 # - kde (KDE/Qt based environments, using 'kdialog' backend)
 # - cli (Command Line Interface)
@@ -131,10 +123,16 @@ opt_verbose            = 'off'
 # verbose: is this message important?
 
 def superPrint(priority, title, message):
-    """Print messages through terminal, zenity or kdialog"""
-    if gui == 'qt':
-        QtGui.QMessageBox.about(widget, title, message)
-    elif gui == 'gnome':
+    """Print messages through terminal, zenity, kdialog or Qt interface"""
+    if opt_gui == 'qt':
+        message = message.replace("\n", "<br>")
+        alert = QtGui.QMessageBox()
+        alert.setWindowTitle(title)
+        alert.setWindowIcon(QtGui.QIcon.fromTheme("document-properties"))
+        alert.setText(message)
+        alert.exec_()
+
+    elif opt_gui == 'gnome':
         if title:
             subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
         else:
@@ -163,194 +161,183 @@ def superPrint(priority, title, message):
         else: # CLI
             print(">> " + message)
 
-# New version of superPrint with Qt (keep the old one too until selection window in qt)
-def superQPrint(widget, title, message):
-    """Print messages through terminal, zenity or kdialog"""
-    if gui == 'cli':
-        print(">> " + message)
-    else:
-        QtGui.QMessageBox.about(widget, title, message)
-
-# ==== Settings Management =======================================================
+# ==== QT Settings Management Window ===========================================
 # If config file does not exists create it, put the default values and print the
-# settings window, then get the values and write the config file.
+# settings window, then get the values and write the config file.
 #
-# If config file does exists parse it and get the values.
+# If config file does exists parse it and get the values.
 
-subLang=[("Mandarin","mdr"),("English","eng"),("Spanish","spa"),("Hindi","hin"),("Arabic","ara"),("Russian","rus"),("Bengali","ben"),("Portuguese","por"),("Indonesian","ind"),("Swahili","swa"),("Japanese","jpn"),("French","fre"),("German","ger"),("Filipino","fil"),("Urdu","urd"),("Italian","ita"),("Turkish","tur"),("Vietnamese","vie"),("Korean","kor"),("Persian","per"),("Cantonese","yue")]
+subLang=[("Arabic","ara"),("Bengali","ben"),("Cantonese","yue"),("Dutch","nld"),("English","eng"),("Filipino","fil"),("French","fre"),("German","ger"),("Hindi","hin"),("Indonesian","ind"),("Italian","ita"),("Japanese","jpn"),("Korean","kor"),("Mandarin","mdr"),("Persian","per"),("Portuguese","por"),("Russian","rus"),("Spanish","spa"),("Swahili","swa"),("Turkish","tur"),("Vietnamese","vie")]
 
-# ===========================
+if "PyQt4" in sys.modules :
+    class settingsWindow(QtGui.QDialog):
+        def __init__(self,parent=None):
+            super(settingsWindow,self).__init__(parent)
+            QtGui.QMainWindow.__init__(self)
+            self.setWindowTitle('OpenSubtitlesDownload  Settings ')
+            self.setWindowIcon(QtGui.QIcon.fromTheme("document-properties"))
 
-class settingsWindow(QtGui.QDialog):
-    def __init__(self,parent=None):
-        super(settingsWindow,self).__init__(parent)
-        QtGui.QMainWindow.__init__(self)
-        self.setWindowTitle('OpenSubtitlesDownload: Settings Window ')
-        self.setWindowIcon(QtGui.QIcon.fromTheme("document-properties"))
+            # Languages selection gui (puchbuttons)
+            self.langLabel = QtGui.QLabel("1/ Select the languages you need:")
+            titleFont = QtGui.QFont()
+            titleFont.setBold(True)
+            titleFont.setUnderline(True)
+            self.langLabel.setFont(titleFont)
 
-        # Languages selection gui (puchbuttons)
-        self.langLabel = QtGui.QLabel("1/ Select the languages you need:")
-        titleFont = QtGui.QFont()
-        titleFont.setBold(True)
-        titleFont.setUnderline(True)
-        self.langLabel.setFont(titleFont)
+            # Preferences selection gui (comboboxes)
+            self.prefLabel = QtGui.QLabel("2/ Select your preferences:")
+            self.prefLabel.setFont(titleFont)
+            self.optLabel = QtGui.QLabel("Write 2-letter language code (ex: _en) at the end of the subtitles file ?")
+            self.optBox = QtGui.QComboBox()
+            self.optBox.setMaximumWidth(100)
+            self.optBox.addItems(['auto','on','off'])
+            self.modeLabel = QtGui.QLabel("Subtitles selection mode :")
+            self.modeBox = QtGui.QComboBox()
+            self.modeBox.setMaximumWidth(100)
+            self.modeBox.addItems(['manual','auto'])
 
-        # Preferences selection gui (comboboxes)
-        self.prefLabel = QtGui.QLabel("2/ Select your preferences:")
-        self.prefLabel.setFont(titleFont)
-        self.optLabel = QtGui.QLabel("Write 2-letter language code (ex: _en) at the end of the subtitles file ?")
-        self.optBox = QtGui.QComboBox()
-        self.optBox.setMaximumWidth(100)
-        self.optBox.addItems(['auto','on','off'])
-        self.modeLabel = QtGui.QLabel("Subtitles selection mode :")
-        self.modeBox = QtGui.QComboBox()
-        self.modeBox.setMaximumWidth(100)
-        self.modeBox.addItems(['manual','auto'])
+            # Columns in selection window (checkboxes)
+            self.columnLabel = QtGui.QLabel("3/ Select the colums to show in the selection window:")
+            self.columnLabel.setFont(titleFont)
+            self.langBox = QtGui.QCheckBox("Subtitles language")
+            self.hiBox = QtGui.QCheckBox("Hearing impaired version")
+            self.rateBox = QtGui.QCheckBox("Users rating")
+            self.countBox = QtGui.QCheckBox("Downloads count")
 
-        # Columns in selection window (checkboxes)
-        self.columnLabel = QtGui.QLabel("3/ Select the colums to show in the selection window:")
-        self.columnLabel.setFont(titleFont)
-        self.langBox = QtGui.QCheckBox("Subtitles language")
-        self.langBox.setCheckState(True)
-        self.hiBox = QtGui.QCheckBox("Hearing impaired version")
-        self.rateBox = QtGui.QCheckBox("Users rating")
-        self.countBox = QtGui.QCheckBox("Downloads count")
-        self.countBox.setCheckState(True)
+            # Help / Link to the wiki
+            self.helpLabel = QtGui.QLabel("If you have some troubles: <a href=https://github.com/emericg/OpenSubtitlesDownload/wiki> Documentation </a> ")
+            self.helpLabel.setOpenExternalLinks(True)
 
-        # Help / Link to the wiki
-        self.helpLabel = QtGui.QLabel("If you have some troubles: <a href=https://github.com/emericg/OpenSubtitlesDownload/wiki> Documentation </a> ")
-        self.helpLabel.setOpenExternalLinks(True)
+            # Finish button and its function
+            self.finishButton = QtGui.QPushButton("Finish",self)
+            self.connect(self.finishButton, QtCore.SIGNAL("clicked()"), self.doFinish)
 
-        # Finish button and its function
-        self.finish = QtGui.QPushButton("Finish",self)
-        self.connect(self.finish, QtCore.SIGNAL("clicked()"), self.dofinish)
+            self.vbox = QtGui.QVBoxLayout()    # Main vertical layout
+            self.grid = QtGui.QGridLayout()    # Grid layout for the languages buttons
 
-        self.vbox = QtGui.QVBoxLayout()    # Main vertical layout
-        self.grid = QtGui.QGridLayout()    # Grid layout for the languages buttons
+            # Language section :
+            self.vbox.addWidget(self.langLabel)
+            self.vbox.addSpacing(30)
 
-        # Languege section :
-        self.vbox.addWidget(self.langLabel)
-        self.vbox.addSpacing(30)
+            # Create the buttons for languages from the list and add them to the layout
+            x=0
+            y=0
+            self.pushLang=[]
+            for i in range(0,len(subLang)) :
+               self.pushLang.append(QtGui.QPushButton(subLang[i][0],self))
+               self.pushLang[i].setCheckable(True)
+               self.grid.addWidget(self.pushLang[i],x,y)
+               y=(y+1)%3 # Coz we want 3 columns
+               if y==0 : x=x+1
 
-        # Create the buttons for language with the list and add them to the layout
-        x=0
-        y=0
-        self.pushLang=[]
-        for i in range(0,len(subLang)) :
-           self.pushLang.append(QtGui.QPushButton(subLang[i][0],self))
-           self.pushLang[i].setCheckable(True)
-           self.grid.addWidget(self.pushLang[i],x,y)
-           y=(y+1)%3 # Coz we want 3 columns
-           if y==0 : x=x+1
+            self.vbox.addLayout(self.grid)
 
-        self.vbox.addLayout(self.grid)
+            # Add the other widgets to the layout vertical
+            self.vbox.addSpacing(20)
+            self.vbox.addWidget(self.prefLabel)
+            self.vbox.addWidget(self.optLabel)
+            self.vbox.addWidget(self.optBox)
+            self.vbox.addWidget(self.modeLabel)
+            self.vbox.addWidget(self.modeBox)
+            self.vbox.addSpacing(30)
+            self.vbox.addWidget(self.columnLabel)
+            self.vbox.addWidget(self.langBox)
+            self.vbox.addWidget(self.hiBox)
+            self.vbox.addWidget(self.rateBox)
+            self.vbox.addWidget(self.countBox)
+            self.vbox.addSpacing(20)
+            self.vbox.addWidget(self.helpLabel)
+            self.vbox.addWidget(self.finishButton)
 
-        # Add the other widgets to the layout vertical
-        self.vbox.addSpacing(20)
-        self.vbox.addWidget(self.prefLabel)
-        self.vbox.addWidget(self.optLabel)
-        self.vbox.addWidget(self.optBox)
-        self.vbox.addWidget(self.modeLabel)
-        self.vbox.addWidget(self.modeBox)
-        self.vbox.addSpacing(30)
-        self.vbox.addWidget(self.columnLabel)
-        self.vbox.addWidget(self.langBox)
-        self.vbox.addWidget(self.hiBox)
-        self.vbox.addWidget(self.rateBox)
-        self.vbox.addWidget(self.countBox)
-        self.vbox.addSpacing(20)
-        self.vbox.addWidget(self.helpLabel)
-        self.vbox.addWidget(self.finish)
+            self.setLayout(self.vbox)
 
-        self.setLayout(self.vbox)
+        def doFinish(self):
+            global opt_languages,opt_language_suffix, opt_selection_mode, opt_selection_language, opt_selection_hi, opt_selection_rating, opt_selection_count
+            opt_languages = []
 
-    def dofinish(self):
-        global SubLanguageIDs,opt_write_languagecode, opt_selection_mode, opt_selection_language, opt_selection_hi, opt_selection_rating, opt_selection_count
-        SubLanguageIDs = []
-        # Get the values of the comboboxes and put them in the global ones :
-        opt_write_languagecode = self.optBox.currentText()
-        opt_selection_mode = self.modeBox.currentText()
+            # Get the values of the comboboxes and put them in the global ones :
+            opt_language_suffix = self.optBox.currentText()
+            opt_selection_mode = self.modeBox.currentText()
+            
+            # Same for the checkboxes :
+            opt_selection_language='off'
+            opt_selection_hi='off'
+            opt_selection_rating='off'
+            opt_selection_count='off'        
+            if self.langBox.isChecked() : opt_selection_language='on'
+            if self.hiBox.isChecked() : opt_selection_hi='on'
+            if self.rateBox.isChecked() : opt_selection_rating='on'
+            if self.countBox.isChecked() : opt_selection_count='on'
 
-        # Same for the checkboxes :
-        if self.langBox.isChecked() : opt_selection_language="auto"
-        else : opt_selection_language="off"
-        if self.hiBox.isChecked() : opt_selection_hi='auto'
-        else : opt_selection_hi='off'
-        if self.rateBox.isChecked() : opt_selection_rating='auto'
-        else : opt_selection_rating='off'
-        if self.countBox.isChecked() : opt_selection_count='auto'
-        else : opt_selection_count='off'
+            # Get all the selected languages and construct the IDsList:
+            check = 0
+            for i in range(0,len(subLang)):
+                if self.pushLang[i].isChecked() :
+                    opt_languages.append(subLang[i][1])
+                    check = 1
 
-        # Get all the selected languages and construct the IDsList:
-        check = 0
-        for i in range(0,len(subLang)):
-            if self.pushLang[i].isChecked() :
-                SubLanguageIDs.append(subLang[i][1])
-                check = 1
-        print(SubLanguageIDs)
+            # Close the window when its all saved (and if at least one lang is selected)
+            if check == 1 : self.close()
+            else : superPrint(self,self.windowTitle(),"Cannot save with those settings : choose at least one language please")
 
-        # Close the window when its all saved (and if at least one lang is selected)
-        if check == 1 : self.close()
-        else : superQPrint(self,self.windowTitle(),"Cannot save with those settings : choose at least one language please")
+    def configQt(calledManually):
+        global opt_languages, opt_language_suffix, opt_selection_mode, opt_selection_language, opt_selection_hi, opt_selection_rating, opt_selection_count
+        # Try to get the xdg folder for the config file, if not we use $HOME/.config
+        if os.getenv("XDG_CONFIG_HOME"):
+            confdir = os.path.join (os.getenv("XDG_CONFIG_HOME"), "OpenSubtitlesDownload")
+            confpath = os.path.join (confdir, "OpenSubtitlesDownload.conf")
+        else:
+            confdir = os.path.join (os.getenv("HOME"), ".config/OpenSubtitlesDownload/")
+            confpath = os.path.join (confdir, "OpenSubtitlesDownload.conf")
 
-def config():
-    # Try to get the xdg folder for the config file, if not we use $HOME/.config
-    if os.getenv("XDG_CONFIG_HOME"):
-        confdir = os.path.join (os.getenv("XDG_CONFIG_HOME"), "OpenSubtitlesDownload")
-        confpath = os.path.join (confdir, "OpenSubtitlesDownload.conf")
-    else:
-        confdir = os.path.join (os.getenv("HOME"), ".config/OpenSubtitlesDownload/")
-        confpath = os.path.join (confdir, "OpenSubtitlesDownload.conf")
+        if sys.version_info >= (3,0):
+            confparser = configparser.SafeConfigParser()
+        else: # python2
+            confparser = ConfigParser.SafeConfigParser()
+        
+        if not os.path.isfile(confpath) or calledManually :
+            # Create the conf folder if it doesn't exist :
+            try:
+                os.stat(confdir)
+            except:
+                os.mkdir(confdir)
 
-    if sys.version_info >= (3,0):
-        confparser = configparser.SafeConfigParser()
-    else: # python2
-        confparser = ConfigParser.SafeConfigParser()
+            # Print the settings window :
+            gui = settingsWindow()
+            gui.exec_()
 
-    if not os.path.isfile(confpath):
-        # Create the conf folder if it doesn't exist :
-        try:
-            os.stat(confdir)
-        except:
-            os.mkdir(confdir)
+            # Write the conf file with the parser :
+            confparser.add_section('languagesIDs')
+            i = 0
+            for ids in opt_languages :
+                confparser.set ('languagesIDs', 'sublanguageids'+str(i),ids)
+                i+=1
 
-        # Print the settings window :
-        app = QtGui.QApplication(sys.argv)
-        main = settingsWindow()
-        main.show()
-        app.exec_()
+            confparser.add_section('settings')
+            confparser.set ('settings', 'opt_language_suffix', str(opt_language_suffix))
+            confparser.set ('settings', 'opt_selection_mode', str(opt_selection_mode))
+            confparser.set ('settings', 'opt_selection_language', str(opt_selection_language))
+            confparser.set ('settings', 'opt_selection_hi', str(opt_selection_hi))
+            confparser.set ('settings', 'opt_selection_rating', str(opt_selection_rating))
+            confparser.set ('settings', 'opt_selection_count', str(opt_selection_count))
 
-        # Write the conf file with the parser :
-        global SubLanguageIDs, opt_write_languagecode, opt_selection_mode, opt_selection_language, opt_selection_hi, opt_selection_rating, opt_selection_count
-        confparser.add_section('languagesIDs')
-        i = 0
-        for ids in SubLanguageIDs :
-            confparser.set ('languagesIDs', 'sublanguageids'+str(i),ids)
-            i+=1
-
-        confparser.add_section('settings')
-        confparser.set ('settings', 'opt_write_languagecode', str(opt_write_languagecode))
-        confparser.set ('settings', 'opt_selection_mode', str(opt_selection_mode))
-        confparser.set ('settings', 'opt_selection_language', str(opt_selection_language))
-        confparser.set ('settings', 'opt_selection_hi', str(opt_selection_hi))
-        confparser.set ('settings', 'opt_selection_rating', str(opt_selection_rating))
-        confparser.set ('settings', 'opt_selection_count', str(opt_selection_count))
-
-        with open(confpath, 'w') as confile:
-            confparser.write(confile)
-
-    else:
-        confparser.read(confpath)
-        SubLanguageIDs=[]
-        for i in range(0,len(confparser.items('languagesIDs'))) :
-            SubLanguageIDs.append(confparser.get('languagesIDs', 'sublanguageids'+str(i)))
-
-        opt_write_languagecode = confparser.get ('settings', 'opt_write_languagecode')
-        opt_selection_mode = confparser.get ('settings', 'opt_selection_mode')
-        opt_selection_language = confparser.get ('settings', 'opt_selection_language')
-        opt_selection_hi = confparser.get ('settings', 'opt_selection_hi')
-        opt_selection_rating = confparser.get ('settings', 'opt_selection_rating')
-        opt_selection_count = confparser.get ('settings', 'opt_selection_count')
+            with open(confpath, 'w') as confile:
+                confparser.write(confile)
+        
+        # If the file is already there we get the values :
+        else :
+            confparser.read(confpath)
+            opt_languages=[]
+            languages = ""
+            for i in range(0,len(confparser.items('languagesIDs'))) :
+                languages += confparser.get('languagesIDs', 'sublanguageids'+str(i)) + ","
+            opt_languages.append(languages)
+            opt_language_suffix = confparser.get ('settings', 'opt_language_suffix')
+            opt_selection_mode = confparser.get ('settings', 'opt_selection_mode')
+            opt_selection_language = confparser.get ('settings', 'opt_selection_language')
+            opt_selection_hi = confparser.get ('settings', 'opt_selection_hi')
+            opt_selection_rating = confparser.get ('settings', 'opt_selection_rating')
+            opt_selection_count = confparser.get ('settings', 'opt_selection_count')
 
 # ==== Check file path & file ==================================================
 
@@ -416,6 +403,221 @@ def hashFile(path):
     except IOError:
         superPrint("error", "I/O error!", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
+
+# ==== Qt subs window : Cross platform subtitles selection window ==============
+
+if "PyQt4" in sys.modules :
+    class subsWindow(QtGui.QDialog):
+        def __init__(self,parent=None):
+            super(subsWindow,self).__init__(parent)
+            QtGui.QMainWindow.__init__(self)
+            self.setWindowTitle('OpenSubtitlesDownload : Choose you subtitle')
+            self.setWindowIcon(QtGui.QIcon.fromTheme("document-properties"))
+            self.resize(opt_gui_width, opt_gui_height)
+
+            self.vBox = QtGui.QVBoxLayout()    # Main vertical layout
+
+            # Title and filename of the video , each in a horizontal layout
+            labelFont = QtGui.QFont()
+            labelFont.setBold(True)
+            self.titleTxtLabel = QtGui.QLabel("Title : ")
+            self.titleTxtLabel.setFont(labelFont)
+            self.titleLabel = QtGui.QLabel(videoTitle.replace("\\", ""))
+            self.titleHBox = QtGui.QHBoxLayout()
+            self.titleHBox.addWidget(self.titleTxtLabel)
+            self.titleHBox.addWidget(self.titleLabel)
+            self.titleHBox.addStretch(1)            
+
+            self.nameTxtLabel = QtGui.QLabel("Filename : ")
+            self.nameTxtLabel.setFont(labelFont)
+            self.nameLabel = QtGui.QLabel(videoFileName)
+            self.nameHBox = QtGui.QHBoxLayout()            
+            self.nameHBox.addWidget(self.nameTxtLabel)
+            self.nameHBox.addWidget(self.nameLabel)
+            self.nameHBox.addStretch(1)
+
+            # Table containing the list of the subtitles :
+            self.subTable = QtGui.QTableWidget()
+            self.subTable.setShowGrid(False)   # Don't show the table grid
+            self.subTable.setSelectionBehavior(1) # 1 = QAbstractItemView::SelectRows, selecting only rows 
+            self.subTable.verticalHeader().setVisible(False)  # Don't print the lines number
+            self.subTable.horizontalHeader().setResizeMode(3) # 3 = mode resize based on the contents 
+            self.subTable.horizontalHeader().setStretchLastSection(True)
+
+            ## Set col and lines nunbers depending on on the user's choices and the number of item in the list 
+            self.hLabels = QtCore.QString("Available subtitles (synchronized)")
+            self.colCount = 1 
+
+            # Build the colums an their labels, depending on the user's choices
+            if opt_selection_language == "on" :
+                self.hLabels += ";Language"
+                self.colCount += 1
+
+            if opt_selection_hi == "on" :
+                self.hLabels += ";HI"
+                self.colCount += 1
+
+            if opt_selection_rating == "on" :
+                self.hLabels += ";Rating"
+                self.colCount += 1
+
+            if opt_selection_count == "on" :
+                self.hLabels += ";Downloads"
+                self.colCount += 1
+
+            self.subTable.setColumnCount(self.colCount)
+            self.subTable.setHorizontalHeaderLabels(self.hLabels.split(";"))
+            self.subTable.setRowCount(len(subtitlesList['data']))
+
+            # Set the content of the table :
+            rowIndex = 0
+
+            for sub in subtitlesList['data']:
+                colIndex = 0
+                item = QtGui.QTableWidgetItem(sub['SubFileName'])
+                item.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)  # Flags to disable editing of the cells   
+                self.subTable.setItem(rowIndex,colIndex, item)
+
+                if opt_selection_language == "on" :
+                    colIndex += 1
+                    item = QtGui.QTableWidgetItem(sub['LanguageName'])
+                    item.setTextAlignment(0x0004) # Center the content of the cell
+                    item.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+                    self.subTable.setItem(rowIndex,colIndex, item)
+
+                if opt_selection_hi == 'on' :
+                    colIndex += 1
+                    if sub['SubHearingImpaired'] == '1' :
+                        item = QtGui.QTableWidgetItem(u'\u2713')
+                        self.subTable.setItem(rowIndex,colIndex, item)
+                    else :
+                        item = QtGui.QTableWidgetItem("")
+                        self.subTable.setItem(rowIndex,colIndex, item)
+                    item.setTextAlignment(0x0004)
+                    item.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+
+                if opt_selection_rating == "on" :
+                    colIndex += 1
+                    item = QtGui.QTableWidgetItem(sub['SubRating'])
+                    item.setTextAlignment(0x0004)         
+                    item.setFlags(QtCore.Qt.ItemIsEnabled)       
+                    item.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+
+                if opt_selection_count == "on" :
+                    colIndex += 1
+                    item = QtGui.QTableWidgetItem(sub['SubDownloadsCnt'])
+                    item.setTextAlignment(0x0004)
+                    item.setFlags(QtCore.Qt.ItemIsEnabled|QtCore.Qt.ItemIsSelectable)
+                    self.subTable.setItem(rowIndex,colIndex, item)
+                
+                rowIndex += 1 # Next row
+            self.subTable.selectRow(0) # select the first row by default 
+
+            # Create the buttons and connect them to the right function
+            self.settingsButton = QtGui.QPushButton("Settings",self)
+            self.connect(self.settingsButton, QtCore.SIGNAL("clicked()"), self.doConfig)
+            self.cancelButton = QtGui.QPushButton("Cancel",self)
+            self.connect(self.cancelButton, QtCore.SIGNAL("clicked()"), self.doCancel)
+            self.okButton = QtGui.QPushButton("Accept",self)
+            self.okButton.setDefault(True)
+            self.connect(self.okButton, QtCore.SIGNAL("clicked()"), self.doAccept)
+
+            # Put the bottom buttons in a H layout, Cancel and validate buttons are pushed to the bottom right corner :
+            self.buttonHBox = QtGui.QHBoxLayout()
+            self.buttonHBox.addWidget(self.settingsButton)
+            self.buttonHBox.addStretch(1)
+            self.buttonHBox.addWidget(self.cancelButton)
+            self.buttonHBox.addWidget(self.okButton)
+
+            # Put the differents layouts in the main vertical one  
+            self.vBox.addLayout(self.titleHBox)
+            self.vBox.addLayout(self.nameHBox)
+            self.vBox.addWidget(self.subTable)
+            self.vBox.addLayout(self.buttonHBox)
+            self.setLayout(self.vBox)
+
+            self.next = False # Variable to know if we continue the script after this window
+
+        def doCancel(self):
+            self.close()
+
+        def doAccept(self):
+            self.next = True
+            self.selectedSub = str(self.subTable.item(self.subTable.currentRow(),0).text())
+            self.close()
+
+        def doConfig(self):
+            configQt(True)
+            self.close()
+
+        def closeEvent(self,event):
+            if not self.next : # If cancel or X corner clicked, we close the script !
+                sys.exit(0)
+
+    def selectionQt(subtitlesList): 
+        gui = subsWindow()
+        gui.exec_()
+        return gui.selectedSub
+
+# ==== Qt download window, thread and function =================================
+
+if "PyQt4" in sys.modules :
+    class downloadWindow(QtGui.QDialog):
+        def __init__(self,subtitleURL,subtitlePath,parent=None):
+            super(downloadWindow,self).__init__(parent)
+            QtGui.QMainWindow.__init__(self)
+            self.setWindowTitle('OpenSubtitlesDownload : Downloading ...')
+            self.setWindowIcon(QtGui.QIcon.fromTheme("document-properties"))
+            self.resize(380,90)
+            
+            # Create a progress bar and a label, add them to the main vertical layout
+            self.vBox = QtGui.QVBoxLayout()
+            self.progressBar = QtGui.QProgressBar(self)
+            self.progressBar.setRange(0,0)
+            self.vBox.addWidget(self.progressBar)
+            self.label = QtGui.QLabel("Please wait while the subtitles are being downloaded")
+            self.label.setAlignment(QtCore.Qt.AlignCenter)
+            self.vBox.addWidget(self.label)
+            self.setLayout(self.vBox)
+
+            def onFinished():
+                self.progressBar.setRange(0,1)
+                self.close()
+
+            # Initiate the dowloading task in a thread
+            self.task = downloadThread(subtitleURL, subtitlePath)
+            self.task.finished.connect(onFinished)
+            self.task.start()
+
+    # Thread for downloading the sub and when done emit the signal to close the window
+    class downloadThread(QtCore.QThread):
+        def __init__(self, subtitleURL, subtitlePath, parent=None) :
+            super(downloadThread,self).__init__(parent)
+            finished = QtCore.pyqtSignal()
+            self.subURL = subtitleURL
+            self.subPath = subtitlePath
+             
+        def run(self):
+            if sys.version_info >= (3,0):            
+                response = urllib.urlretrieve(self.subURL)
+            else :
+                response = urllib2.urlopen(self.subURL)
+
+            tmpFile = gzip.GzipFile(fileobj=StringIO.StringIO(response.read()))
+
+            with open(self.subPath, 'w') as outfile:
+                outfile.write(tmpFile.read())
+
+            self.finished.emit()
+
+    def downloadQt(subtitleURL,subtitlePath):
+        gui = downloadWindow(subtitleURL,subtitlePath)
+        gui.exec_()
+
+        if os.path.isfile(subtitlePath) :
+            return 0
+        else :
+            return 1
 
 # ==== Gnome selection window ==================================================
 
@@ -616,6 +818,9 @@ if opt_gui == 'auto':
     # Note: "ps cax" only output the first 15 characters of the executable's names
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
     for line in ps:
+        if "PyQt4" in sys.modules:
+            opt_gui = 'qt'
+            break
         if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce4-session' in line):
             opt_gui = 'gnome'
             break
@@ -624,7 +829,7 @@ if opt_gui == 'auto':
             break
 
 # Fallback
-if opt_gui not in ['gnome', 'kde', 'cli']:
+if opt_gui not in ['qt', 'gnome', 'kde', 'cli']:
     opt_gui = 'cli'
     opt_selection_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
@@ -704,7 +909,9 @@ for videoPathDispatch in videoPathList:
 # ==== Main program ============================================================
 # ==== Search and download subtitles
 
-config()
+if opt_gui == 'qt' :
+    app = QtGui.QApplication(sys.argv)
+    configQt(False)
 
 try:
     try:
@@ -814,7 +1021,9 @@ try:
                             opt_selection_count = 'on'
 
                     # Spaw selection window
-                    if opt_gui == 'gnome':
+                    if opt_gui == 'qt':
+                        subtitlesSelected = selectionQt(subtitlesList)
+                    elif opt_gui == 'gnome':
                         subtitlesSelected = selectionGnome(subtitlesList)
                     elif opt_gui == 'kde':
                         subtitlesSelected = selectionKde(subtitlesList)
@@ -848,7 +1057,10 @@ try:
                 subPath = re.escape(subPath)
 
                 # Download and unzip the selected subtitles (with progressbar)
-                if opt_gui == 'gnome':
+                if opt_gui == 'qt':
+                    subPath = subPath.replace("\\", "")
+                    process_subtitlesDownload = downloadQt(subURL,subPath)
+                elif opt_gui == 'gnome':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif opt_gui == 'kde':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
@@ -856,7 +1068,7 @@ try:
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
                     process_subtitlesDownload = subprocess.call("wget -nv -O - " + subURL + " | gunzip > " + subPath, shell=True)
 
-                # If an error occur, say so
+                # If an error occurs, say so
                 if process_subtitlesDownload != 0:
                     superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
                     osd_server.LogOut(session['token'])
