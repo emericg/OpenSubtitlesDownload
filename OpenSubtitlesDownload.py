@@ -61,19 +61,17 @@ osd_password = ''
 osd_language = 'en'
 
 # ==== Language settings =======================================================
-# Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
-#
-# 1/ You can change the search language here by using either 2-letter (ISO 639-1)
-# or 3-letter (ISO 639-2) language codes.
-#
-# 2/ You can also search for subtitles in several languages ​​at once:
-# - opt_languages = ['eng','fre'] to search for subtitles in multiple languages. Highly recommended.
-# - opt_languages = ['eng,fre'] to download the first language available only
+
+# 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
+#    > Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
+# 2/ Search for subtitles in several languages ​​at once by using multiple language codes separated by a comma:
+#    > Exemple: opt_languages = ['eng,fre']
 opt_languages = ['eng']
 
 # Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
 # If you are regularly searching for several language at once, you sould use 'on'.
 opt_language_suffix = 'auto'
+opt_language_separator = '_'
 
 # ==== GUI settings ============================================================
 
@@ -621,7 +619,7 @@ try:
                     else:
                         subIndexTemp += 1
 
-                subLangId = '_' + subtitlesList['data'][subIndex]['ISO639']
+                subLangId = opt_language_separator  + subtitlesList['data'][subIndex]['ISO639']
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
