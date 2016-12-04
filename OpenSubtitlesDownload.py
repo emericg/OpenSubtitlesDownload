@@ -65,7 +65,7 @@ osd_language = 'en'
 # 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
 #    > Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
 # 2/ Search for subtitles in several languages ​​at once by using multiple language codes separated by a comma:
-#    > Exemple: opt_languages = ['eng,fre']
+#    > Exemple: opt_languages = ['eng', 'fre']
 opt_languages = ['eng']
 
 # Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
