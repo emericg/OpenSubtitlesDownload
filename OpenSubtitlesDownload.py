@@ -655,7 +655,7 @@ try:
     if session['token']: osd_server.LogOut(session['token'])
     sys.exit(0)
 
-except (RuntimeError, TypeError, NameError, IOError, OSError):
+except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
 
     # Do not warn about remote disconnection # bug/feature of python 3.5
     if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
