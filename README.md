@@ -1,10 +1,14 @@
 OpenSubtitlesDownload.py
 ========================
 
+[![GitHub release](https://img.shields.io/github/release/emericg/OpenSubtitlesDownload.svg?style=flat-square)]()
+[![GitHub issues](https://img.shields.io/github/issues/emericg/OpenSubtitlesDownload.svg?style=flat-square)]()
+[![license: GPL v3](https://img.shields.io/badge/License-GPL%20v3-brightgreen.svg?style=flat-square)](http://www.gnu.org/licenses/gpl-3.0)
+
 Introduction
 ------------
 
-**OpenSubtitlesDownload.py** is a small Linux software written in python, built to help you **quickly find and download subtitles for your favorite videos**. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI mode (Command Line Interface) on your NAS, Raspberry Pi or wherever you want to bundle it really!
+**OpenSubtitlesDownload.py** is a small software written in python, built to help you **quickly find and download subtitles for your favorite videos**. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI mode (Command Line Interface) on your NAS, Raspberry Pi, macOS or wherever you want to bundle it really!
 
 The subtitles search is done by precisly **identifying your video files** by computing unique movie hash sums. This way, you have more chance to find the **exact subtitles for your videos**, avoiding synchronization problems between the subtitles and the soundtrack. But what if that doesn't work? Well, a search with the filename will be performed, but be aware: results are a bit more... unpredictable (don't worry, you will be warned! and you can even disable this feature if you want).
 
@@ -14,7 +18,7 @@ Features
 --------
 
 - Use a GNOME/GTK or KDE/Qt GUI depending on your favorite desktop environment.
-- Or just use the CLI! Great for automation, and it works on Linux and Mac OS.
+- Or just use the CLI! Great for automation, and it works on Linux and macOS.
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
 - Query subtitles in multiple languages at once.
 - Query subtitles for multiple video files at once.

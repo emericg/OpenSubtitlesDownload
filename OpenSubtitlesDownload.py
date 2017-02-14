@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitlesDownload.py / Version 3.5
+# OpenSubtitlesDownload.py / Version 3.6
 # This software is designed to help you find and download subtitles for your favorite videos!
 
 # You can browse the official website:
@@ -11,7 +11,7 @@
 # Learn much more about OpenSubtitlesDownload.py on its wiki:
 # https://github.com/emericg/OpenSubtitlesDownload/wiki
 
-# Copyright (c) 2016 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2017 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -494,13 +494,13 @@ for videoPathDispatch in videoPathList:
 try:
     try:
         # Connection to opensubtitles.org server
-        session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.5')
+        session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
     except Exception:
         # Retry once, it could be a momentary overloaded server?
         time.sleep(3)
         try:
             # Connection to opensubtitles.org server
-            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.5')
+            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
         except Exception:
             # Failed connection attempts?
             superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
