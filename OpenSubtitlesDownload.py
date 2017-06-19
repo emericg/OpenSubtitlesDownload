@@ -64,7 +64,7 @@ osd_language = 'en'
 
 # 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
 #    > Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
-# 2/ Search for subtitles in several languages ​​at once by using multiple language codes separated by a comma:
+# 2/ Search for subtitles in several languages at once by using multiple language codes separated by a comma:
 #    > Exemple: opt_languages = ['eng,fre']
 opt_languages = ['eng']
 
@@ -167,7 +167,7 @@ def checkFile(path):
     return True
 
 # ==== Hashing algorithm =======================================================
-# Infos: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+# Info: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
 # This particular implementation is coming from SubDownloader: http://subdownloader.net/
 
 def hashFile(path):
