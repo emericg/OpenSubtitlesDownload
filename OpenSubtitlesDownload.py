@@ -83,6 +83,9 @@ opt_search_mode = 'manual'
 # If the search by movie hash fails, search by file name will be used as backup.
 opt_search_byname = 'on'
 
+# Search and download a subtitles even if a subtitles file already exists.
+opt_search_overwrite = 'on'
+
 # ==== GUI settings ============================================================
 
 # Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
@@ -142,9 +145,9 @@ def superPrint(priority, title, message):
         else: # CLI
             print(">> " + message)
 
-# ==== Check file path & file ==================================================
+# ==== Check file path & type ==================================================
 
-def checkFile(path):
+def checkFileValidity(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) == False:
         superPrint("error", "File type error!", "This is not a file:\n<i>" + path + "</i>")
@@ -154,10 +157,10 @@ def checkFile(path):
     if fileMimeType == None:
         fileExtension = path.rsplit('.', 1)
         if fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
-        'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
-        'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
-        'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
-        'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
+                                    'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
+                                    'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
+                                    'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
+                                    'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
             superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
@@ -167,6 +170,29 @@ def checkFile(path):
             return False
 
     return True
+
+# ==== Check subtitles presence ================================================
+
+def checkSubtitlesExists(path):
+    """Check if a subtitles already exists for the current file"""
+
+    for ext in ['srt', 'sub', 'sbv', 'smi', 'ssa', 'ass', 'usf']:
+        subPath = path.rsplit('.', 1)[0] + '.' + ext
+        if os.path.isfile(subPath) == True:
+            superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
+            return True
+        # With language code? Only check the first language (and probably using the wrong language suffix format)
+        if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto')):
+            if len(opt_languages) == 1:
+                splitted_languages_list = opt_languages[0].split(',')
+            else:
+                splitted_languages_list = opt_languages
+            subPath = path.rsplit('.', 1)[0] + opt_language_separator + splitted_languages_list[0] + '.' + ext
+            if os.path.isfile(subPath) == True:
+                superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
+                return True
+
+    return False
 
 # ==== Hashing algorithm =======================================================
 # Info: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
@@ -440,8 +466,9 @@ videoPathList = []
 if 'result' in locals():
     # Go through the paths taken from arguments, and extract only valid video paths
     for i in result.filePathListArg:
-        if checkFile(os.path.abspath(i)):
-            videoPathList.append(os.path.abspath(i))
+        filePath = os.path.abspath(i)
+        if checkFileValidity(filePath):
+            videoPathList.append(filePath)
 else:
     # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
     # $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS (only for local storage)
@@ -458,7 +485,7 @@ else:
                     filePath = urllib.request.url2pathname(filePath)
                 else: # python2
                     filePath = urllib2.url2pathname(filePath)
-                if checkFile(filePath):
+                if checkFileValidity(filePath):
                     videoPathList.append(filePath)
 
 # ==== Instances dispatcher
@@ -467,6 +494,16 @@ else:
 if len(videoPathList) == 0:
     parser.print_help()
     sys.exit(1)
+
+# Check if the subtitles exists videoPathList
+if opt_search_overwrite == 'off':
+    for videoPathDispatch in videoPathList:
+        if checkSubtitlesExists(videoPathDispatch) == True:
+            videoPathList.remove(videoPathDispatch)
+
+    # If videoPathList is empty, exit!
+    if len(videoPathList) == 0:
+        sys.exit(0)
 
 # The first video file will be processed by this instance
 videoPath = videoPathList[0]
