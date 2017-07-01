@@ -73,6 +73,16 @@ opt_languages = ['eng']
 opt_language_suffix = 'auto'
 opt_language_separator = '_'
 
+# ==== Search settings =========================================================
+
+# Subtitles search and selection mode. Can be overridden at run time with '-a' argument.
+# - manual (in case of multiple results, let you choose the subtitles you want)
+# - auto (automatically select the best fitted subtitles)
+opt_search_mode = 'manual'
+
+# If the search by movie hash fails, search by file name will be used as backup.
+opt_search_byname = 'on'
+
 # ==== GUI settings ============================================================
 
 # Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
@@ -85,14 +95,6 @@ opt_gui = 'auto'
 # Change the subtitles selection GUI size:
 opt_gui_width  = 720
 opt_gui_height = 320
-
-# If the search by movie hash fails, search by file name will be used as backup
-opt_backup_searchbyname = 'on'
-
-# Subtitles selection mode. Can be overridden at run time with '-a' argument.
-# - manual (in case of multiple results, let you choose the subtitles you want)
-# - auto (automatically select the most downloaded subtitles)
-opt_selection_mode     = 'manual'
 
 # Various GUI options. You can set them to 'on', 'off' or 'auto'.
 opt_selection_language = 'auto'
@@ -327,18 +329,27 @@ def selectionCLI(subtitlesList):
 def selectionAuto(subtitlesList):
     """Automatic subtitles selection using filename match"""
 
+    if len(opt_languages) == 1:
+        splitted_languages_list = list(reversed(opt_languages[0].split(',')))
+    else:
+        splitted_languages_list = opt_languages
+
     videoFileParts = videoFileName.replace('-','.').replace(' ','.').replace('_','.').lower().split('.')
     maxScore = -1
 
     for subtitle in subtitlesList['data']:
-        subFileParts = subtitle['SubFileName'].replace('-','.').replace(' ','.').replace('_','.').lower().split('.');
         score = 0
+        # points to respect languages priority
+        score += splitted_languages_list.index(subtitle['SubLanguageID']) * 100
+        # extra point if the sub is found by hash
         if subtitle['MatchedBy'] == 'moviehash':
-            score = score + 1 # extra point if the sub is found by hash, which is the preferred way to find subs
+            score += 1
+        # points for filename mach
+        subFileParts = subtitle['SubFileName'].replace('-','.').replace(' ','.').replace('_','.').lower().split('.');
         for subPart in subFileParts:
             for filePart in videoFileParts:
                 if subPart == filePart:
-                    score = score + 1
+                    score += 1
         if score > maxScore:
             maxScore = score
             subtitlesSelected = subtitle['SubFileName']
@@ -373,7 +384,7 @@ parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
     formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
-parser.add_argument('-a', '--auto', help="Automatically choose the best subtitles, without human interaction (default: disabled)", action='store_true')
+parser.add_argument('-a', '--auto', help="Automatically choose and download best fitted subtitles from the search results (default: disabled)", action='store_true')
 parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
 parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
@@ -388,7 +399,7 @@ if len(sys.argv) > 1:
     if result.gui:
         opt_gui = result.gui
     if result.auto:
-        opt_selection_mode = 'auto'
+        opt_search_mode = 'auto'
     if result.verbose:
         opt_verbose = 'on'
     if result.lang:
@@ -414,7 +425,7 @@ if opt_gui == 'auto':
 # Fallback
 if opt_gui not in ['gnome', 'kde', 'cli']:
     opt_gui = 'cli'
-    opt_selection_mode = 'auto'
+    opt_search_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
 
 # ==== Check for the necessary tools (must be done after GUI auto detection)
@@ -466,7 +477,7 @@ for videoPathDispatch in videoPathList:
 
     # Handle current options
     command = execPath + " -g " + opt_gui
-    if opt_selection_mode == 'auto':
+    if opt_search_mode == 'auto':
         command += " -a "
     if opt_verbose == 'on':
         command += " -v "
@@ -479,7 +490,7 @@ for videoPathDispatch in videoPathList:
     # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
     command_splitted.append(videoPathDispatch)
 
-    if opt_gui == 'cli' and opt_selection_mode == 'manual':
+    if opt_gui == 'cli' and opt_search_mode == 'manual':
         # Synchronous call
         process_videoDispatched = subprocess.call(command_splitted)
     else:
@@ -537,7 +548,7 @@ try:
                 superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
         # No results using search by hash? Retry with filename
-        if (not subtitlesList['data']) and (opt_backup_searchbyname == 'on'):
+        if (not subtitlesList['data']) and (opt_search_byname == 'on'):
             searchList = []
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
             try:
@@ -550,7 +561,7 @@ try:
                 except Exception:
                     superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
         else:
-            opt_backup_searchbyname = 'off'
+            opt_search_byname = 'off'
 
         # Parse the results of the XML-RPC query
         if subtitlesList['data']:
@@ -560,7 +571,7 @@ try:
             subtitlesSelected = ''
 
             # If there is only one subtitles, which wasn't found by filename, auto-select it
-            if (len(subtitlesList['data']) == 1) and (opt_backup_searchbyname == 'off'):
+            if (len(subtitlesList['data']) == 1) and (opt_search_byname == 'off'):
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
 
             # Get video title
@@ -577,11 +588,11 @@ try:
                 videoFileName = videoFileName.replace('`', '\`')
                 videoFileName = videoFileName.replace("&", "&amp;")
 
-            # If there is more than one subtitles and opt_selection_mode != 'auto',
+            # If there is more than one subtitles and opt_search_mode != 'auto',
             # then let the user decide which one will be downloaded
             if subtitlesSelected == '':
                 # Automatic subtitles selection?
-                if opt_selection_mode == 'auto':
+                if opt_search_mode == 'auto':
                     subtitlesSelected = selectionAuto(subtitlesList)
                 else:
                     # Go through the list of subtitles and handle 'auto' settings activation
