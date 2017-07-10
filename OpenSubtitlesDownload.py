@@ -597,8 +597,6 @@ try:
                     subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
                 except Exception:
                     superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
-        else:
-            opt_search_byname = 'off'
 
         # Parse the results of the XML-RPC query
         if subtitlesList['data']:
@@ -607,8 +605,8 @@ try:
             searchLanguageResult += 1
             subtitlesSelected = ''
 
-            # If there is only one subtitles, which wasn't found by filename, auto-select it
-            if (len(subtitlesList['data']) == 1) and (opt_search_byname == 'off'):
+            # If there is only one subtitles, auto-select it (only when matched by file hash, except in CLI mode)
+            if (len(subtitlesList['data']) == 1) and (opt_gui == 'cli' or subtitlesList['data'][0]['MatchedBy'] == 'moviehash'):
                 subtitlesSelected = subtitlesList['data'][0]['SubFileName']
 
             # Get video title
