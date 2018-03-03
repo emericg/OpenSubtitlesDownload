@@ -718,5 +718,13 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
 
     # Disconnect from opensubtitles.org server, then exit
     if session['token']: osd_server.LogOut(session['token'])
+    sys.exit(1)
 
+except Exception:
+
+    # Catch unhandled exceptions but do not spawn an error window
+    print("Unexpected error:", str(sys.exc_info()[0]))
+
+    # Disconnect from opensubtitles.org server, then exit
+    if session['token']: osd_server.LogOut(session['token'])
     sys.exit(1)
