@@ -50,6 +50,7 @@ else: # python2
     from xmlrpclib import ServerProxy, Error
 
 # ==== Opensubtitles.org server settings =======================================
+
 # XML-RPC server domain for opensubtitles.org:
 osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
@@ -171,7 +172,7 @@ def checkFileValidity(path):
 
     return True
 
-# ==== Check subtitles presence ================================================
+# ==== Check for existing subtitles file =======================================
 
 def checkSubtitlesExists(path):
     """Check if a subtitles already exists for the current file"""
@@ -537,9 +538,10 @@ for videoPathDispatch in videoPathList:
     # Do not spawn too many instances at the same time
     time.sleep(0.33)
 
-# ==== Search and download subtitles
+# ==== Search and download subtitles ===========================================
 
 try:
+    # ==== Connection
     try:
         # Connection to opensubtitles.org server
         session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
@@ -570,7 +572,9 @@ try:
     for SubLanguageID in opt_languages:
         searchLanguage += len(SubLanguageID.split(','))
 
-    # Search for available subtitles using file hash and size
+    searchResultPerLanguage = [searchLanguage]
+
+    # ==== Search for available subtitles using file hash and size
     for SubLanguageID in opt_languages:
         searchList = []
         searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
@@ -703,7 +707,7 @@ try:
 
 except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
 
-    # Do not warn about remote disconnection # bug/feature of python 3.5
+    # Do not warn about remote disconnection # bug/feature of python 3.5?
     if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
         sys.exit(1)
 
