@@ -11,7 +11,7 @@
 # Learn much more about OpenSubtitlesDownload.py on its wiki:
 # https://github.com/emericg/OpenSubtitlesDownload/wiki
 
-# Copyright (c) 2017 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2018 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -420,7 +420,7 @@ parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
 parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
 parser.add_argument('-a', '--auto', help="Automatically choose and download best fitted subtitles from the search results (default: disabled)", action='store_true')
 parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
-parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre : search in both language\n-l eng -l fre : download both language", nargs='?', action='append')
+parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language", nargs='?', action='append')
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
 
 # Only use ArgumentParser if we have arguments...
@@ -698,7 +698,7 @@ try:
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
                     process_subtitlesDownload = subprocess.call("wget -nv -O - " + subURL + " | gunzip > " + subPath, shell=True)
 
-                # If an error occur, say so
+                # If an error occurs, say so
                 if process_subtitlesDownload != 0:
                     superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
                     osd_server.LogOut(session['token'])
