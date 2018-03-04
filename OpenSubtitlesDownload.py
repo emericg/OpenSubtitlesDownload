@@ -109,6 +109,11 @@ opt_selection_count    = 'off'
 # Enables extra output. Can be overridden at run time with '-v' argument.
 opt_verbose            = 'off'
 
+# ==== Exit codes ==============================================================
+# -1: Success but NO subtitles downloaded
+#  0: Success and subtitles downloaded
+#  2: Failure
+
 # ==== Super Print =============================================================
 # priority: info, warning, error
 # title: only for zenity messages
@@ -400,6 +405,8 @@ def dependencyChecker():
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
 
+ExitCode = 1
+
 # ==== Argument parsing
 
 # Get OpenSubtitlesDownload.py script path
@@ -494,7 +501,7 @@ else:
 # If videoPathList is empty, abort!
 if len(videoPathList) == 0:
     parser.print_help()
-    sys.exit(1)
+    sys.exit(-1)
 
 # Check if the subtitles exists videoPathList
 if opt_search_overwrite == 'off':
@@ -504,7 +511,7 @@ if opt_search_overwrite == 'off':
 
     # If videoPathList is empty, exit!
     if len(videoPathList) == 0:
-        sys.exit(0)
+        sys.exit(-1)
 
 # The first video file will be processed by this instance
 videoPath = videoPathList[0]
@@ -700,31 +707,26 @@ try:
     # Print a message if no subtitles have been found, for any of the languages
     if searchLanguageResult == 0:
         superPrint("info", "No subtitles found for: " + videoFileName, '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
-
-    # Disconnect from opensubtitles.org server, then exit
-    if session['token']: osd_server.LogOut(session['token'])
-    sys.exit(0)
+        ExitCode = -1
+    else:
+        ExitCode = 0
 
 except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
 
     # Do not warn about remote disconnection # bug/feature of python 3.5?
     if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
-        sys.exit(1)
+        sys.exit(ExitCode)
 
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unknown error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
                "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n\n" + \
                "Just to be safe, please check:\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n- Your Internet connection status\n- That are using the latest version of this software ;-)")
 
-    # Disconnect from opensubtitles.org server, then exit
-    if session['token']: osd_server.LogOut(session['token'])
-    sys.exit(1)
-
 except Exception:
 
     # Catch unhandled exceptions but do not spawn an error window
     print("Unexpected error:", str(sys.exc_info()[0]))
 
-    # Disconnect from opensubtitles.org server, then exit
-    if session['token']: osd_server.LogOut(session['token'])
-    sys.exit(1)
+# Disconnect from opensubtitles.org server, then exit
+if session['token']: osd_server.LogOut(session['token'])
+sys.exit(ExitCode)
