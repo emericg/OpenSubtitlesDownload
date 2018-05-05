@@ -76,13 +76,18 @@ opt_language_separator = '_'
 
 # ==== Search settings =========================================================
 
-# Subtitles search and selection mode. Can be overridden at run time with '-a' argument.
-# - manual (in case of multiple results, let you choose the subtitles you want)
-# - auto (automatically select the best fitted subtitles)
-opt_search_mode = 'manual'
+# Subtitles search mode. Can be overridden at run time with '-s' argument.
+# - hash (search by hash)
+# - filename (search by filename)
+# - hash_then_filename (search by hash, then filename if no results)
+# - hash_and_filename (search using both methods)
+opt_search_mode = 'hash_then_filename'
 
-# If the search by movie hash fails, search by file name will be used as backup.
-opt_search_byname = 'on'
+# Subtitles selection mode. Can be overridden at run time with '-t' argument.
+# - manual (always let you choose the subtitles you want)
+# - default (in case of multiple results, let you choose the subtitles you want)
+# - auto (automatically select the best subtitles found)
+opt_selection_mode = 'default'
 
 # Search and download a subtitles even if a subtitles file already exists.
 opt_search_overwrite = 'on'
@@ -101,8 +106,9 @@ opt_gui_width  = 720
 opt_gui_height = 320
 
 # Various GUI options. You can set them to 'on', 'off' or 'auto'.
-opt_selection_language = 'auto'
 opt_selection_hi       = 'auto'
+opt_selection_language = 'auto'
+opt_selection_match    = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
@@ -243,19 +249,25 @@ def hashFile(path):
 
 def selectionGnome(subtitlesList):
     """GNOME subtitles selection window using zenity"""
-    searchMode = 'moviehash'
     subtitlesSelected = ''
     subtitlesItems = ''
-    columnLn = ''
+    subtitlesMatchedByHash = 0
+    subtitlesMatchedByName = 0
     columnHi = ''
+    columnLn = ''
+    columnMatch = ''
     columnRate = ''
     columnCount = ''
 
     # Generate selection window content
     for item in subtitlesList['data']:
-        if item['MatchedBy'] != 'moviehash':
-            searchMode = item['MatchedBy']
+        if item['MatchedBy'] == 'moviehash':
+            subtitlesMatchedByHash += 1
+        else:
+            subtitlesMatchedByName += 1
+
         subtitlesItems += '"' + item['SubFileName'] + '" '
+
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
             if item['SubHearingImpaired'] == '1':
@@ -265,6 +277,12 @@ def selectionGnome(subtitlesList):
         if opt_selection_language == 'on':
             columnLn = '--column="Language" '
             subtitlesItems += '"' + item['LanguageName'] + '" '
+        if opt_selection_match == 'on':
+            columnMatch = '--column="MatchedBy" '
+            if item['MatchedBy'] == 'moviehash':
+                subtitlesItems += '"HASH" '
+            else:
+                subtitlesItems += '"" '
         if opt_selection_rating == 'on':
             columnRate = '--column="Rating" '
             subtitlesItems += '"' + item['SubRating'] + '" '
@@ -273,17 +291,23 @@ def selectionGnome(subtitlesList):
             subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
 
     # Spawn zenity "list" dialog
-    if searchMode == 'moviehash':
+    if subtitlesMatchedByName == 0:
         process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
             ' --list --title="Synchronized subtitles for: ' + videoTitle + '"' + \
             ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
-            ' --column="Available subtitles (synchronized)" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems,
+            ' --column="Available subtitles (synchronized)" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems,
             shell=True, stdout=subprocess.PIPE)
-    else:
+    elif subtitlesMatchedByHash == 0:
         process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
             ' --list --title="Subtitles found!"' + \
             ' --text="<b>Filename:</b> ' + videoFileName + '\n<b>>> These results comes from search by file name (not using movie hash) and may be unreliable...</b>"' + \
-            ' --column="Available subtitles" ' + columnHi + columnLn + columnRate + columnCount + subtitlesItems,
+            ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems,
+            shell=True, stdout=subprocess.PIPE)
+    else:
+        process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
+            ' --list --title="Subtitles for: ' + videoTitle + '"' + \
+            ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
+            ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems,
             shell=True, stdout=subprocess.PIPE)
 
     # Get back the result
@@ -329,16 +353,22 @@ def selectionCLI(subtitlesList):
     for item in subtitlesList['data']:
         subtitlesIndex += 1
         subtitlesItem = '"' + item['SubFileName'] + '" '
-        if opt_selection_hi == 'on':
-            if item['SubHearingImpaired'] == '1':
-                subtitlesItem += '> "HI" '
+
+        if opt_selection_hi == 'on' and item['SubHearingImpaired'] == '1':
+            subtitlesItem += '> "HI" '
         if opt_selection_language == 'on':
-            subtitlesItem += '> "LanguageName: ' + item['LanguageName'] + '" '
+            subtitlesItem += '> "Language: ' + item['LanguageName'] + '" '
+        if opt_selection_match == 'on':
+            subtitlesItem += '> "MatchedBy: ' + item['MatchedBy'] + '" '
         if opt_selection_rating == 'on':
             subtitlesItem += '> "SubRating: ' + item['SubRating'] + '" '
         if opt_selection_count == 'on':
             subtitlesItem += '> "SubDownloadsCnt: ' + item['SubDownloadsCnt'] + '" '
-        print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+
+        if item['MatchedBy'] == 'moviehash':
+            print("\033[92m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+        else:
+            print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
 
     # Ask user selection
     print("\033[91m[0]\033[0m Cancel search")
@@ -418,8 +448,11 @@ parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
     formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
-parser.add_argument('-a', '--auto', help="Automatically choose and download best fitted subtitles from the search results (default: disabled)", action='store_true')
-parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
+parser.add_argument('--cli', help="Force CLI mode", action='store_true')
+parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_then_filename, hash_and_filename (default: hash_then_filename)")
+parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
+parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
+parser.add_argument('-v', '--verbose', help="Force verbose output", action='store_true')
 parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language", nargs='?', action='append')
 
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
@@ -432,8 +465,14 @@ if len(sys.argv) > 1:
     # Handle results
     if result.gui:
         opt_gui = result.gui
+    if result.cli:
+        opt_gui = 'cli'
+    if result.search:
+        opt_search_mode = result.search
+    if result.select:
+        opt_selection_mode = result.select
     if result.auto:
-        opt_search_mode = 'auto'
+        opt_selection_mode = 'auto'
     if result.verbose:
         opt_verbose = 'on'
     if result.lang:
@@ -455,10 +494,17 @@ if opt_gui == 'auto':
             opt_gui = 'kde'
             break
 
-# Fallback
+# Sanitize settings
+if opt_search_mode not in ['hash', 'filename', 'hash_then_filename', 'hash_and_filename']:
+    opt_search_mode = 'hash_then_filename'
+
+if opt_selection_mode not in ['manual', 'default', 'auto']:
+    opt_selection_mode = 'default'
+
 if opt_gui not in ['gnome', 'kde', 'cli']:
     opt_gui = 'cli'
-    opt_search_mode = 'auto'
+    opt_search_mode = 'hash_then_filename'
+    opt_selection_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
 
 # ==== Check for the necessary tools (must be done after GUI auto detection)
@@ -520,11 +566,7 @@ videoPathList.pop(0)
 for videoPathDispatch in videoPathList:
 
     # Handle current options
-    command = execPath + " -g " + opt_gui
-    if opt_search_mode == 'auto':
-        command += " -a "
-    if opt_verbose == 'on':
-        command += " -v "
+    command = execPath + " -g " + opt_gui + " -s " + opt_search_mode + " -t " + opt_selection_mode
     if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
         for resultlangs in opt_languages:
             command += " -l " + resultlangs
@@ -534,7 +576,7 @@ for videoPathDispatch in videoPathList:
     # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
     command_splitted.append(videoPathDispatch)
 
-    if opt_gui == 'cli' and opt_search_mode == 'manual':
+    if opt_gui == 'cli' and opt_selection_mode != 'auto':
         # Synchronous call
         process_videoDispatched = subprocess.call(command_splitted)
     else:
@@ -583,7 +625,14 @@ try:
     # ==== Search for available subtitles using file hash and size
     for SubLanguageID in opt_languages:
         searchList = []
-        searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
+        subtitlesList = {}
+
+        if (opt_search_mode == 'hash' or opt_search_mode == 'hash_then_filename' or opt_search_mode == 'hash_and_filename'):
+            searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
+        if (opt_search_mode == 'filename' or opt_search_mode == 'hash_and_filename'):
+            searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
+
+        # Primary search
         try:
             subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
         except Exception:
@@ -594,10 +643,14 @@ try:
             except Exception:
                 superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
-        # No results using search by hash? Retry with filename
-        if (not subtitlesList['data']) and (opt_search_byname == 'on'):
-            searchList = []
+        #if (opt_search_mode == 'hash_and_filename'):
+        #    TODO Cleanup duplicate between moviehash and filename results
+
+        # Fallback search
+        if ((not subtitlesList['data']) and (opt_search_mode == 'hash_then_filename')):
+            searchList.clear()
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
+            subtitlesList.clear()
             try:
                 subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
             except Exception:
@@ -615,9 +668,10 @@ try:
             searchLanguageResult += 1
             subtitlesSelected = ''
 
-            # If there is only one subtitles, auto-select it (only when matched by file hash, except in CLI mode)
-            if (len(subtitlesList['data']) == 1) and (opt_gui == 'cli' or subtitlesList['data'][0]['MatchedBy'] == 'moviehash'):
-                subtitlesSelected = subtitlesList['data'][0]['SubFileName']
+            # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
+            if (len(subtitlesList['data']) == 1) and (subtitlesList['data'][0]['MatchedBy'] == 'moviehash'):
+                if opt_selection_mode != 'manual':
+                    subtitlesSelected = subtitlesList['data'][0]['SubFileName']
 
             # Get video title
             videoTitle = subtitlesList['data'][0]['MovieName']
@@ -633,15 +687,18 @@ try:
                 videoFileName = videoFileName.replace('`', '\`')
                 videoFileName = videoFileName.replace("&", "&amp;")
 
-            # If there is more than one subtitles and opt_search_mode != 'auto',
+            # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
             if subtitlesSelected == '':
                 # Automatic subtitles selection?
-                if opt_search_mode == 'auto':
+                if opt_selection_mode == 'auto':
                     subtitlesSelected = selectionAuto(subtitlesList)
                 else:
                     # Go through the list of subtitles and handle 'auto' settings activation
                     for item in subtitlesList['data']:
+                        if opt_selection_match == 'auto':
+                            if opt_search_mode == 'hash_and_filename':
+                                opt_selection_match = 'on'
                         if opt_selection_language == 'auto':
                             if searchLanguage > 1:
                                 opt_selection_language = 'on'
