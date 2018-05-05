@@ -202,7 +202,7 @@ def checkSubtitlesExists(path):
 
 # ==== Hashing algorithm =======================================================
 # Info: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
-# This particular implementation is coming from SubDownloader: http://subdownloader.net/
+# This particular implementation is coming from SubDownloader: http://subdownloader.net
 
 def hashFile(path):
     """Produce a hash for a video file: size + 64bit chksum of the first and
@@ -239,10 +239,10 @@ def hashFile(path):
         superPrint("error", "I/O error!", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
 
-# ==== Gnome selection window ==================================================
+# ==== GNOME selection window ==================================================
 
 def selectionGnome(subtitlesList):
-    """Gnome subtitles selection window using zenity"""
+    """GNOME subtitles selection window using zenity"""
     searchMode = 'moviehash'
     subtitlesSelected = ''
     subtitlesItems = ''
@@ -343,7 +343,7 @@ def selectionCLI(subtitlesList):
     # Ask user selection
     print("\033[91m[0]\033[0m Cancel search")
     sub_selection = -1
-    while( sub_selection < 0 or sub_selection > subtitlesIndex ):
+    while(sub_selection < 0 or sub_selection > subtitlesIndex):
         try:
             sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
         except:
@@ -421,12 +421,12 @@ parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde
 parser.add_argument('-a', '--auto', help="Automatically choose and download best fitted subtitles from the search results (default: disabled)", action='store_true')
 parser.add_argument('-v', '--verbose', help="Enables verbose output (default: disabled)", action='store_true')
 parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language", nargs='?', action='append')
+
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
 
 # Only use ArgumentParser if we have arguments...
 if len(sys.argv) > 1:
 
-    # Parsing
     result = parser.parse_args()
 
     # Handle results
@@ -443,8 +443,7 @@ if len(sys.argv) > 1:
             if opt_language_suffix != 'off':
                 opt_language_suffix = 'on'
 
-# ==== GUI auto detection
-
+# GUI auto detection
 if opt_gui == 'auto':
     # Note: "ps cax" only output the first 15 characters of the executable's names
     ps = str(subprocess.Popen(['ps', 'cax'], stdout=subprocess.PIPE).communicate()[0]).split('\n')
