@@ -550,9 +550,7 @@ if len(videoPathList) == 0:
 
 # Check if the subtitles exists videoPathList
 if opt_search_overwrite == 'off':
-    for videoPathDispatch in videoPathList:
-        if checkSubtitlesExists(videoPathDispatch) == True:
-            videoPathList.remove(videoPathDispatch)
+    videoPathList = [path for path in videoPathList if not checkSubtitlesExists(path)]
 
     # If videoPathList is empty, exit!
     if len(videoPathList) == 0:
