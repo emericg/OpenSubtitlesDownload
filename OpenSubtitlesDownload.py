@@ -646,7 +646,7 @@ try:
 
         # Fallback search
         if ((not subtitlesList['data']) and (opt_search_mode == 'hash_then_filename')):
-            searchList.clear()
+            searchList[:] = [] # searchList.clear()
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
             subtitlesList.clear()
             try:
