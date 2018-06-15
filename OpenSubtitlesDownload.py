@@ -642,7 +642,8 @@ try:
         #    TODO Cleanup duplicate between moviehash and filename results
 
         # Fallback search
-        if ((not subtitlesList['data']) and (opt_search_mode == 'hash_then_filename')):
+        if ((opt_search_mode == 'hash_then_filename') and
+            (('data' in subtitlesList) and (len(subtitlesList['data']) == 0))):
             searchList[:] = [] # searchList.clear()
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
             subtitlesList.clear()
@@ -657,7 +658,7 @@ try:
                     superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
         # Parse the results of the XML-RPC query
-        if subtitlesList['data']:
+        if ('data' in subtitlesList) and (len(subtitlesList['data']) > 0):
 
             # Mark search as successful
             searchLanguageResult += 1
