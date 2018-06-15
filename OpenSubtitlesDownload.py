@@ -589,27 +589,24 @@ for videoPathDispatch in videoPathList:
 try:
     # ==== Connection
     try:
-        # Connection to opensubtitles.org server
         session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
     except Exception:
-        # Retry once, it could be a momentary overloaded server?
+        # Retry once, we never know, the server maybe momentary overloaded
         time.sleep(3)
         try:
-            # Connection to opensubtitles.org server
             session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
         except Exception:
-            # Failed connection attempts?
-            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
             sys.exit(2)
 
     # Connection refused?
     if session['status'] != '200 OK':
-        superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your 200 downloads per 24h limit")
+        superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
         sys.exit(2)
 
     searchLanguage = 0
     searchLanguageResult = 0
-    videoTitle = 'Unknown video title'
+    videoTitle = ''
     videoHash = hashFile(videoPath)
     videoSize = os.path.getsize(videoPath)
     videoFileName = os.path.basename(videoPath)
@@ -634,7 +631,7 @@ try:
         try:
             subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
         except Exception:
-            # Retry once, we are already connected, the server is probably momentary overloaded
+            # Retry once, we are already connected, the server maybe momentary overloaded
             time.sleep(3)
             try:
                 subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
@@ -652,7 +649,7 @@ try:
             try:
                 subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
             except Exception:
-                # Retry once, we are already connected, the server is probably momentary overloaded
+                # Retry once, we are already connected, the server maybe momentary overloaded
                 time.sleep(3)
                 try:
                     subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
