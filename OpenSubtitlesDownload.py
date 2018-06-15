@@ -773,13 +773,14 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
 
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unknown error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
-               "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n\n" + \
+               "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
+               "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
                "Just to be safe, please check:\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n- Your Internet connection status\n- That are using the latest version of this software ;-)")
 
 except Exception:
 
     # Catch unhandled exceptions but do not spawn an error window
-    print("Unexpected error:", str(sys.exc_info()[0]))
+    print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
 # Disconnect from opensubtitles.org server, then exit
 if session['token']: osd_server.LogOut(session['token'])
