@@ -13,7 +13,7 @@ Introduction
 
 The subtitles search is done by precisly **identifying your video files** by computing unique movie hash sums. This way, you have more chance to find the **exact subtitles for your videos**, avoiding synchronization problems between the subtitles and the soundtrack. But what if that doesn't work? Well, a search with the filename will be performed, but be aware: results are a bit more... unpredictable (don't worry, you will be warned! and you can even disable this feature if you want).
 
-The subtitles search and download service is powered by [opensubtitles.org](http://www.opensubtitles.org). Big thanks to their hard work on this amazing project! Be sure to [give them your support](http://www.opensubtitles.org/en/support) if you appreciate the service provided, they sure need donations for handling the ever growing hosting costs!
+The subtitles search and download service is powered by [opensubtitles.org](https://www.opensubtitles.org). Big thanks to their hard work on this amazing project! Be sure to [give them your support](http://www.opensubtitles.org/en/support) if you appreciate the service provided, they sure need donations for handling the ever growing hosting costs!
 
 Features
 --------
@@ -42,10 +42,10 @@ Installation
 
 Quick installation as a nautilus script, under GNOME 3 desktop environment:
 
-> $ git clone https://github.com/emericg/OpenSubtitlesDownload.git  
 > $ mkdir -p ~/.local/share/nautilus/scripts/  
-> $ cp OpenSubtitlesDownload/OpenSubtitlesDownload.py ~/.local/share/nautilus/scripts/OpenSubtitlesDownload.py  
-> $ chmod u+x ~/.local/share/nautilus/scripts/OpenSubtitlesDownload.py  
+> $ cd ~/.local/share/nautilus/scripts/  
+> $ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/OpenSubtitlesDownload.py  
+> $ chmod u+x OpenSubtitlesDownload.py  
 
 Website
 -------
@@ -66,7 +66,7 @@ Contributors
 License
 -------
 
-OpenSubtitlesDownload.py is a free software released under the GPL v3 license <http://www.gnu.org/licenses/gpl-3.0.txt>
+OpenSubtitlesDownload.py is a free software released under the GPL v3 license <https://www.gnu.org/licenses/gpl-3.0.txt>
 
 Screenshots!
 ------------
