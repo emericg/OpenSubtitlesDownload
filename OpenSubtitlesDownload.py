@@ -41,7 +41,7 @@ import subprocess
 import argparse
 import time
 
-if sys.version_info >= (3,0):
+if sys.version_info >= (3, 0):
     import shutil
     import urllib.request
     from xmlrpc.client import ServerProxy, Error
@@ -54,9 +54,10 @@ else: # python2
 # XML-RPC server domain for opensubtitles.org:
 osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
 
-# You can use your opensubtitles.org account to avoid "in-subtitles" advertisment and bypass download limits
-# Be careful about your password security, it will be stored right here in plain text...
-# You can also change opensubtitles.org language, it will be used for error codes and stuff
+# You can use your opensubtitles.org account to avoid "in-subtitles" advertisment
+# and bypass download limits. Be careful about your password security, it will be
+# stored right here in plain text... You can also change opensubtitles.org language,
+# it will be used for error codes and stuff.
 osd_username = ''
 osd_password = ''
 osd_language = 'en'
@@ -65,7 +66,7 @@ osd_language = 'en'
 
 # 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
 #    > Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
-# 2/ Search for subtitles in several languages at once by using multiple language codes separated by a comma:
+# 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
 #    > Exemple: opt_languages = ['eng,fre']
 opt_languages = ['eng']
 
@@ -161,12 +162,12 @@ def superPrint(priority, title, message):
 
 def checkFileValidity(path):
     """Check mimetype and/or file extension to detect valid video file"""
-    if os.path.isfile(path) == False:
+    if os.path.isfile(path) is False:
         superPrint("error", "File type error!", "This is not a file:\n<i>" + path + "</i>")
         return False
 
     fileMimeType, encoding = mimetypes.guess_type(path)
-    if fileMimeType == None:
+    if fileMimeType is None:
         fileExtension = path.rsplit('.', 1)
         if fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
                                     'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
@@ -190,17 +191,17 @@ def checkSubtitlesExists(path):
 
     for ext in ['srt', 'sub', 'sbv', 'smi', 'ssa', 'ass', 'usf']:
         subPath = path.rsplit('.', 1)[0] + '.' + ext
-        if os.path.isfile(subPath) == True:
+        if os.path.isfile(subPath) is True:
             superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
             return True
         # With language code? Only check the first language (and probably using the wrong language suffix format)
-        if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto')):
+        if opt_language_suffix in ('on', 'auto'):
             if len(opt_languages) == 1:
                 splitted_languages_list = opt_languages[0].split(',')
             else:
                 splitted_languages_list = opt_languages
             subPath = path.rsplit('.', 1)[0] + opt_language_separator + splitted_languages_list[0] + '.' + ext
-            if os.path.isfile(subPath) == True:
+            if os.path.isfile(subPath) is True:
                 superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
                 return True
 
@@ -315,7 +316,7 @@ def selectionGnome(subtitlesList):
 
     # The results contain a subtitles?
     if result_subtitlesSelection[0]:
-        if sys.version_info >= (3,0):
+        if sys.version_info >= (3, 0):
             subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
         else: # python2
             subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
@@ -382,9 +383,9 @@ def selectionCLI(subtitlesList):
     # Return the result
     if sub_selection == 0:
         print("Cancelling search...")
-        return
-    else:
-        return subtitlesList['data'][sub_selection-1]['SubFileName']
+        return ""
+
+    return subtitlesList['data'][sub_selection-1]['SubFileName']
 
 # ==== Automatic selection mode ================================================
 
@@ -396,7 +397,7 @@ def selectionAuto(subtitlesList):
     else:
         splitted_languages_list = opt_languages
 
-    videoFileParts = videoFileName.replace('-','.').replace(' ','.').replace('_','.').lower().split('.')
+    videoFileParts = videoFileName.replace('-', '.').replace(' ', '.').replace('_', '.').lower().split('.')
     maxScore = -1
 
     for subtitle in subtitlesList['data']:
@@ -407,7 +408,7 @@ def selectionAuto(subtitlesList):
         if subtitle['MatchedBy'] == 'moviehash':
             score += 1
         # points for filename mach
-        subFileParts = subtitle['SubFileName'].replace('-','.').replace(' ','.').replace('_','.').lower().split('.');
+        subFileParts = subtitle['SubFileName'].replace('-', '.').replace(' ', '.').replace('_', '.').lower().split('.')
         for subPart in subFileParts:
             for filePart in videoFileParts:
                 if subPart == filePart:
@@ -423,7 +424,7 @@ def selectionAuto(subtitlesList):
 def dependencyChecker():
     """Check the availability of tools used as dependencies"""
 
-    if sys.version_info >= (3,3):
+    if sys.version_info >= (3, 3):
         for tool in ['gunzip', 'wget']:
             path = shutil.which(tool)
             if path is None:
@@ -444,8 +445,8 @@ execPath = str(sys.argv[0])
 
 # Setup parser
 parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
-    description='This software is designed to help you find and download subtitles for your favorite videos!',
-    formatter_class=argparse.RawTextHelpFormatter)
+                                 description='This software is designed to help you find and download subtitles for your favorite videos!',
+                                 formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
 parser.add_argument('--cli', help="Force CLI mode", action='store_true')
@@ -490,7 +491,7 @@ if opt_gui == 'auto':
         if ('gnome-session' in line) or ('cinnamon-sessio' in line) or ('mate-session' in line) or ('xfce4-session' in line):
             opt_gui = 'gnome'
             break
-        elif ('ksmserver' in line):
+        elif 'ksmserver' in line:
             opt_gui = 'kde'
             break
 
@@ -509,7 +510,7 @@ if opt_gui not in ['gnome', 'kde', 'cli']:
 
 # ==== Check for the necessary tools (must be done after GUI auto detection)
 
-if dependencyChecker() == False:
+if dependencyChecker() is False:
     sys.exit(2)
 
 # ==== Get valid video paths
@@ -529,12 +530,12 @@ else:
     if opt_gui == 'gnome':
         # Try to get file(s) provided by nautilus
         filePathListEnv = os.environ.get('NAUTILUS_SCRIPT_SELECTED_URIS')
-        if filePathListEnv != None:
+        if filePathListEnv is not None:
             # Check file(s) type and validity
             for filePath in filePathListEnv.splitlines():
                 # Work a little bit of magic (Make sure we have a clean and absolute path, even from an URI)
                 filePath = os.path.abspath(os.path.basename(filePath))
-                if sys.version_info >= (3,0):
+                if sys.version_info >= (3, 0):
                     filePath = urllib.request.url2pathname(filePath)
                 else: # python2
                     filePath = urllib2.url2pathname(filePath)
@@ -622,9 +623,9 @@ try:
         searchList = []
         subtitlesList = {}
 
-        if (opt_search_mode == 'hash' or opt_search_mode == 'hash_then_filename' or opt_search_mode == 'hash_and_filename'):
+        if opt_search_mode in ('hash', 'hash_then_filename', 'hash_and_filename'):
             searchList.append({'sublanguageid':SubLanguageID, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
-        if (opt_search_mode == 'filename' or opt_search_mode == 'hash_and_filename'):
+        if opt_search_mode in ('filename', 'hash_and_filename'):
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
 
         # Primary search
@@ -643,7 +644,7 @@ try:
 
         # Fallback search
         if ((opt_search_mode == 'hash_then_filename') and
-            (('data' in subtitlesList) and (len(subtitlesList['data']) == 0))):
+                (('data' in subtitlesList) and (len(subtitlesList['data']) == 0))):
             searchList[:] = [] # searchList.clear()
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
             subtitlesList.clear()
@@ -734,8 +735,7 @@ try:
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Write language code into the filename?
-                if ((opt_language_suffix == 'on') or
-                    (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
+                if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
                     subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
