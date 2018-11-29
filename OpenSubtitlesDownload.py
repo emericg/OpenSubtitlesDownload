@@ -441,7 +441,7 @@ ExitCode = 2
 # ==== Argument parsing
 
 # Get OpenSubtitlesDownload.py script path
-execPath = str(sys.argv[0])
+execPath = os.getcwd() + "/" + str(sys.argv[0])
 
 # Setup parser
 parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
@@ -781,5 +781,7 @@ except Exception:
     print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
 # Disconnect from opensubtitles.org server, then exit
-if session['token']: osd_server.LogOut(session['token'])
+if session and session['token']:
+    osd_server.LogOut(session['token'])
+
 sys.exit(ExitCode)
