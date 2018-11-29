@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitlesDownload.py / Version 3.6
+# OpenSubtitlesDownload.py / Version 3.7
 # This software is designed to help you find and download subtitles for your favorite videos!
 
 # You can browse the official website:
