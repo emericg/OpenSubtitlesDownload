@@ -441,7 +441,10 @@ ExitCode = 2
 # ==== Argument parsing
 
 # Get OpenSubtitlesDownload.py script path
-execPath = os.getcwd() + "/" + str(sys.argv[0])
+if os.path.isabs(sys.argv[0]):
+    execPath = sys.argv[0]
+else:
+    execPath = os.getcwd() + "/" + str(sys.argv[0])
 
 # Setup parser
 parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
