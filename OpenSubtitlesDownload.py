@@ -100,7 +100,7 @@ opt_search_overwrite = 'on'
 # - gnome (GNOME/GTK based environments, using 'zenity' backend)
 # - kde (KDE/Qt based environments, using 'kdialog' backend)
 # - cli (Command Line Interface)
-opt_gui = 'auto'
+opt_gui = 'cli'
 
 # Change the subtitles selection GUI size:
 opt_gui_width  = 720
@@ -424,14 +424,13 @@ def selectionAuto(subtitlesList):
 def dependencyChecker():
     """Check the availability of tools used as dependencies"""
 
-    if sys.version_info >= (3, 3):
-        for tool in ['gunzip', 'wget']:
-            path = shutil.which(tool)
-            if path is None:
-                superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
-                return False
-
-    return True
+    #if sys.version_info >= (3, 3):
+        #for tool in ['gzip', 'wget']:
+            #path = shutil.which(tool)
+            #if path is None:
+                #superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
+                #return False
+    #return True
 
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
@@ -742,16 +741,19 @@ try:
                     subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
-                subPath = re.escape(subPath)
+                #subPath = re.escape(subPath)
+                gzPath = subPath + '.gz'
 
                 # Download and unzip the selected subtitles (with progressbar)
                 if opt_gui == 'gnome':
-                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
+                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif opt_gui == 'kde':
-                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
+                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gzip > " + subPath + ") 2>&1", shell=True)
                 else: # CLI
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
-                    process_subtitlesDownload = subprocess.call("wget -nv -O - " + subURL + " | gunzip > " + subPath, shell=True)
+
+                    process_subtitlesDownload = subprocess.call("wget -nv --output-document=\""+gzPath+ "\" " + subURL, shell=True)
+                    process_subtitlesDownload = subprocess.call("gzip -d \""+gzPath+"\"", shell=True)
 
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
