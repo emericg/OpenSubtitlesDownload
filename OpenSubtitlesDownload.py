@@ -753,7 +753,7 @@ try:
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
 
                     process_subtitlesDownload = subprocess.call("wget -nv --output-document=\""+gzPath+ "\" " + subURL, shell=True)
-                    process_subtitlesDownload = subprocess.call("gzip -d \""+gzPath+"\"", shell=True)
+                    process_subtitlesDownload = subprocess.call("gzip -f -d \""+gzPath+"\"", shell=True)
 
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
