@@ -88,10 +88,10 @@ opt_search_mode = 'hash_then_filename'
 # - manual (always let you choose the subtitles you want)
 # - default (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the best subtitles found)
-opt_selection_mode = 'default'
+opt_selection_mode = 'auto'
 
 # Search and download a subtitles even if a subtitles file already exists.
-opt_search_overwrite = 'on'
+opt_search_overwrite = 'off'
 
 # ==== GUI settings ============================================================
 
@@ -523,7 +523,13 @@ if 'result' in locals():
     # Go through the paths taken from arguments, and extract only valid video paths
     for i in result.filePathListArg:
         filePath = os.path.abspath(i)
-        if checkFileValidity(filePath):
+        if os.path.isdir(filePath): #If it is a dir, get all files recursively
+            for root, dirs, files in os.walk(filePath, topdown=False):
+                for name in files:
+                    localPath = os.path.join(root, name)
+                    if checkFileValidity(localPath):                        
+                        videoPathList.append(localPath)
+        elif checkFileValidity(filePath): #If it is a file, check just add it            
             videoPathList.append(filePath)
 else:
     # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
@@ -571,7 +577,8 @@ for videoPathDispatch in videoPathList:
     if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
         for resultlangs in opt_languages:
             command += " -l " + resultlangs
-
+    command = "python " + command;
+	
     # Split command string
     command_splitted = command.split()
     # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
@@ -585,7 +592,7 @@ for videoPathDispatch in videoPathList:
         process_videoDispatched = subprocess.Popen(command_splitted)
 
     # Do not spawn too many instances at the same time
-    time.sleep(0.33)
+    time.sleep(0.5)
 
 # ==== Search and download subtitles ===========================================
 
@@ -752,8 +759,8 @@ try:
                 else: # CLI
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
 
-                    process_subtitlesDownload = subprocess.call("wget -nv --output-document=\""+gzPath+ "\" " + subURL, shell=True)
-                    process_subtitlesDownload = subprocess.call("gzip -f -d \""+gzPath+"\"", shell=True)
+                    process_subtitlesDownload = subprocess.call("wget -q --output-document=\""+gzPath+ "\" " + subURL, shell=True)
+                    process_subtitlesDownload = subprocess.call("gzip -q -f -d \""+gzPath+"\"", shell=True)
 
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
