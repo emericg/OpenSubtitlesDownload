@@ -129,6 +129,9 @@ opt_verbose            = 'off'
 
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
+    if priority == 'verbose' and opt_verbose == 'off':
+        return False
+	
     if opt_gui == 'gnome':
         if title:
             subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
@@ -163,7 +166,7 @@ def superPrint(priority, title, message):
 def checkFileValidity(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) is False:
-        superPrint("error", "File type error!", "This is not a file:\n<i>" + path + "</i>")
+        superPrint("verbose", "File type error!", "This is not a file:\n<i>" + path + "</i>")
         return False
 
     fileMimeType, encoding = mimetypes.guess_type(path)
@@ -174,12 +177,12 @@ def checkFileValidity(path):
                                     'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
                                     'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
                                     'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
-            superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
+            superPrint("verbose", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
         fileMimeType = fileMimeType.split('/', 1)
         if fileMimeType[0] != 'video':
-            superPrint("error", "File type error!", "This file is not a video (unknown mimetype):\n<i>" + path + "</i>")
+            superPrint("verbose", "File type error!", "This file is not a video (unknown mimetype):\n<i>" + path + "</i>")
             return False
 
     return True
@@ -192,7 +195,7 @@ def checkSubtitlesExists(path):
     for ext in ['srt', 'sub', 'sbv', 'smi', 'ssa', 'ass', 'usf']:
         subPath = path.rsplit('.', 1)[0] + '.' + ext
         if os.path.isfile(subPath) is True:
-            superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
+            superPrint("verbose", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + path + "</i>")
             return True
         # With language code? Only check the first language (and probably using the wrong language suffix format)
         if opt_language_suffix in ('on', 'auto'):
@@ -202,7 +205,7 @@ def checkSubtitlesExists(path):
                 splitted_languages_list = opt_languages
             subPath = path.rsplit('.', 1)[0] + opt_language_separator + splitted_languages_list[0] + '.' + ext
             if os.path.isfile(subPath) is True:
-                superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
+                superPrint("verbose", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + path + "</i>")
                 return True
 
     return False
