@@ -40,6 +40,10 @@ import mimetypes
 import subprocess
 import argparse
 import time
+import urllib.request
+import gzip
+import shutil
+import platform
 
 if sys.version_info >= (3, 0):
     import shutil
@@ -122,7 +126,7 @@ opt_verbose            = 'off'
 # 2: Failure
 
 # ==== Super Print =============================================================
-# priority: info, warning, error
+# priority: info, warning, error, verbose
 # title: only for zenity messages
 # message: full text, with tags and breaks (tag cleanup for terminal)
 # verbose: is this message important?
@@ -426,14 +430,17 @@ def selectionAuto(subtitlesList):
 
 def dependencyChecker():
     """Check the availability of tools used as dependencies"""
-
-    #if sys.version_info >= (3, 3):
-        #for tool in ['gzip', 'wget']:
-            #path = shutil.which(tool)
-            #if path is None:
-                #superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
-                #return False
-    #return True
+    #Dependencies removed on Cli mode 
+    if opt_gui == 'cli':
+        return True
+        
+    if sys.version_info >= (3, 3):
+        for tool in ['gzip', 'wget']:
+            path = shutil.which(tool)
+            if path is None:
+                superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
+                return False
+    return True
 
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
@@ -755,16 +762,23 @@ try:
                 gzPath = subPath + '.gz'
 
                 # Download and unzip the selected subtitles (with progressbar)
+                process_subtitlesDownload = 0
                 if opt_gui == 'gnome':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif opt_gui == 'kde':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gzip > " + subPath + ") 2>&1", shell=True)
-                else: # CLI
-                    print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
+                else: # Cli
+                    superPrint("info","Downloading","Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
 
-                    process_subtitlesDownload = subprocess.call("wget -q --output-document=\""+gzPath+ "\" " + subURL, shell=True)
-                    process_subtitlesDownload = subprocess.call("gzip -q -f -d \""+gzPath+"\"", shell=True)
-
+                    #Download sub file
+                    urllib.request.urlretrieve(subURL, gzPath)
+                    #Ungzip sub file
+                    with gzip.open(gzPath, 'rb') as f_in:
+                        with open(subPath, 'wb') as f_out:
+                            shutil.copyfileobj(f_in, f_out)
+                    #Delete gziped file                            
+                    os.remove(gzPath)
+                    
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
                     superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
