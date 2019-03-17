@@ -176,7 +176,10 @@ def checkFileValidity(path):
     fileMimeType, encoding = mimetypes.guess_type(path)
     if fileMimeType is None:
         fileExtension = path.rsplit('.', 1)
-        if fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
+        # If file has no extension 
+        if len(fileExtension) < 2:
+            return False
+        elif fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
                                     'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
                                     'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
                                     'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
@@ -430,7 +433,7 @@ def selectionAuto(subtitlesList):
 
 def dependencyChecker():
     """Check the availability of tools used as dependencies"""
-    #Dependencies removed on Cli mode 
+    # Dependencies removed on Cli mode
     if opt_gui == 'cli':
         return True
         
@@ -533,13 +536,15 @@ if 'result' in locals():
     # Go through the paths taken from arguments, and extract only valid video paths
     for i in result.filePathListArg:
         filePath = os.path.abspath(i)
-        if os.path.isdir(filePath): #If it is a dir, get all files recursively
+        # If it is a dir, get all files recursively
+        if os.path.isdir(filePath):
             for root, dirs, files in os.walk(filePath, topdown=False):
                 for name in files:
                     localPath = os.path.join(root, name)
                     if checkFileValidity(localPath):                        
                         videoPathList.append(localPath)
-        elif checkFileValidity(filePath): #If it is a file, check just add it            
+        # If it is a file, check just add it
+        elif checkFileValidity(filePath):
             videoPathList.append(filePath)
 else:
     # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
@@ -732,7 +737,7 @@ try:
                         subtitlesSelected = selectionGnome(subtitlesList)
                     elif opt_gui == 'kde':
                         subtitlesSelected = selectionKde(subtitlesList)
-                    else: # CLI
+                    else: # Cli
                         subtitlesSelected = selectionCLI(subtitlesList)
 
             # If a subtitles has been selected at this point, download it!
