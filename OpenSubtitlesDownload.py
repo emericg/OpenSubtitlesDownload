@@ -44,6 +44,7 @@ import urllib.request
 import gzip
 import shutil
 import platform
+import configparser
 
 if sys.version_info >= (3, 0):
     import shutil
@@ -53,72 +54,51 @@ else: # python2
     import urllib2
     from xmlrpclib import ServerProxy, Error
 
+# Reading settings file
+config = configparser.ConfigParser()
+config.read('config.ini')
+
 # ==== Opensubtitles.org server settings =======================================
+# See config.ini
 
-# XML-RPC server domain for opensubtitles.org:
-osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+osd_server = ServerProxy(config['OpenSubtitles']['SERVER'])
 
-# You can use your opensubtitles.org account to avoid "in-subtitles" advertisment
-# and bypass download limits. Be careful about your password security, it will be
-# stored right here in plain text... You can also change opensubtitles.org language,
-# it will be used for error codes and stuff.
-osd_username = ''
-osd_password = ''
-osd_language = 'en'
+osd_username = config['OpenSubtitles']['USERNAME']
+osd_password = config['OpenSubtitles']['PASSWORD']
+osd_language = config['OpenSubtitles']['LANGUAGE']
 
 # ==== Language settings =======================================================
+# See config.ini
+opt_languages = config['Language']['LANGUAGES'].split(',')
 
-# 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
-#    > Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
-# 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
-#    > Exemple: opt_languages = ['eng,fre']
-opt_languages = ['eng']
-
-# Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
-# If you are regularly searching for several language at once, you sould use 'on'.
-opt_language_suffix = 'auto'
-opt_language_separator = '_'
+opt_language_suffix = config['Language']['LANGUAGE_SUFFIX']
+opt_language_separator = config['Language']['LANGUAGE_SEPARATOR']
 
 # ==== Search settings =========================================================
+# See config.ini
 
-# Subtitles search mode. Can be overridden at run time with '-s' argument.
-# - hash (search by hash)
-# - filename (search by filename)
-# - hash_then_filename (search by hash, then filename if no results)
-# - hash_and_filename (search using both methods)
-opt_search_mode = 'hash_then_filename'
-
-# Subtitles selection mode. Can be overridden at run time with '-t' argument.
-# - manual (always let you choose the subtitles you want)
-# - default (in case of multiple results, let you choose the subtitles you want)
-# - auto (automatically select the best subtitles found)
-opt_selection_mode = 'auto'
-
-# Search and download a subtitles even if a subtitles file already exists.
-opt_search_overwrite = 'off'
+opt_search_mode = config['Search']['SEARCH_MODE']
+opt_selection_mode = config['Search']['SELECTION_MODE']
+opt_search_overwrite = config['Search']['OVERWRITE']
 
 # ==== GUI settings ============================================================
+# See config.ini
 
-# Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
-# - auto (autodetection, fallback on CLI)
-# - gnome (GNOME/GTK based environments, using 'zenity' backend)
-# - kde (KDE/Qt based environments, using 'kdialog' backend)
-# - cli (Command Line Interface)
-opt_gui = 'cli'
+opt_gui = config['GUI']['OPTION']
 
-# Change the subtitles selection GUI size:
-opt_gui_width  = 720
-opt_gui_height = 320
+opt_gui_width  = config['GUI']['WIDTH']
+opt_gui_height = config['GUI']['HEIGHT']
 
-# Various GUI options. You can set them to 'on', 'off' or 'auto'.
-opt_selection_hi       = 'auto'
-opt_selection_language = 'auto'
-opt_selection_match    = 'auto'
-opt_selection_rating   = 'off'
-opt_selection_count    = 'off'
+# ==== Other settings ============================================================
+# See config.ini
 
-# Enables extra output. Can be overridden at run time with '-v' argument.
-opt_verbose            = 'off'
+opt_selection_hi       = config['Other']['SELECTION_HI']
+opt_selection_language = config['Other']['SELECTION_LANGUAGE']
+opt_selection_match    = config['Other']['SELECTION_MATCH']
+opt_selection_rating   = config['Other']['SELECTION_RATING']
+opt_selection_count    = config['Other']['SELECTION_COUNT']
+
+opt_verbose            = config['Other']['VERBOSE']
 
 # ==== Exit codes ==============================================================
 # 0: Success and subtitles downloaded
