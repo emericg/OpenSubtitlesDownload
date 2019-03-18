@@ -40,19 +40,19 @@ import mimetypes
 import subprocess
 import argparse
 import time
-import urllib.request
 import gzip
 import shutil
 import platform
-import configparser
 
 if sys.version_info >= (3, 0):
     import shutil
     import urllib.request
     from xmlrpc.client import ServerProxy, Error
+    import configparser
 else: # python2
     import urllib2
     from xmlrpclib import ServerProxy, Error
+    import ConfigParser as configparser
 
 # Reading settings file
 config = configparser.ConfigParser()
@@ -61,44 +61,44 @@ config.read('config.ini')
 # ==== Opensubtitles.org server settings =======================================
 # See config.ini
 
-osd_server = ServerProxy(config['OpenSubtitles']['SERVER'])
+osd_server = ServerProxy(config.get('OpenSubtitles','SERVER'))
 
-osd_username = config['OpenSubtitles']['USERNAME']
-osd_password = config['OpenSubtitles']['PASSWORD']
-osd_language = config['OpenSubtitles']['LANGUAGE']
+osd_username = config.get('OpenSubtitles','USERNAME')
+osd_password = config.get('OpenSubtitles','PASSWORD')
+osd_language = config.get('OpenSubtitles','LANGUAGE')
 
 # ==== Language settings =======================================================
 # See config.ini
-opt_languages = config['Language']['LANGUAGES'].split(',')
+opt_languages = config.get('Language','LANGUAGES').split(',')
 
-opt_language_suffix = config['Language']['LANGUAGE_SUFFIX']
-opt_language_separator = config['Language']['LANGUAGE_SEPARATOR']
+opt_language_suffix = config.get('Language','LANGUAGE_SUFFIX')
+opt_language_separator = config.get('Language','LANGUAGE_SEPARATOR')
 
 # ==== Search settings =========================================================
 # See config.ini
 
-opt_search_mode = config['Search']['SEARCH_MODE']
-opt_selection_mode = config['Search']['SELECTION_MODE']
-opt_search_overwrite = config['Search']['OVERWRITE']
+opt_search_mode = config.get('Search','SEARCH_MODE')
+opt_selection_mode = config.get('Search','SELECTION_MODE')
+opt_search_overwrite = config.get('Search','OVERWRITE')
 
 # ==== GUI settings ============================================================
 # See config.ini
 
-opt_gui = config['GUI']['OPTION']
+opt_gui = config.get('GUI','OPTION')
 
-opt_gui_width  = config['GUI']['WIDTH']
-opt_gui_height = config['GUI']['HEIGHT']
+opt_gui_width  = config.get('GUI','WIDTH')
+opt_gui_height = config.get('GUI','HEIGHT')
 
 # ==== Other settings ============================================================
 # See config.ini
 
-opt_selection_hi       = config['Other']['SELECTION_HI']
-opt_selection_language = config['Other']['SELECTION_LANGUAGE']
-opt_selection_match    = config['Other']['SELECTION_MATCH']
-opt_selection_rating   = config['Other']['SELECTION_RATING']
-opt_selection_count    = config['Other']['SELECTION_COUNT']
+opt_selection_hi       = config.get('Other','SELECTION_HI')
+opt_selection_language = config.get('Other','SELECTION_LANGUAGE')
+opt_selection_match    = config.get('Other','SELECTION_MATCH')
+opt_selection_rating   = config.get('Other','SELECTION_RATING')
+opt_selection_count    = config.get('Other','SELECTION_COUNT')
 
-opt_verbose            = config['Other']['VERBOSE']
+opt_verbose            = config.get('Other','VERBOSE')
 
 # ==== Exit codes ==============================================================
 # 0: Success and subtitles downloaded
