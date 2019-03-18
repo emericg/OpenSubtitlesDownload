@@ -450,6 +450,7 @@ parser.add_argument('-t', '--select', help="Selection mode: manual, default, aut
 parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-v', '--verbose', help="Force verbose output", action='store_true')
 parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language", nargs='?', action='append')
+parser.add_argument('-f', '--force', help="Search and download a subtitles even if a subtitles file already exists", action="store_true")
 
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
 
@@ -477,6 +478,8 @@ if len(sys.argv) > 1:
             opt_selection_language = 'on'
             if opt_language_suffix != 'off':
                 opt_language_suffix = 'on'
+    if result.force:
+        opt_search_overwrite = 'on'
 
 # GUI auto detection
 if opt_gui == 'auto':
