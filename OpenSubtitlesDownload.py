@@ -575,7 +575,7 @@ for videoPathDispatch in videoPathList:
     if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
         for resultlangs in opt_languages:
             command += " -l " + resultlangs
-    command = "python " + command;
+    command = sys.executable+ " " + command;
 	
     # Split command string
     command_splitted = command.split()
