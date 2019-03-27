@@ -533,23 +533,8 @@ if 'result' in locals():
             # If it is a valid file, use it
             videoPathList.append(filePath)
 else:
-    # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
-    # $NAUTILUS_SCRIPT_SELECTED_FILE_PATHS (only for local storage)
-    # $NAUTILUS_SCRIPT_SELECTED_URIS
-    if opt_gui == 'gnome':
-        # Try to get file(s) provided by nautilus
-        filePathListEnv = os.environ.get('NAUTILUS_SCRIPT_SELECTED_URIS')
-        if filePathListEnv is not None:
-            # Check file(s) type and validity
-            for filePath in filePathListEnv.splitlines():
-                # Work a little bit of magic (Make sure we have a clean and absolute path, even from an URI)
-                filePath = os.path.abspath(os.path.basename(filePath))
-                if sys.version_info >= (3, 0):
-                    filePath = urllib.request.url2pathname(filePath)
-                else: # python2
-                    filePath = urllib2.url2pathname(filePath)
-                if checkFileValidity(filePath):
-                    videoPathList.append(filePath)
+    superPrint("error", "No file provided!", "No file provided!")
+    sys.exit(2)
 
 # ==== Instances dispatcher
 
