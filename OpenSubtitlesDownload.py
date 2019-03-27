@@ -163,7 +163,6 @@ def superPrint(priority, title, message):
 def checkFileValidity(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) is False:
-        superPrint("error", "File type error!", "This is not a file:\n<i>" + path + "</i>")
         return False
 
     fileMimeType, encoding = mimetypes.guess_type(path)
@@ -174,12 +173,12 @@ def checkFileValidity(path):
                                     'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
                                     'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
                                     'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
-            superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
+            #superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
         fileMimeType = fileMimeType.split('/', 1)
         if fileMimeType[0] != 'video':
-            superPrint("error", "File type error!", "This file is not a video (unknown mimetype):\n<i>" + path + "</i>")
+            #superPrint("error", "File type error!", "This file is not a video (unknown mimetype):\n<i>" + path + "</i>")
             return False
 
     return True
@@ -524,7 +523,14 @@ if 'result' in locals():
     # Go through the paths taken from arguments, and extract only valid video paths
     for i in result.filePathListArg:
         filePath = os.path.abspath(i)
-        if checkFileValidity(filePath):
+        if os.path.isdir(filePath):
+            # If it is a folder, check all of its files
+            for item in os.listdir(filePath):
+                localPath = os.path.join(filePath, item)
+                if checkFileValidity(localPath):
+                    videoPathList.append(localPath)
+        elif checkFileValidity(filePath):
+            # If it is a valid file, use it
             videoPathList.append(filePath)
 else:
     # No filePathListArg from the arg parser? Try selected file(s) from nautilus environment variables:
