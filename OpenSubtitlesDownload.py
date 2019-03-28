@@ -133,9 +133,9 @@ def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
     if opt_gui == 'gnome':
         if title:
-            subprocess.call(['zenity', '--' + priority, '--title=' + title, '--text=' + message])
+            subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--title=' + title, '--text=' + message])
         else:
-            subprocess.call(['zenity', '--' + priority, '--text=' + message])
+            subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--text=' + message])
     else:
         # Clean up formating tags from the zenity messages
         message = message.replace("\n\n", "\n")
