@@ -19,7 +19,7 @@ Features
 --------
 
 - Use a GNOME/GTK or KDE/Qt GUI depending on your favorite desktop environment.
-- Or just use the CLI! Great for automation, and it works on Linux and macOS.
+- Or just use the CLI! Great for automation, and it works on Linux, macOS and Windows.
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
 - Query subtitles in multiple languages at once.
 - Query subtitles for multiple video files at once.
@@ -35,7 +35,7 @@ Requirements
 - python (version 2 or 3)
 - zenity (only for GNOME based desktop environments)
 - kdialog (only for KDE based desktop environments)
-- common unix tools: wget & gzip (subtitles downloading), ps & grep (GUI autodetection)
+- common unix tools: wget & gzip (GUI subtitles downloading), ps & grep (GUI autodetection)
 
 Installation
 ------------

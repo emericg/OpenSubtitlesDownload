@@ -27,6 +27,7 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Contributors / special thanks:
+# Thiago Alvarenga Lechuga <thiagoalz@gmail.com> for his work on the 'Windows CLI' and the 'folder search'
 # jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
 # Gui13 for his work on the arguments parsing
 # Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
@@ -40,13 +41,14 @@ import mimetypes
 import subprocess
 import argparse
 import time
+import gzip
 
 if sys.version_info >= (3, 0):
     import shutil
     import urllib.request
     from xmlrpc.client import ServerProxy, Error
 else: # python2
-    import urllib2
+    import urllib
     from xmlrpclib import ServerProxy, Error
 
 # ==== Opensubtitles.org server settings =======================================
@@ -423,12 +425,13 @@ def selectionAuto(subtitlesList):
 def dependencyChecker():
     """Check the availability of tools used as dependencies"""
 
-    if sys.version_info >= (3, 3):
-        for tool in ['gunzip', 'wget']:
-            path = shutil.which(tool)
-            if path is None:
-                superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
-                return False
+    if opt_gui != 'cli':
+        if sys.version_info >= (3, 3):
+            for tool in ['gunzip', 'wget']:
+                path = shutil.which(tool)
+                if path is None:
+                    superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
+                    return False
 
     return True
 
@@ -439,11 +442,11 @@ ExitCode = 2
 
 # ==== Argument parsing
 
-# Get OpenSubtitlesDownload.py script path
+# Get OpenSubtitlesDownload.py script absolute path
 if os.path.isabs(sys.argv[0]):
-    execPath = sys.argv[0]
+    scriptPath = sys.argv[0]
 else:
-    execPath = os.getcwd() + "/" + str(sys.argv[0])
+    scriptPath = os.getcwd() + "/" + str(sys.argv[0])
 
 # Setup parser
 parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
@@ -559,7 +562,7 @@ videoPathList.pop(0)
 for videoPathDispatch in videoPathList:
 
     # Handle current options
-    command = execPath + " -g " + opt_gui + " -s " + opt_search_mode + " -t " + opt_selection_mode
+    command = sys.executable + " " + scriptPath + " -g " + opt_gui + " -s " + opt_search_mode + " -t " + opt_selection_mode
     if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
         for resultlangs in opt_languages:
             command += " -l " + resultlangs
@@ -733,7 +736,8 @@ try:
                     subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
-                subPath = re.escape(subPath)
+                if opt_gui != 'cli':
+                    subPath = re.escape(subPath)
 
                 # Download and unzip the selected subtitles (with progressbar)
                 if opt_gui == 'gnome':
@@ -742,7 +746,20 @@ try:
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
                 else: # CLI
                     print(">> Downloading '" + subtitlesList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
-                    process_subtitlesDownload = subprocess.call("wget -nv -O - " + subURL + " | gunzip > " + subPath, shell=True)
+
+                    if sys.version_info >= (3, 0):
+                        tmpFile1, headers = urllib.request.urlretrieve(subURL)
+                        tmpFile2 = gzip.GzipFile(tmpFile1)
+                        byteswritten = open(subPath, 'wb').write(tmpFile2.read())
+                        if byteswritten > 0:
+                            process_subtitlesDownload = 0
+                        else:
+                            process_subtitlesDownload = 1
+                    else: # python 2
+                        tmpFile1, headers = urllib.urlretrieve(subURL)
+                        tmpFile2 = gzip.GzipFile(tmpFile1)
+                        open(subPath, 'wb').write(tmpFile2.read())
+                        process_subtitlesDownload = 0
 
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
