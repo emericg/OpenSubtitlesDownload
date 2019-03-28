@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# OpenSubtitlesDownload.py / Version 3.7
+# OpenSubtitlesDownload.py / Version 4.0
 # This software is designed to help you find and download subtitles for your favorite videos!
 
 # You can browse the official website:
@@ -11,7 +11,7 @@
 # Learn much more about OpenSubtitlesDownload.py on its wiki:
 # https://github.com/emericg/OpenSubtitlesDownload/wiki
 
-# Copyright (c) 2018 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2019 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -587,12 +587,12 @@ for videoPathDispatch in videoPathList:
 try:
     # ==== Connection
     try:
-        session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
+        session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.0')
     except Exception:
-        # Retry once, we never know, the server maybe momentary overloaded
+        # Retry once, it could be a momentary overloaded server?
         time.sleep(3)
         try:
-            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 3.6')
+            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.0')
         except Exception:
             superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
             sys.exit(2)
@@ -769,7 +769,7 @@ try:
 
     # Print a message if no subtitles have been found, for any of the languages
     if searchLanguageResult == 0:
-        superPrint("info", "No subtitles found for: " + videoFileName, '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
+        superPrint("info", "No subtitles available :-(", '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
         ExitCode = 1
     else:
         ExitCode = 0
@@ -781,7 +781,7 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
         sys.exit(ExitCode)
 
     # An unknown error occur, let's apologize before exiting
-    superPrint("error", "Unknown error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
+    superPrint("error", "Unexpected error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
                "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
                "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
                "Just to be safe, please check:\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n- Your Internet connection status\n- That are using the latest version of this software ;-)")

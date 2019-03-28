@@ -54,20 +54,6 @@ You can browse the project's website at <https://emericg.github.io/OpenSubtitles
 You can browse the project's GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
 Learn much more about OpenSubtitlesDownload.py installation and configuration on its wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>  
 
-Contributors
-------------
-
-- Emeric Grange <emeric.grange@gmail.com> maintainer
-- jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
-- Gui13 for his work on the arguments parsing
-- Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
-- Carlos Acedo <carlos@linux-labs.net> for his work on the original script
-
-License
--------
-
-OpenSubtitlesDownload.py is a free software released under the GPL v3 license <https://www.gnu.org/licenses/gpl-3.0.txt>
-
 Screenshots!
 ------------
 
@@ -80,3 +66,18 @@ Enjoy your subtitled video!
 
 What if multiple subtitles are available? Just pick one from the list!
 ![Multiple subtitles selection](https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/screenshots/osd_screenshot_selection.png)
+
+Contributors
+------------
+
+- Emeric Grange <emeric.grange@gmail.com> maintainer
+- jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
+- Gui13 for his work on the arguments parsing
+- Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
+- Carlos Acedo <carlos@linux-labs.net> for his work on the original script
+
+License
+-------
+
+OpenSubtitlesDownload.py is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.  
+Read the license [on the FSF website](https://www.gnu.org/licenses/gpl-3.0.txt).
