@@ -86,14 +86,14 @@ opt_language_separator = '_'
 # - hash_and_filename (search using both methods)
 opt_search_mode = 'hash_then_filename'
 
+# Search and download a subtitles even if a subtitles file already exists.
+opt_search_overwrite = 'on'
+
 # Subtitles selection mode. Can be overridden at run time with '-t' argument.
 # - manual (always let you choose the subtitles you want)
 # - default (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the best subtitles found)
 opt_selection_mode = 'default'
-
-# Search and download a subtitles even if a subtitles file already exists.
-opt_search_overwrite = 'on'
 
 # ==== GUI settings ============================================================
 
@@ -119,8 +119,10 @@ opt_selection_count    = 'off'
 opt_verbose            = 'off'
 
 # ==== Exit codes ==============================================================
-# 0: Success and subtitles downloaded
-# 1: Success but no subtitles found
+
+# Exit code returned by the software. You can use them to improve scripting behaviours.
+# 0: Success, and subtitles downloaded
+# 1: Success, but no subtitles found
 # 2: Failure
 
 # ==== Super Print =============================================================
