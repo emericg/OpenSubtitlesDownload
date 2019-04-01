@@ -451,13 +451,13 @@ parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
                                  description='This software is designed to help you find and download subtitles for your favorite videos!',
                                  formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
 parser.add_argument('--cli', help="Force CLI mode", action='store_true')
+parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
+parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language", nargs='?', action='append')
+parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles file is detected", action='store_true')
 parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_then_filename, hash_and_filename (default: hash_then_filename)")
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
-parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
-parser.add_argument('-v', '--verbose', help="Force verbose output", action='store_true')
-parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: eng).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language", nargs='?', action='append')
+parser.add_argument('-a', '--auto', help="Trigger automatic selection and download of the best subtitles found", action='store_true')
 
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
 
@@ -466,18 +466,18 @@ if len(sys.argv) > 1:
     result = parser.parse_args()
 
     # Handle results
-    if result.gui:
-        opt_gui = result.gui
     if result.cli:
         opt_gui = 'cli'
+    if result.gui:
+        opt_gui = result.gui
     if result.search:
         opt_search_mode = result.search
+    if result.skip:
+        opt_search_overwrite = 'off'
     if result.select:
         opt_selection_mode = result.select
     if result.auto:
         opt_selection_mode = 'auto'
-    if result.verbose:
-        opt_verbose = 'on'
     if result.lang:
         if opt_languages != result.lang:
             opt_languages = result.lang
