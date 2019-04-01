@@ -20,14 +20,13 @@ Features
 
 - Use a GNOME/GTK or KDE/Qt GUI depending on your favorite desktop environment
 - Or just use the CLI! Great for automation, and it works on Linux, macOS and Windows
-
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
 - Query subtitles in multiple languages at once
 - Query subtitles for multiple video files and folders at once
 - Detect valid video files (using mime types and file extensions)
 - Detect correct video titles by computing unique movie hash sums in order to download the right subtitles for the right file!
 - If the video detection fails, a backup search using filename will be performed
-- Download subtitles automatically if only one is available, choose the one you want otherwise.
+- Download subtitles automatically if only one is available, choose the one you want otherwise
 - Rename downloaded subtitles to match source video file. Possibility to append a language code to the file name (ex: movie_en.srt).
 
 Requirements
@@ -51,7 +50,7 @@ Quick installation as a nautilus script, under GNOME 3 desktop environment:
 Website
 -------
 
-You can browse the project's website at <https://emericg.github.io/OpenSubtitlesDownload>  
+You can browse the project's website at <https://emeric.io/OpenSubtitlesDownload>  
 You can browse the project's GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
 Learn much more about OpenSubtitlesDownload.py installation and configuration on its wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>  
 
