@@ -8,9 +8,7 @@ Categories=AudioVideo;
 
 Name=OpenSubtitlesDownload
 GenericName=Automatic subtitles downloader
-GenericName[fr]=Téléchargeur automatique de sous-titres
 Comment=Download subtitles from opensubtitles.org
-Comment[fr]=Télécharge des sous-titres depuis opensubtitles.org
 
 OnlyShowIn=GNOME;LXDE;Unity;XFCE;
 Exec=OpenSubtitlesDownload.py --gui=gnome "%F"

@@ -18,24 +18,25 @@ The subtitles search and download service is powered by [opensubtitles.org](http
 Features
 --------
 
-- Use a GNOME/GTK or KDE/Qt GUI depending on your favorite desktop environment.
-- Or just use the CLI! Great for automation, and it works on Linux, macOS and Windows.
+- Use a GNOME/GTK or KDE/Qt GUI depending on your favorite desktop environment
+- Or just use the CLI! Great for automation, and it works on Linux, macOS and Windows
+
 - Query subtitles in more than 60 different languages for documentaries, movies, TV shows and more...
-- Query subtitles in multiple languages at once.
-- Query subtitles for multiple video files at once.
-- Detect valid video files (using mime types and file extensions).
+- Query subtitles in multiple languages at once
+- Query subtitles for multiple video files and folders at once
+- Detect valid video files (using mime types and file extensions)
 - Detect correct video titles by computing unique movie hash sums in order to download the right subtitles for the right file!
-- If the video detection fails, search by filename will be performed as backup method.
+- If the video detection fails, a backup search using filename will be performed
 - Download subtitles automatically if only one is available, choose the one you want otherwise.
-- Rename downloaded subtitles to match source video file. Possibility to append the language code to the file name (ex: movie_en.srt).
+- Rename downloaded subtitles to match source video file. Possibility to append a language code to the file name (ex: movie_en.srt).
 
 Requirements
 ------------
 
 - python (version 2 or 3)
-- zenity (only for GNOME based desktop environments)
-- kdialog (only for KDE based desktop environments)
-- common unix tools: wget & gzip (GUI subtitles downloading), ps & grep (GUI autodetection)
+- zenity (only needed for GNOME based desktop environments)
+- kdialog (only needed for KDE based desktop environments)
+- common unix tools (only needed for GUIs): wget & gzip (GUI subtitles downloading), ps & grep (GUI autodetection)
 
 Installation
 ------------
@@ -71,6 +72,7 @@ Contributors
 ------------
 
 - Emeric Grange <emeric.grange@gmail.com> maintainer
+- Thiago Alvarenga Lechuga <thiagoalz@gmail.com> for his work on the 'Windows CLI' and the 'folder search'
 - jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
 - Gui13 for his work on the arguments parsing
 - Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature

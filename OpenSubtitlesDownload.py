@@ -36,12 +36,12 @@
 import os
 import re
 import sys
-import struct
-import mimetypes
-import subprocess
-import argparse
 import time
 import gzip
+import struct
+import argparse
+import mimetypes
+import subprocess
 
 if sys.version_info >= (3, 0):
     import shutil
@@ -115,9 +115,6 @@ opt_selection_match    = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
 
-# Enables extra output. Can be overridden at run time with '-v' argument.
-opt_verbose            = 'off'
-
 # ==== Exit codes ==============================================================
 
 # Exit code returned by the software. You can use them to improve scripting behaviours.
@@ -129,7 +126,6 @@ opt_verbose            = 'off'
 # priority: info, warning, error
 # title: only for zenity messages
 # message: full text, with tags and breaks (tag cleanup for terminal)
-# verbose: is this message important?
 
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
@@ -450,7 +446,7 @@ if os.path.isabs(sys.argv[0]):
 else:
     scriptPath = os.getcwd() + "/" + str(sys.argv[0])
 
-# Setup parser
+# Setup ArgumentParser
 parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
                                  description='This software is designed to help you find and download subtitles for your favorite videos!',
                                  formatter_class=argparse.RawTextHelpFormatter)
@@ -467,7 +463,6 @@ parser.add_argument('filePathListArg', help="The video file(s) for which subtitl
 
 # Only use ArgumentParser if we have arguments...
 if len(sys.argv) > 1:
-
     result = parser.parse_args()
 
     # Handle results
