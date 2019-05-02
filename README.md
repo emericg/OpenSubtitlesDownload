@@ -50,7 +50,7 @@ Quick installation as a nautilus script, under GNOME 3 desktop environment:
 Website
 -------
 
-You can browse the project's website at <https://emeric.io/OpenSubtitlesDownload>  
+You can browse the project's website at <https://emeric.io/OpenSubtitlesDownload.html>  
 You can browse the project's GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
 Learn much more about OpenSubtitlesDownload.py installation and configuration on its wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>  
 
