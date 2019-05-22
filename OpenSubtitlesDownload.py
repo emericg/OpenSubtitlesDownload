@@ -128,16 +128,23 @@ opt_selection_count    = 'off'
 
 # ==== Super Print =============================================================
 # priority: info, warning, error
-# title: only for zenity messages
-# message: full text, with tags and breaks (tag cleanup for terminal)
+# title: only for zenity and kdialog messages
+# message: full text, with tags and breaks (tags will be cleaned up for CLI)
 
 def superPrint(priority, title, message):
     """Print messages through terminal, zenity or kdialog"""
     if opt_gui == 'gnome':
-        if title:
-            subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--title=' + title, '--text=' + message])
-        else:
-            subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--text=' + message])
+        subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--title=' + title, '--text=' + message])
+    elif opt_gui == 'kde':
+        # Adapt to kdialog
+        message = message.replace("\n", "<br>")
+        message = message.replace('\\"', '"')
+        if priority == 'warning':
+            priority = 'sorry'
+        elif priority == 'info':
+            priority = 'msgbox'
+
+        subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
     else:
         # Clean up formating tags from the zenity messages
         message = message.replace("\n\n", "\n")
@@ -147,20 +154,7 @@ def superPrint(priority, title, message):
         message = message.replace("</b>", "")
         message = message.replace('\\"', '"')
 
-        # Print message
-        if opt_gui == 'kde':
-            if priority == 'warning':
-                priority = 'sorry'
-            elif priority == 'info':
-                priority = 'msgbox'
-
-            if title:
-                subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
-            else:
-                subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height),'--' + priority + '=' + message])
-
-        else: # CLI
-            print(">> " + message)
+        print(">> " + message)
 
 # ==== Check file path & type ==================================================
 
@@ -299,10 +293,10 @@ def selectionGnome(subtitlesList):
         textstr = ' --text="<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
     elif subtitlesMatchedByHash == 0:
         tilestr = ' --title="Subtitles for: ' + videoFileName + '"'
-        textstr = ' --text="Search results using file name, NOT movie detection. <b>May be unreliable...</b>\n<b>File name:</b> ' + videoFileName + '" '
+        textstr = ' --text="Search results using file name, NOT video detection. <b>May be unreliable...</b>\n<b>File name:</b> ' + videoFileName + '" '
     else: # a mix of the two
         tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
-        textstr = ' --text="Search results using file name AND movie detection.\n<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
+        textstr = ' --text="Search results using file name AND video detection.\n<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
 
     # Spawn zenity "list" dialog
     process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr \
@@ -349,17 +343,17 @@ def selectionKde(subtitlesList):
 
         # key + subtitles name
         subtitlesItems += str(index) + ' "' + item['SubFileName'] + '" '
-        index+=1
+        index += 1
 
     if subtitlesMatchedByName == 0:
             tilestr = ' --title="Subtitles for ' + videoTitle + '"'
             menustr = ' --menu="<b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
     elif subtitlesMatchedByHash == 0:
             tilestr = ' --title="Subtitles for ' + videoFileName + '"'
-            menustr = ' --menu="Search results using file name, NOT movie detection. <b>May be unreliable...</b><br><b>File name:</b> ' + videoFileName + '" '
+            menustr = ' --menu="Search results using file name, NOT video detection. <b>May be unreliable...</b><br><b>File name:</b> ' + videoFileName + '" '
     else: # a mix of the two
             tilestr = ' --title="Subtitles for ' + videoTitle + '" '
-            menustr = ' --menu="Search results using file name AND movie detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
+            menustr = ' --menu="Search results using file name AND video detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
 
     # Spawn kdialog "radiolist"
     process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems, shell=True, stdout=subprocess.PIPE)
@@ -725,7 +719,7 @@ try:
 
             # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
-            if subtitlesSelected == '':
+            if not subtitlesSelected:
                 # Automatic subtitles selection?
                 if opt_selection_mode == 'auto':
                     subtitlesSelected = selectionAuto(subtitlesList)
