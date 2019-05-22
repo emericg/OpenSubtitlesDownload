@@ -290,25 +290,19 @@ def selectionGnome(subtitlesList):
             columnCount = '--column="Downloads" '
             subtitlesItems += '"' + item['SubDownloadsCnt'] + '" '
 
-    # Spawn zenity "list" dialog
     if subtitlesMatchedByName == 0:
-        process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
-            ' --list --title="Synchronized subtitles for: ' + videoTitle + '"' + \
-            ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
-            ' --column="Available subtitles (synchronized)" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems,
-            shell=True, stdout=subprocess.PIPE)
+        tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
+        textstr = ' --text="<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
     elif subtitlesMatchedByHash == 0:
-        process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
-            ' --list --title="Subtitles found!"' + \
-            ' --text="<b>Filename:</b> ' + videoFileName + '\n<b>>> These results comes from search by file name (not using movie hash) and may be unreliable...</b>"' + \
-            ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems,
-            shell=True, stdout=subprocess.PIPE)
-    else:
-        process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + \
-            ' --list --title="Subtitles for: ' + videoTitle + '"' + \
-            ' --text="<b>Title:</b> ' + videoTitle + '\n<b>Filename:</b> ' + videoFileName + '"' + \
-            ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems,
-            shell=True, stdout=subprocess.PIPE)
+        tilestr = ' --title="Subtitles for: ' + videoFileName + '"'
+        textstr = ' --text="Search results using file name, NOT movie detection. <b>May be unreliable...</b>\n<b>File name:</b> ' + videoFileName + '" '
+    else: # a mix of the two
+        tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
+        textstr = ' --text="Search results using file name AND movie detection.\n<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
+
+    # Spawn zenity "list" dialog
+    process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr \
+        + ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
 
     # Get back the result
     result_subtitlesSelection = process_subtitlesSelection.communicate()
