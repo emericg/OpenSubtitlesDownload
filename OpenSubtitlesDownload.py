@@ -95,6 +95,10 @@ opt_search_overwrite = 'on'
 # - auto (automatically select the best subtitles found)
 opt_selection_mode = 'default'
 
+# Customize subtitles download path. Can be overridden at run time with '-o' argument.
+# By default, subtitles are downloaded next to their video file.
+opt_output_path = ''
+
 # ==== GUI settings ============================================================
 
 # Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
@@ -496,6 +500,7 @@ parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles f
 parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_then_filename, hash_and_filename (default: hash_then_filename)")
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
 parser.add_argument('-a', '--auto', help="Trigger automatic selection and download of the best subtitles found", action='store_true')
+parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
 
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
 
@@ -516,6 +521,8 @@ if len(sys.argv) > 1:
         opt_selection_mode = result.select
     if result.auto:
         opt_selection_mode = 'auto'
+    if result.output:
+        opt_output_path = result.output
     if result.lang:
         if opt_languages != result.lang:
             opt_languages = result.lang
@@ -765,6 +772,8 @@ try:
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                if opt_output_path and os.path.isdir(os.path.abspath(opt_output_path)):
+                    subPath = os.path.abspath(opt_output_path) + "/" + subPath.rsplit('/', 1)[1]
 
                 # Write language code into the filename?
                 if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
