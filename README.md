@@ -25,9 +25,10 @@ Features
 - Query subtitles for multiple video files and folders at once
 - Detect valid video files (using mime types and file extensions)
 - Detect correct video titles by computing unique movie hash sums in order to download the right subtitles for the right file!
-- If the video detection fails, a backup search using filename will be performed
+- If the video detection fails, a backup search using filename is performed
 - Download subtitles automatically if only one is available, choose the one you want otherwise
-- Rename downloaded subtitles to match source video file. Possibility to append a language code to the file name (ex: movie_en.srt).
+- Download the subtitles file right next to the video file (need read/write permissions)
+- Rename downloaded subtitles to match the video file. Possibility to add a language code (ex: movie_en.srt).
 
 Requirements
 ------------

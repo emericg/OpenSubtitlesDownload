@@ -486,7 +486,7 @@ else:
 
 # Setup ArgumentParser
 parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
-                                 description='This software is designed to help you find and download subtitles for your favorite videos!',
+                                 description='Automatically find and download the right subtitles for your favorite videos!',
                                  formatter_class=argparse.RawTextHelpFormatter)
 
 parser.add_argument('--cli', help="Force CLI mode", action='store_true')
