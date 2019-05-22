@@ -24,7 +24,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Contributors / special thanks:
 # Thiago Alvarenga Lechuga <thiagoalz@gmail.com> for his work on the 'Windows CLI' and the 'folder search'
@@ -54,7 +54,7 @@ else: # python2
 # ==== Opensubtitles.org server settings =======================================
 
 # XML-RPC server domain for opensubtitles.org:
-osd_server = ServerProxy('http://api.opensubtitles.org/xml-rpc')
+osd_server = ServerProxy('https://api.opensubtitles.org/xml-rpc')
 
 # You can use your opensubtitles.org account to avoid "in-subtitles" advertisment
 # and bypass download limits. Be careful about your password security, it will be
@@ -67,7 +67,7 @@ osd_language = 'en'
 # ==== Language settings =======================================================
 
 # 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
-#    > Supported ISO codes: http://www.opensubtitles.org/addons/export_languages.php
+#    > Supported ISO codes: https://www.opensubtitles.org/addons/export_languages.php
 # 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
 #    > Exemple: opt_languages = ['eng,fre']
 opt_languages = ['eng']
@@ -205,8 +205,8 @@ def checkSubtitlesExists(path):
     return False
 
 # ==== Hashing algorithm =======================================================
-# Info: http://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
-# This particular implementation is coming from SubDownloader: http://subdownloader.net
+# Info: https://trac.opensubtitles.org/projects/opensubtitles/wiki/HashSourceCodes
+# This particular implementation is coming from SubDownloader: https://subdownloader.net
 
 def hashFile(path):
     """Produce a hash for a video file: size + 64bit chksum of the first and
