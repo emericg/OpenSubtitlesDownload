@@ -151,9 +151,9 @@ def superPrint(priority, title, message):
                 priority = 'msgbox'
 
             if title:
-                subprocess.call(['kdialog', '--' + priority, '--title=' + title, '--text=' + message])
+                subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
             else:
-                subprocess.call(['kdialog', '--' + priority, '--text=' + message])
+                subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height),'--' + priority + '=' + message])
 
         else: # CLI
             print(">> " + message)
@@ -335,7 +335,51 @@ def selectionGnome(subtitlesList):
 
 def selectionKde(subtitlesList):
     """KDE subtitles selection window using kdialog"""
-    return selectionAuto(subtitlesList)
+    subtitlesSelected = ''
+    subtitlesItems = ''
+    subtitlesMatchedByHash = 0
+    subtitlesMatchedByName = 0
+
+    # Generate selection window content
+    # TODO doesn't support additional columns
+    index = 0
+    for item in subtitlesList['data']:
+        if item['MatchedBy'] == 'moviehash':
+            subtitlesMatchedByHash += 1
+        else:
+            subtitlesMatchedByName += 1
+
+        # key + subtitles name
+        subtitlesItems += str(index) + ' "' + item['SubFileName'] + '" '
+        index+=1
+
+    if subtitlesMatchedByName == 0:
+            tilestr = ' --title="Subtitles for ' + videoTitle + '"'
+            menustr = ' --menu="<b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
+    elif subtitlesMatchedByHash == 0:
+            tilestr = ' --title="Subtitles for ' + videoFileName + '"'
+            menustr = ' --menu="Search results using file name, NOT movie detection. <b>May be unreliable...</b><br><b>File name:</b> ' + videoFileName + '" '
+    else: # a mix of the two
+            tilestr = ' --title="Subtitles for ' + videoTitle + '" '
+            menustr = ' --menu="Search results using file name AND movie detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
+
+    # Spawn kdialog "radiolist"
+    process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+
+    # Get back the result
+    result_subtitlesSelection = process_subtitlesSelection.communicate()
+
+    # The results contain the key matching a subtitles?
+    if result_subtitlesSelection[0]:
+        if sys.version_info >= (3, 0):
+            keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
+        else: # python2
+            keySelected = int(str(result_subtitlesSelection[0]).strip("\n"))
+
+        subtitlesSelected = subtitlesList['data'][keySelected]['SubFileName']
+
+    # Return the result
+    return subtitlesSelected
 
 # ==== CLI selection mode ======================================================
 
