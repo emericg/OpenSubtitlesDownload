@@ -411,7 +411,10 @@ def selectionCLI(subtitlesList):
     sub_selection = -1
     while(sub_selection < 0 or sub_selection > subtitlesIndex):
         try:
-            sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
+            if sys.version_info >= (3, 0):
+                sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
+            else: # python 2
+                sub_selection = int(raw_input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
         except:
             sub_selection = -1
 
