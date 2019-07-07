@@ -214,29 +214,29 @@ def hashFile(path):
     try:
         longlongformat = 'Q' # unsigned long long little endian
         bytesize = struct.calcsize(longlongformat)
-        format = "<%d%s" % (65536//bytesize, longlongformat)
+        fmt = "<%d%s" % (65536//bytesize, longlongformat)
 
         f = open(path, "rb")
 
         filesize = os.fstat(f.fileno()).st_size
-        hash = filesize
+        filehash = filesize
 
         if filesize < 65536 * 2:
             superPrint("error", "File size error!", "File size error while generating hash for this file:\n<i>" + path + "</i>")
             return "SizeError"
 
-        buffer = f.read(65536)
-        longlongs = struct.unpack(format, buffer)
-        hash += sum(longlongs)
+        buf = f.read(65536)
+        longlongs = struct.unpack(fmt, buf)
+        filehash += sum(longlongs)
 
         f.seek(-65536, os.SEEK_END) # size is always > 131072
-        buffer = f.read(65536)
-        longlongs = struct.unpack(format, buffer)
-        hash += sum(longlongs)
-        hash &= 0xFFFFFFFFFFFFFFFF
+        buf = f.read(65536)
+        longlongs = struct.unpack(fmt, buf)
+        filehash += sum(longlongs)
+        filehash &= 0xFFFFFFFFFFFFFFFF
 
         f.close()
-        returnedhash = "%016x" % hash
+        returnedhash = "%016x" % filehash
         return returnedhash
 
     except IOError:
