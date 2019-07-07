@@ -578,7 +578,7 @@ else:
 # ==== Instances dispatcher
 
 # If videoPathList is empty, abort!
-if len(videoPathList) == 0:
+if not videoPathList:
     parser.print_help()
     sys.exit(1)
 
@@ -587,7 +587,7 @@ if opt_search_overwrite == 'off':
     videoPathList = [path for path in videoPathList if not checkSubtitlesExists(path)]
 
     # If videoPathList is empty, exit!
-    if len(videoPathList) == 0:
+    if not videoPathList:
         sys.exit(1)
 
 # The first video file will be processed by this instance
@@ -677,7 +677,7 @@ try:
 
         # Fallback search
         if ((opt_search_mode == 'hash_then_filename') and
-                (('data' in subtitlesList) and (len(subtitlesList['data']) == 0))):
+                (('data' in subtitlesList) and (not subtitlesList['data']))):
             searchList[:] = [] # searchList.clear()
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
             subtitlesList.clear()
@@ -692,7 +692,7 @@ try:
                     superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
         # Parse the results of the XML-RPC query
-        if ('data' in subtitlesList) and (len(subtitlesList['data']) > 0):
+        if ('data' in subtitlesList) and (subtitlesList['data']):
 
             # Mark search as successful
             searchLanguageResult += 1
