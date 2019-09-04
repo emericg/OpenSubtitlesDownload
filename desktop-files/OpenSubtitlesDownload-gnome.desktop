@@ -8,7 +8,7 @@ Categories=AudioVideo;
 
 Name=OpenSubtitlesDownload
 GenericName=Automatic subtitles downloader
-Comment=Download subtitles from opensubtitles.org
+Comment=Download synchronized subtitles from opensubtitles.org
 
-OnlyShowIn=GNOME;LXDE;Unity;XFCE;
+OnlyShowIn=GNOME;MATE;LXDE;Unity;XFCE;
 Exec=OpenSubtitlesDownload.py --gui=gnome "%F"

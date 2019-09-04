@@ -9,7 +9,7 @@ ServiceTypes=KonqPopupMenu/Plugin,video/*
 
 Name=OpenSubtitlesDownload
 GenericName=Automatic subtitles downloader
-Comment=Download subtitles from opensubtitles.org
+Comment=Download synchronized subtitles from opensubtitles.org
 
-OnlyShowIn=KDE;MATE;Razor;TDE;
+OnlyShowIn=KDE;Razor;TDE;
 Exec=openSubtitlesDownload.py --gui=kde "%F"
