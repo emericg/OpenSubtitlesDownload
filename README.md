@@ -9,7 +9,7 @@ OpenSubtitlesDownload.py
 Introduction
 ------------
 
-**OpenSubtitlesDownload.py** is a small software written in python, built to help you **quickly find and download subtitles for your favorite videos**. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI mode (Command Line Interface) on your NAS, Raspberry Pi, macOS or wherever you want to bundle it really!
+**OpenSubtitlesDownload.py** is a small software written in Python, built to help you **quickly find and download subtitles** for your favorite videos. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI mode (Command Line Interface) on your NAS, Raspberry Pi or anywhere you want really, as long as you have a working Python interpreter.
 
 The subtitles search is done by precisly **identifying your video files** by computing unique movie hash sums. This way, you have more chance to find the **exact subtitles for your videos**, avoiding synchronization problems between the subtitles and the soundtrack. But what if that doesn't work? Well, a search with the filename will be performed, but be aware: results are a bit more... unpredictable (don't worry, you will be warned! and you can even disable this feature if you want).
 
@@ -41,7 +41,7 @@ Requirements
 Installation
 ------------
 
-Quick installation as a nautilus script, under GNOME 3 desktop environment:
+Quick install as a nautilus script, under GNOME 3 desktop environment:
 
 > $ mkdir -p ~/.local/share/nautilus/scripts/  
 > $ cd ~/.local/share/nautilus/scripts/  
