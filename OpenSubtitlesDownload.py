@@ -612,15 +612,15 @@ for videoPathDispatch in videoPathList:
     # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
     command_splitted.append(videoPathDispatch)
 
+    # Do not spawn too many instances at once
+    time.sleep(0.33)
+
     if opt_gui == 'cli' and opt_selection_mode != 'auto':
         # Synchronous call
         process_videoDispatched = subprocess.call(command_splitted)
     else:
         # Asynchronous call
         process_videoDispatched = subprocess.Popen(command_splitted)
-
-    # Do not spawn too many instances at the same time
-    time.sleep(0.33)
 
 # ==== Search and download subtitles ===========================================
 
