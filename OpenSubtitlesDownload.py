@@ -346,14 +346,14 @@ def selectionKde(subtitlesList):
         index += 1
 
     if subtitlesMatchedByName == 0:
-            tilestr = ' --title="Subtitles for ' + videoTitle + '"'
-            menustr = ' --menu="<b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
+        tilestr = ' --title="Subtitles for ' + videoTitle + '"'
+        menustr = ' --menu="<b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
     elif subtitlesMatchedByHash == 0:
-            tilestr = ' --title="Subtitles for ' + videoFileName + '"'
-            menustr = ' --menu="Search results using file name, NOT video detection. <b>May be unreliable...</b><br><b>File name:</b> ' + videoFileName + '" '
+        tilestr = ' --title="Subtitles for ' + videoFileName + '"'
+        menustr = ' --menu="Search results using file name, NOT video detection. <b>May be unreliable...</b><br><b>File name:</b> ' + videoFileName + '" '
     else: # a mix of the two
-            tilestr = ' --title="Subtitles for ' + videoTitle + '" '
-            menustr = ' --menu="Search results using file name AND video detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
+        tilestr = ' --title="Subtitles for ' + videoTitle + '" '
+        menustr = ' --menu="Search results using file name AND video detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
 
     # Spawn kdialog "radiolist"
     process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems, shell=True, stdout=subprocess.PIPE)
@@ -472,6 +472,7 @@ def dependencyChecker():
 
     return True
 
+# ==============================================================================
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
 
@@ -578,20 +579,20 @@ else:
     superPrint("error", "No file provided!", "No file provided!")
     sys.exit(2)
 
-# ==== Instances dispatcher
-
 # If videoPathList is empty, abort!
 if not videoPathList:
     parser.print_help()
     sys.exit(1)
 
-# Check if the subtitles exists videoPathList
+# Check if the subtitles files already exists
 if opt_search_overwrite == 'off':
     videoPathList = [path for path in videoPathList if not checkSubtitlesExists(path)]
 
     # If videoPathList is empty, exit!
     if not videoPathList:
         sys.exit(1)
+
+# ==== Instances dispatcher ====================================================
 
 # The first video file will be processed by this instance
 videoPath = videoPathList[0]
@@ -624,11 +625,11 @@ for videoPathDispatch in videoPathList:
 # ==== Search and download subtitles ===========================================
 
 try:
-    # ==== Connection
+    # ==== Connection to OpenSubtitlesDownload
     try:
         session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.1')
     except Exception:
-        # Retry once, it could be a momentary overloaded server?
+        # Retry once after a delay (could just be a momentary overloaded server?)
         time.sleep(3)
         try:
             session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.1')
@@ -641,20 +642,21 @@ try:
         superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
         sys.exit(2)
 
+    # Count languages marked for this search
     searchLanguage = 0
     searchLanguageResult = 0
-    videoTitle = ''
-    videoHash = hashFile(videoPath)
-    videoSize = os.path.getsize(videoPath)
-    videoFileName = os.path.basename(videoPath)
-
-    # Count languages marked for this search
     for SubLanguageID in opt_languages:
         searchLanguage += len(SubLanguageID.split(','))
 
     searchResultPerLanguage = [searchLanguage]
 
-    # ==== Search for available subtitles using file hash and size
+    # ==== Get file hash, size and name
+    videoTitle = ''
+    videoHash = hashFile(videoPath)
+    videoSize = os.path.getsize(videoPath)
+    videoFileName = os.path.basename(videoPath)
+
+    # ==== Search for available subtitles on OpenSubtitlesDownload
     for SubLanguageID in opt_languages:
         searchList = []
         subtitlesList = {}
@@ -664,11 +666,11 @@ try:
         if opt_search_mode in ('filename', 'hash_and_filename'):
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
 
-        # Primary search
+        ## Primary search
         try:
             subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
         except Exception:
-            # Retry once, we are already connected, the server maybe momentary overloaded
+            # Retry once after a delay (we are already connected, the server may be momentary overloaded)
             time.sleep(3)
             try:
                 subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
@@ -678,23 +680,22 @@ try:
         #if (opt_search_mode == 'hash_and_filename'):
         #    TODO Cleanup duplicate between moviehash and filename results
 
-        # Fallback search
-        if ((opt_search_mode == 'hash_then_filename') and
-                (('data' in subtitlesList) and (not subtitlesList['data']))):
+        ## Fallback search
+        if ((opt_search_mode == 'hash_then_filename') and (('data' in subtitlesList) and (not subtitlesList['data']))):
             searchList[:] = [] # searchList.clear()
             searchList.append({'sublanguageid':SubLanguageID, 'query':videoFileName})
             subtitlesList.clear()
             try:
                 subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
             except Exception:
-                # Retry once, we are already connected, the server maybe momentary overloaded
+                # Retry once after a delay (we are already connected, the server may be momentary overloaded)
                 time.sleep(3)
                 try:
                     subtitlesList = osd_server.SearchSubtitles(session['token'], searchList)
                 except Exception:
                     superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
 
-        # Parse the results of the XML-RPC query
+        ## Parse the results of the XML-RPC query
         if ('data' in subtitlesList) and (subtitlesList['data']):
 
             # Mark search as successful
@@ -780,7 +781,7 @@ try:
                 if opt_gui != 'cli':
                     subPath = re.escape(subPath)
 
-                # Download and unzip the selected subtitles (with progressbar)
+                ## Download and unzip the selected subtitles (with progressbar)
                 if opt_gui == 'gnome':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif opt_gui == 'kde':
@@ -808,7 +809,7 @@ try:
                     osd_server.LogOut(session['token'])
                     sys.exit(2)
 
-    # Print a message if no subtitles have been found, for any of the languages
+    ## Print a message if no subtitles have been found, for any of the languages
     if searchLanguageResult == 0:
         superPrint("info", "No subtitles available :-(", '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
         ExitCode = 1
