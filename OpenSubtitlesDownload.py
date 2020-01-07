@@ -4,14 +4,14 @@
 # OpenSubtitlesDownload.py / Version 4.1
 # This software is designed to help you find and download subtitles for your favorite videos!
 
-# You can browse the official website:
-# https://emericg.github.io/OpenSubtitlesDownload
 # You can browse the project's GitHub page:
 # https://github.com/emericg/OpenSubtitlesDownload
 # Learn much more about OpenSubtitlesDownload.py on its wiki:
 # https://github.com/emericg/OpenSubtitlesDownload/wiki
+# You can also browse the official website:
+# https://emeric.io/OpenSubtitlesDownload
 
-# Copyright (c) 2019 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2020 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
