@@ -769,6 +769,7 @@ try:
                 subLangId = opt_language_separator  + subtitlesList['data'][subIndex]['ISO639']
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
+                subEncoding = subtitlesList['data'][subIndex]['SubEncoding']
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 if opt_output_path and os.path.isdir(os.path.abspath(opt_output_path)):
                     subPath = os.path.abspath(opt_output_path) + "/" + subPath.rsplit('/', 1)[1]
@@ -780,6 +781,11 @@ try:
                 # Escape non-alphanumeric characters from the subtitles path
                 if opt_gui != 'cli':
                     subPath = re.escape(subPath)
+
+                # Make sure we are downloading an UTF8 encoded file
+                downloadPos = subURL.find("download/")
+                if downloadPos > 0:
+                    subURL = subURL[:downloadPos+9] + "subencoding-utf8/" + subURL[downloadPos+9:]
 
                 ## Download and unzip the selected subtitles (with progressbar)
                 if opt_gui == 'gnome':
