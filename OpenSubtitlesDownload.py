@@ -713,12 +713,12 @@ try:
             # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
             if opt_gui != 'cli':
                 videoTitle = videoTitle.replace('"', '\\"')
-                videoTitle = videoTitle.replace("'", "\'")
-                videoTitle = videoTitle.replace('`', '\`')
+                videoTitle = videoTitle.replace("'", "\\'")
+                videoTitle = videoTitle.replace('`', '\\`')
                 videoTitle = videoTitle.replace("&", "&amp;")
                 videoFileName = videoFileName.replace('"', '\\"')
-                videoFileName = videoFileName.replace("'", "\'")
-                videoFileName = videoFileName.replace('`', '\`')
+                videoFileName = videoFileName.replace("'", "\\'")
+                videoFileName = videoFileName.replace('`', '\\`')
                 videoFileName = videoFileName.replace("&", "&amp;")
 
             # If there is more than one subtitles and opt_selection_mode != 'auto',
@@ -781,6 +781,10 @@ try:
                 # Escape non-alphanumeric characters from the subtitles path
                 if opt_gui != 'cli':
                     subPath = re.escape(subPath)
+                    subPath = subPath.replace('"', '\\"')
+                    subPath = subPath.replace("'", "\\'")
+                    subPath = subPath.replace('`', '\\`')
+                    subPath = subPath.replace("&", "&amp;")
 
                 # Make sure we are downloading an UTF8 encoded file
                 downloadPos = subURL.find("download/")
