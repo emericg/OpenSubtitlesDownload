@@ -77,6 +77,9 @@ opt_languages = ['eng']
 opt_language_suffix = 'auto'
 opt_language_separator = '_'
 
+# Force downloading and storing UTF-8 encoded subtitles files.
+opt_force_utf8 = True
+
 # ==== Search settings =========================================================
 
 # Subtitles search mode. Can be overridden at run time with '-s' argument.
@@ -87,7 +90,7 @@ opt_language_separator = '_'
 opt_search_mode = 'hash_then_filename'
 
 # Search and download a subtitles even if a subtitles file already exists.
-opt_search_overwrite = 'on'
+opt_search_overwrite = True
 
 # Subtitles selection mode. Can be overridden at run time with '-t' argument.
 # - manual (always let you choose the subtitles you want)
@@ -514,7 +517,7 @@ if len(sys.argv) > 1:
     if result.search:
         opt_search_mode = result.search
     if result.skip:
-        opt_search_overwrite = 'off'
+        opt_search_overwrite = False
     if result.select:
         opt_selection_mode = result.select
     if result.auto:
@@ -585,7 +588,7 @@ if not videoPathList:
     sys.exit(1)
 
 # Check if the subtitles files already exists
-if opt_search_overwrite == 'off':
+if not opt_search_overwrite:
     videoPathList = [path for path in videoPathList if not checkSubtitlesExists(path)]
 
     # If videoPathList is empty, exit!
@@ -787,9 +790,10 @@ try:
                     subPath = subPath.replace("&", "&amp;")
 
                 # Make sure we are downloading an UTF8 encoded file
-                downloadPos = subURL.find("download/")
-                if downloadPos > 0:
-                    subURL = subURL[:downloadPos+9] + "subencoding-utf8/" + subURL[downloadPos+9:]
+                if opt_force_utf8:
+                    downloadPos = subURL.find("download/")
+                    if downloadPos > 0:
+                        subURL = subURL[:downloadPos+9] + "subencoding-utf8/" + subURL[downloadPos+9:]
 
                 ## Download and unzip the selected subtitles (with progressbar)
                 if opt_gui == 'gnome':
