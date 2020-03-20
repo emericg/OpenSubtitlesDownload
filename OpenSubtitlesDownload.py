@@ -570,10 +570,17 @@ if 'result' in locals():
     for i in result.filePathListArg:
         filePath = os.path.abspath(i)
         if os.path.isdir(filePath):
-            # If it is a folder, check all of its files recursively
-            for root, _, items in os.walk(filePath):
-                for item in items:
-                    localPath = os.path.join(root, item)
+            if opt_gui == 'cli':
+                # If it is a folder, check all of its files recursively
+                for root, _, items in os.walk(filePath):
+                    for item in items:
+                        localPath = os.path.join(root, item)
+                        if checkFileValidity(localPath):
+                            videoPathList.append(localPath)
+            else:
+                # If it is a folder, check all of its files
+                for item in os.listdir(filePath):
+                    localPath = os.path.join(filePath, item)
                     if checkFileValidity(localPath):
                         videoPathList.append(localPath)
         elif checkFileValidity(filePath):
