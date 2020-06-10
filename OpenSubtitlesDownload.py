@@ -56,10 +56,9 @@ else: # python2
 # XML-RPC server domain for opensubtitles.org:
 osd_server = ServerProxy('https://api.opensubtitles.org/xml-rpc')
 
-# You can use your opensubtitles.org account to avoid "in-subtitles" advertisment
-# and bypass download limits. Be careful about your password security, it will be
-# stored right here in plain text... You can also change opensubtitles.org language,
-# it will be used for error codes and stuff.
+# You can use your opensubtitles.org VIP account to avoid "in-subtitles" advertisement and bypass download limits.
+# Be careful about your password security, it will be stored right here in plain text...
+# You can also change opensubtitles.org language, it will be used for error codes and stuff.
 osd_username = ''
 osd_password = ''
 osd_language = 'en'
@@ -613,16 +612,7 @@ videoPathList.pop(0)
 for videoPathDispatch in videoPathList:
 
     # Handle current options
-    command = [
-        sys.executable,
-        scriptPath,
-        "-g",
-        opt_gui,
-        "-s",
-        opt_search_mode,
-        "-t",
-        opt_selection_mode
-    ]
+    command = [ sys.executable, scriptPath, "-g", opt_gui, "-s", opt_search_mode, "-t", opt_selection_mode ]
 
     if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
         for resultlangs in opt_languages:
@@ -653,12 +643,16 @@ try:
         try:
             session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.1')
         except Exception:
-            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n" + \
+                "- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\n" + \
+                "The subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
             sys.exit(2)
 
     # Connection refused?
     if session['status'] != '200 OK':
-        superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\nThe subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+        superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n" + \
+            "- Your Internet connection status\n - www.opensubtitles.org availability\n - Your downloads limit (200 subtitles per 24h)\n\n" + \
+            "The subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
         sys.exit(2)
 
     # Count languages marked for this search
@@ -853,10 +847,14 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
         sys.exit(ExitCode)
 
     # An unknown error occur, let's apologize before exiting
-    superPrint("error", "Unexpected error!", "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
-               "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
-               "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
-               "Just to be safe, please check:\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n- Your Internet connection status\n- That are using the latest version of this software ;-)")
+    superPrint("error", "Unexpected error!",
+        "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
+        "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
+        "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
+        "Just to be safe, please check:\n- www.opensubtitles.org availability\" + \n" + \
+        "- Your downloads limit (200 subtitles per 24h)\n" + \
+        "- Your Internet connection status\n" + \
+        "- That are using the latest version of this software ;-)")
 
 except Exception:
 
