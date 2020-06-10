@@ -613,25 +613,33 @@ videoPathList.pop(0)
 for videoPathDispatch in videoPathList:
 
     # Handle current options
-    command = sys.executable + " " + scriptPath + " -g " + opt_gui + " -s " + opt_search_mode + " -t " + opt_selection_mode
+    command = [
+        sys.executable,
+        scriptPath,
+        "-g",
+        opt_gui,
+        "-s",
+        opt_search_mode,
+        "-t",
+        opt_selection_mode
+    ]
+
     if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
         for resultlangs in opt_languages:
-            command += " -l " + resultlangs
+            command.append("-l")
+            command.append(resultlangs)
 
-    # Split command string
-    command_splitted = command.split()
-    # The videoPath filename can contain spaces, but we do not want to split that, so add it right after the split
-    command_splitted.append(videoPathDispatch)
+    command.append(videoPathDispatch)
 
     # Do not spawn too many instances at once
     time.sleep(0.33)
 
     if opt_gui == 'cli' and opt_selection_mode != 'auto':
         # Synchronous call
-        process_videoDispatched = subprocess.call(command_splitted)
+        process_videoDispatched = subprocess.call(command)
     else:
         # Asynchronous call
-        process_videoDispatched = subprocess.Popen(command_splitted)
+        process_videoDispatched = subprocess.Popen(command)
 
 # ==== Search and download subtitles ===========================================
 
