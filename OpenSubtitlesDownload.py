@@ -622,7 +622,7 @@ for videoPathDispatch in videoPathList:
     command.append(videoPathDispatch)
 
     # Do not spawn too many instances at once
-    time.sleep(0.33)
+    time.sleep(1)
 
     if opt_gui == 'cli' and opt_selection_mode != 'auto':
         # Synchronous call
