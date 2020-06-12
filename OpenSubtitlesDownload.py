@@ -614,10 +614,12 @@ for videoPathDispatch in videoPathList:
     # Handle current options
     command = [ sys.executable, scriptPath, "-g", opt_gui, "-s", opt_search_mode, "-t", opt_selection_mode ]
 
-    if not (len(opt_languages) == 1 and opt_languages[0] == 'eng'):
-        for resultlangs in opt_languages:
-            command.append("-l")
-            command.append(resultlangs)
+    for resultlangs in opt_languages:
+        command.append("-l")
+        command.append(resultlangs)
+
+    if not opt_search_overwrite:
+        command.append("--skip")
 
     command.append(videoPathDispatch)
 
