@@ -187,22 +187,26 @@ def checkFileValidity(path):
 
 def checkSubtitlesExists(path):
     """Check if a subtitles already exists for the current file"""
-
     for ext in ['srt', 'sub', 'sbv', 'smi', 'ssa', 'ass', 'usf']:
         subPath = path.rsplit('.', 1)[0] + '.' + ext
         if os.path.isfile(subPath) is True:
             superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
             return True
-        # With language code? Only check the first language (and probably using the wrong language suffix format)
+        # With language code?
         if opt_language_suffix in ('on', 'auto'):
             if len(opt_languages) == 1:
                 splitted_languages_list = opt_languages[0].split(',')
             else:
-                splitted_languages_list = opt_languages
-            subPath = path.rsplit('.', 1)[0] + opt_language_separator + splitted_languages_list[0] + '.' + ext
-            if os.path.isfile(subPath) is True:
-                superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
-                return True
+                splitted_languages_list = opt_languages.split
+            for language in splitted_languages_list:
+                # Rough method to try 2 and 3 letters language codes
+                if len(language) == 3:
+                    splitted_languages_list.append(language[0:2])
+            for language in splitted_languages_list:
+                subPath = path.rsplit('.', 1)[0] + opt_language_separator + language + '.' + ext
+                if os.path.isfile(subPath) is True:
+                    superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
+                    return True
 
     return False
 
