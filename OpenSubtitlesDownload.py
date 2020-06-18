@@ -66,14 +66,15 @@ osd_language = 'en'
 
 # ==== Language settings =======================================================
 
-# 1/ Change the search language by using any supported 3-letter (ISO 639-2) language codes:
-#    > Supported ISO codes: https://www.opensubtitles.org/addons/export_languages.php
+# 1/ Change the search language by using any supported (ISO 639) 2 or 3 letter language codes:
+#    > Supported language codes: https://www.opensubtitles.org/addons/export_languages.php
 # 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
-#    > Exemple: opt_languages = ['eng,fre']
+#    > Ex: opt_languages = ['eng,fre']
 opt_languages = ['eng']
 
 # Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
 # If you are regularly searching for several language at once, you sould use 'on'.
+# The language code used will be the one provided in opt_languages.
 # Can be overridden at run time with '-x' arguments.
 opt_language_suffix = 'auto'
 opt_language_separator = '_'
@@ -793,7 +794,7 @@ try:
                     else:
                         subIndexTemp += 1
 
-                subLangId = opt_language_separator  + subtitlesList['data'][subIndex]['ISO639']
+                subLangId = opt_language_separator + SubLanguageID
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subEncoding = subtitlesList['data'][subIndex]['SubEncoding']
