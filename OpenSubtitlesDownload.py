@@ -5,11 +5,9 @@
 # This software is designed to help you find and download subtitles for your favorite videos!
 
 # You can browse the project's GitHub page:
-# https://github.com/emericg/OpenSubtitlesDownload
-# Learn much more about OpenSubtitlesDownload.py on its wiki:
-# https://github.com/emericg/OpenSubtitlesDownload/wiki
-# You can also browse the official website:
-# https://emeric.io/OpenSubtitlesDownload
+# - https://github.com/emericg/OpenSubtitlesDownload
+# Learn much more about configuring OpenSubtitlesDownload.py on its wiki:
+# - https://github.com/emericg/OpenSubtitlesDownload/wiki
 
 # Copyright (c) 2020 by Emeric GRANGE <emeric.grange@gmail.com>
 #
@@ -506,7 +504,7 @@ parser.add_argument('-l', '--lang', help="Specify the language in which the subt
 parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles file is detected", action='store_true')
 parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_then_filename, hash_and_filename (default: hash_then_filename)")
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
-parser.add_argument('-a', '--auto', help="Trigger automatic selection and download of the best subtitles found", action='store_true')
+parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
 parser.add_argument('-x', '--suffix', help="Enable language code suffix", action='store_true')
 parser.add_argument('-u', '--username', help="Set opensubtitles.org account username")
@@ -798,13 +796,14 @@ try:
                 subLangName = subtitlesList['data'][subIndex]['LanguageName']
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subEncoding = subtitlesList['data'][subIndex]['SubEncoding']
+
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 if opt_output_path and os.path.isdir(os.path.abspath(opt_output_path)):
                     subPath = os.path.abspath(opt_output_path) + "/" + subPath.rsplit('/', 1)[1]
 
                 # Write language code into the filename?
                 if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
-                    subPath = subPath.rsplit('.',1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                    subPath = subPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
                 if opt_gui != 'cli':
