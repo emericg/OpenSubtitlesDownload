@@ -776,7 +776,7 @@ try:
 
                 # Write language code into the filename?
                 if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
-                    subPath = videoPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
+                    subPath = subPath.rsplit('.',1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
                 if opt_gui != 'cli':
