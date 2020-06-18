@@ -59,6 +59,7 @@ osd_server = ServerProxy('https://api.opensubtitles.org/xml-rpc')
 # You can use your opensubtitles.org VIP account to avoid "in-subtitles" advertisement and bypass download limits.
 # Be careful about your password security, it will be stored right here in plain text...
 # You can also change opensubtitles.org language, it will be used for error codes and stuff.
+# Can be overridden at run time with '-u' and '-p' arguments.
 osd_username = ''
 osd_password = ''
 osd_language = 'en'
@@ -73,6 +74,7 @@ opt_languages = ['eng']
 
 # Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
 # If you are regularly searching for several language at once, you sould use 'on'.
+# Can be overridden at run time with '-x' arguments.
 opt_language_suffix = 'auto'
 opt_language_separator = '_'
 
@@ -505,6 +507,9 @@ parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_th
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
 parser.add_argument('-a', '--auto', help="Trigger automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
+parser.add_argument('-x', '--suffix', help="Enable language code suffix", action='store_true')
+parser.add_argument('-u', '--username', help="Set opensubtitles.org account username")
+parser.add_argument('-p', '--password', help="Set opensubtitles.org account password")
 
 parser.add_argument('filePathListArg', help="The video file(s) for which subtitles should be searched and downloaded", nargs='+')
 
@@ -531,8 +536,11 @@ if len(sys.argv) > 1:
         if opt_languages != result.lang:
             opt_languages = result.lang
             opt_selection_language = 'on'
-            if opt_language_suffix != 'off':
-                opt_language_suffix = 'on'
+    if result.suffix:
+        opt_language_suffix = 'on'
+    if result.username and result.password:
+        osd_username = result.username
+        osd_password = result.password
 
 # GUI auto detection
 if opt_gui == 'auto':
