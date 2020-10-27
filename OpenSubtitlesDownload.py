@@ -151,11 +151,11 @@ def superPrint(priority, title, message):
     else:
         # Clean up formating tags from the zenity messages
         message = message.replace("\n\n", "\n")
+        message = message.replace('\\"', '"')
         message = message.replace("<i>", "")
         message = message.replace("</i>", "")
         message = message.replace("<b>", "")
         message = message.replace("</b>", "")
-        message = message.replace('\\"', '"')
 
         print(">> " + message)
 
@@ -811,7 +811,6 @@ try:
                     subPath = subPath.replace('"', '\\"')
                     subPath = subPath.replace("'", "\\'")
                     subPath = subPath.replace('`', '\\`')
-                    subPath = subPath.replace("&", "&amp;")
 
                 # Make sure we are downloading an UTF8 encoded file
                 if opt_force_utf8:
