@@ -64,7 +64,7 @@ osd_language = 'en'
 
 # ==== Language settings =======================================================
 
-# 1/ Change the search language by using any supported (ISO 639) 2 or 3 letter language codes:
+# 1/ Change the search language by using any supported 3 letter language codes:
 #    > Supported language codes: https://www.opensubtitles.org/addons/export_languages.php
 # 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
 #    > Ex: opt_languages = ['eng,fre']
@@ -83,9 +83,9 @@ opt_force_utf8 = True
 # ==== Search settings =========================================================
 
 # Subtitles search mode. Can be overridden at run time with '-s' argument.
-# - hash (search by hash)
-# - filename (search by filename)
-# - hash_then_filename (search by hash, then filename if no results)
+# - hash (search by hash only)
+# - filename (search by filename only)
+# - hash_then_filename (search by hash, then if no results by filename)
 # - hash_and_filename (search using both methods)
 opt_search_mode = 'hash_then_filename'
 
