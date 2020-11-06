@@ -422,6 +422,8 @@ def selectionCLI(subtitlesList):
                 sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
             else: # python 2
                 sub_selection = int(raw_input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
+        except KeyboardInterrupt:
+            sys.exit(0)
         except:
             sub_selection = -1
 
