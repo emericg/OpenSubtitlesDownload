@@ -48,6 +48,17 @@ Quick install as a nautilus script, under GNOME 3 desktop environment:
 > $ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/OpenSubtitlesDownload.py  
 > $ chmod u+x OpenSubtitlesDownload.py  
 
+Use an opensubtitles.org account
+--------------------------------
+
+Following a recent policy change from opensubtitles.org, the API is now available only for logged users. More informations can be found on [this discussion](https://github.com/emericg/OpenSubtitlesDownload/issues/51).  
+If you are concern by this issue, the symptoms are **401 unauthorized** error messages. If you try too many times without a valid account, know that your IP address will be banned for 24 H.  
+
+To continue using OpenSubtitlesDownload you simply need to:
+
+- [create an account](https://www.opensubtitles.org/en/newuser) on opensubtitles.org website
+- [use that account](https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings#log-in-with-a-registered-user) with the script 
+
 Website
 -------
 
