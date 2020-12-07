@@ -3,12 +3,10 @@ Type=Application
 Icon=text
 NoDisplay=true
 Terminal=true
-MimeType=video/avi;video/mpeg;video/mp4;video/ogg;video/quicktime;video/msvideo;video/webm;video/x-matroska;video/x-mpeg;video/x-ms-wmv;video/x-msvideo;video/x-flv;application/ogg;
-Categories=AudioVideo;
-
 Name=OpenSubtitlesDownload
 GenericName=Automatic subtitles downloader
 Comment=Download synchronized subtitles from opensubtitles.org
-
 OnlyShowIn=GNOME;MATE;LXDE;Unity;XFCE;
-Exec=OpenSubtitlesDownload.py --gui=gnome "%F"
+Exec=OpenSubtitlesDownload.py --gui=gnome %F
+Categories=Utility;AudioVideo;Video;
+MimeType=video/avi;video/mpeg;video/mp4;video/ogg;video/quicktime;video/msvideo;video/webm;video/x-matroska;video/x-mpeg;video/x-ms-wmv;video/x-msvideo;video/x-flv;application/ogg;
