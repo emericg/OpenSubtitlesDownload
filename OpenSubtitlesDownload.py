@@ -37,6 +37,7 @@ import sys
 import time
 import gzip
 import struct
+import hashlib
 import argparse
 import mimetypes
 import subprocess
@@ -49,7 +50,7 @@ else: # python2
     import urllib
     from xmlrpclib import ServerProxy, Error
 
-# ==== Opensubtitles.org server settings =======================================
+# ==== OpenSubtitles.org server settings =======================================
 
 # XML-RPC server domain for opensubtitles.org:
 osd_server = ServerProxy('https://api.opensubtitles.org/xml-rpc')
@@ -126,8 +127,10 @@ opt_selection_count    = 'off'
 
 # Exit code returned by the software. You can use them to improve scripting behaviours.
 # 0: Success, and subtitles downloaded
-# 1: Success, but no subtitles found
+# 1: Success, but no subtitles found or downloaded
 # 2: Failure
+
+ExitCode = 2
 
 # ==== Super Print =============================================================
 # priority: info, warning, error
@@ -485,8 +488,6 @@ def dependencyChecker():
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
 
-ExitCode = 2
-
 # ==== Argument parsing
 
 # Get OpenSubtitlesDownload.py script absolute path
@@ -651,23 +652,29 @@ for videoPathDispatch in videoPathList:
 try:
     # ==== Connection to OpenSubtitlesDownload
     try:
-        session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.2')
+        session = osd_server.LogIn(osd_username, hashlib.md5(osd_password[0:32].encode('utf-8')).hexdigest(), osd_language, 'opensubtitles-download 4.2')
+    except KeyboardInterrupt:
+        sys.exit(1)
     except Exception:
-        # Retry once after a delay (could just be a momentary overloaded server?)
-        time.sleep(3)
-        try:
-            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.2')
-        except Exception:
-            superPrint("error", "Connection error!", "Unable to reach opensubtitles.org servers!\n\nPlease check:\n" + \
-                "- Your Internet connection status\n- www.opensubtitles.org availability\n- Your downloads limit (200 subtitles per 24h)\n\n" + \
-                "The subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
-            sys.exit(2)
+        superPrint("error", "Connection error!", "Unable to reach OpenSubtitles.org servers!\n\nPlease check:\n" + \
+            "- Your Internet connection status\n" + \
+            "- www.opensubtitles.org availability\n" + \
+            "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
+            "Be sure to donate if you appreciate the service provided!")
+        sys.exit(2)
 
-    # Connection refused?
+    # Login accepted?
     if session['status'] != '200 OK':
-        superPrint("error", "Connection error!", "Opensubtitles.org servers refused the connection: " + session['status'] + ".\n\nPlease check:\n" + \
-            "- Your Internet connection status\n - www.opensubtitles.org availability\n - Your downloads limit (200 subtitles per 24h)\n\n" + \
-            "The subtitles search and download service is powered by opensubtitles.org. Be sure to donate if you appreciate the service provided!")
+        if session['status'] == '401 Unauthorized':
+            superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\n" + \
+                "- You MUST use a valid OpenSubtitles.org account!\n" + \
+                "- Check out <a href=\"https://github.com/emericg/OpenSubtitlesDownload/wiki/Log-in-with-a-registered-user\">how and why</a> here")
+        else:
+            superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\nPlease check:\n" + \
+                "- www.opensubtitles.org availability\n" + \
+                "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n\n" + \
+                "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
+                "Be sure to donate if you appreciate the service provided!")
         sys.exit(2)
 
     # Count languages marked for this search
@@ -867,7 +874,7 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
         "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
         "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
         "Just to be safe, please check:\n- www.opensubtitles.org availability\" + \n" + \
-        "- Your downloads limit (200 subtitles per 24h)\n" + \
+        "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n" + \
         "- Your Internet connection status\n" + \
         "- That are using the latest version of this software ;-)")
 
