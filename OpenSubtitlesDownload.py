@@ -65,18 +65,22 @@ osd_language = 'en'
 
 # ==== Language settings =======================================================
 
-# 1/ Change the search language by using any supported 3 letter language codes:
+# 1/ Change the search language by using any supported 3-letter (ISO639-2) language code:
 #    > Supported language codes: https://www.opensubtitles.org/addons/export_languages.php
+#    > Full guide: https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings
 # 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
 #    > Ex: opt_languages = ['eng,fre']
 opt_languages = ['eng']
 
-# Write 2-letter language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
+# Write language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
 # If you are regularly searching for several language at once, you sould use 'on'.
-# The language code used will be the one provided in opt_languages.
-# Can be overridden at run time with '-x' arguments.
 opt_language_suffix = 'auto'
-opt_language_separator = '_'
+# - auto: same language code size than set in opt_languages
+# - 2: 2-letter (ISO639-3) language code
+# - 3: 3-letter (ISO639-2) language code
+opt_language_suffix_size = 'auto'
+# Character used to separate file path from the language code (ex: file_en.srt).
+opt_language_suffix_separator = '_'
 
 # Force downloading and storing UTF-8 encoded subtitles files.
 opt_force_utf8 = True
@@ -207,7 +211,7 @@ def checkSubtitlesExists(path):
                 if len(language) == 3:
                     splitted_languages_list.append(language[0:2])
             for language in splitted_languages_list:
-                subPath = path.rsplit('.', 1)[0] + opt_language_separator + language + '.' + ext
+                subPath = path.rsplit('.', 1)[0] + opt_language_suffix_separator + language + '.' + ext
                 if os.path.isfile(subPath) is True:
                     superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
                     return True
@@ -419,7 +423,7 @@ def selectionCLI(subtitlesList):
     # Ask user selection
     print("\033[91m[0]\033[0m Cancel search")
     sub_selection = -1
-    while(sub_selection < 0 or sub_selection > subtitlesIndex):
+    while (sub_selection < 0 or sub_selection > subtitlesIndex):
         try:
             if sys.version_info >= (3, 0):
                 sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
@@ -509,7 +513,7 @@ parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_th
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
 parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
-parser.add_argument('-x', '--suffix', help="Enable language code suffix", action='store_true')
+parser.add_argument('-x', '--suffix', help="Force language code file suffix", action='store_true')
 parser.add_argument('-u', '--username', help="Set opensubtitles.org account username")
 parser.add_argument('-p', '--password', help="Set opensubtitles.org account password")
 
@@ -801,10 +805,10 @@ try:
                     else:
                         subIndexTemp += 1
 
-                subLangId = opt_language_separator + SubLanguageID
-                subLangName = subtitlesList['data'][subIndex]['LanguageName']
+                # Prepare download
                 subURL = subtitlesList['data'][subIndex]['SubDownloadLink']
                 subEncoding = subtitlesList['data'][subIndex]['SubEncoding']
+                subLangName = subtitlesList['data'][subIndex]['LanguageName']
 
                 subPath = videoPath.rsplit('.', 1)[0] + '.' + subtitlesList['data'][subIndex]['SubFormat']
                 if opt_output_path and os.path.isdir(os.path.abspath(opt_output_path)):
@@ -812,6 +816,12 @@ try:
 
                 # Write language code into the filename?
                 if ((opt_language_suffix == 'on') or (opt_language_suffix == 'auto' and searchLanguageResult > 1)):
+                    if len(opt_languages) == 1: splitted_languages_list = opt_languages[0].split(',')
+                    else: splitted_languages_list = opt_languages.split
+                    if (str(opt_language_suffix_size) == 'auto' and len(splitted_languages_list[0]) == 2) or str(opt_language_suffix_size) == '2': subLangId = opt_language_suffix_separator + subtitlesList['data'][subIndex]['ISO639']
+                    elif (str(opt_language_suffix_size) == 'auto' and len(splitted_languages_list[0]) == 3) or str(opt_language_suffix_size) == '3': subLangId = opt_language_suffix_separator + subtitlesList['data'][subIndex]['SubLanguageID']
+                    else: subLangId = opt_language_suffix_separator + SubLanguageID
+
                     subPath = subPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
                 # Escape non-alphanumeric characters from the subtitles path
