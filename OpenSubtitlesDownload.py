@@ -855,6 +855,9 @@ try:
                     osd_server.LogOut(session['token'])
                     sys.exit(2)
 
+                # Use a secondary tool after a successful download?
+                #process_subtitlesDownload = subprocess.call("(custom_command" + " " + subPath + ") 2>&1", shell=True)
+
     ## Print a message if no subtitles have been found, for any of the languages
     if searchLanguageResult == 0:
         superPrint("info", "No subtitles available :-(", '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
