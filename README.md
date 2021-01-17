@@ -43,10 +43,12 @@ Installation
 
 Quick install as a nautilus script, under GNOME 3 desktop environment:
 
-> $ mkdir -p ~/.local/share/nautilus/scripts/  
-> $ cd ~/.local/share/nautilus/scripts/  
-> $ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/OpenSubtitlesDownload.py  
-> $ chmod u+x OpenSubtitlesDownload.py  
+```
+$ mkdir -p ~/.local/share/nautilus/scripts/
+$ cd ~/.local/share/nautilus/scripts/
+$ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/OpenSubtitlesDownload.py
+$ chmod u+x OpenSubtitlesDownload.py
+```
 
 Use an opensubtitles.org account
 --------------------------------
@@ -95,4 +97,4 @@ License
 OpenSubtitlesDownload.py is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 3 of the License, or (at your option) any later version.  
 Read the [LICENSE](LICENSE) file or [consult the license on the FSF website](https://www.gnu.org/licenses/gpl-3.0.txt) directly.
 
-Emeric Grange <emeric.grange@gmail.com>
+> Emeric Grange <emeric.grange@gmail.com>
