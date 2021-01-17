@@ -660,14 +660,19 @@ try:
     except KeyboardInterrupt:
         sys.exit(1)
     except Exception:
-        superPrint("error", "Connection error!", "Unable to reach OpenSubtitles.org servers!\n\nPlease check:\n" + \
-            "- Your Internet connection status\n" + \
-            "- www.opensubtitles.org availability\n" + \
-            "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
-            "Be sure to donate if you appreciate the service provided!")
-        sys.exit(2)
+        # Retry once after a delay (could just be a momentary overloaded server?)
+        time.sleep(3)
+        try:
+            session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 4.2')
+        except Exception:
+            superPrint("error", "Connection error!", "Unable to reach OpenSubtitles.org servers!\n\nPlease check:\n" + \
+                "- Your Internet connection status\n" + \
+                "- www.opensubtitles.org availability\n" + \
+                "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
+                "Be sure to donate if you appreciate the service provided!")
+            sys.exit(2)
 
-    # Login accepted?
+    # Login not accepted?
     if session['status'] != '200 OK':
         if session['status'] == '401 Unauthorized':
             superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\n" + \
@@ -876,7 +881,6 @@ try:
         ExitCode = 0
 
 except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
-
     # Do not warn about remote disconnection # bug/feature of python 3.5?
     if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
         sys.exit(ExitCode)
@@ -892,12 +896,9 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
         "- That are using the latest version of this software ;-)")
 
 except Exception:
-
     # Catch unhandled exceptions but do not spawn an error window
     print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
 # Disconnect from opensubtitles.org server, then exit
-if session and session['token']:
-    osd_server.LogOut(session['token'])
-
+if session and session['token']: osd_server.LogOut(session['token'])
 sys.exit(ExitCode)
