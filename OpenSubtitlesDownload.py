@@ -430,7 +430,7 @@ def selectionCLI(subtitlesList):
             else: # python 2
                 sub_selection = int(raw_input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
         except KeyboardInterrupt:
-            sys.exit(0)
+            sys.exit(1)
         except:
             sub_selection = -1
 
@@ -879,6 +879,9 @@ try:
         ExitCode = 1
     else:
         ExitCode = 0
+
+except KeyboardInterrupt:
+    sys.exit(1)
 
 except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
     # Do not warn about remote disconnection # bug/feature of python 3.5?
