@@ -43,7 +43,7 @@ Installation
 
 Quick install as a nautilus script, under GNOME 3 desktop environment:
 
-```
+```bash
 $ mkdir -p ~/.local/share/nautilus/scripts/
 $ cd ~/.local/share/nautilus/scripts/
 $ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/OpenSubtitlesDownload.py

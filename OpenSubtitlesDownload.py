@@ -68,8 +68,11 @@ osd_language = 'en'
 # 1/ Change the search language by using any supported 3-letter (ISO639-2) language code:
 #    > Supported language codes: https://www.opensubtitles.org/addons/export_languages.php
 #    > Full guide: https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings
-# 2/ Search for subtitles in several languages at once by using multiple codes separated by a comma:
+#    > Ex: opt_languages = ['eng']
+# 2/ Search for subtitles in several languages (at once, select one) by using multiple codes separated by a comma:
 #    > Ex: opt_languages = ['eng,fre']
+# 3/ Search for subtitles in several languages (separately, select one of each) by using multiple codes separated by a comma:
+#    > Ex: opt_languages = ['eng','fre']
 opt_languages = ['eng']
 
 # Write language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
@@ -120,21 +123,12 @@ opt_gui = 'auto'
 opt_gui_width  = 720
 opt_gui_height = 320
 
-# Various GUI options. You can set them to 'on', 'off' or 'auto'.
+# Various GUI columns to show/hide during subtitles selection. You can set them to 'on', 'off' or 'auto'.
 opt_selection_hi       = 'auto'
 opt_selection_language = 'auto'
 opt_selection_match    = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
-
-# ==== Exit codes ==============================================================
-
-# Exit code returned by the software. You can use them to improve scripting behaviours.
-# 0: Success, and subtitles downloaded
-# 1: Success, but no subtitles found or downloaded
-# 2: Failure
-
-ExitCode = 2
 
 # ==== Super Print =============================================================
 # priority: info, warning, error
@@ -420,7 +414,7 @@ def selectionCLI(subtitlesList):
         else:
             print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
 
-    # Ask user selection
+    # Ask user to selected a subtitles
     print("\033[91m[0]\033[0m Cancel search")
     sub_selection = -1
     while (sub_selection < 0 or sub_selection > subtitlesIndex):
@@ -492,6 +486,13 @@ def dependencyChecker():
 # ==== Main program (execution starts here) ====================================
 # ==============================================================================
 
+# ==== Exit code returned by the software. You can use them to improve scripting behaviours.
+# 0: Success, and subtitles downloaded
+# 1: Success, but no subtitles found or downloaded
+# 2: Failure
+
+ExitCode = 2
+
 # ==== Argument parsing
 
 # Get OpenSubtitlesDownload.py script absolute path
@@ -560,25 +561,25 @@ if opt_gui == 'auto':
             opt_gui = 'kde'
             break
 
-# Sanitize settings
-if opt_search_mode not in ['hash', 'filename', 'hash_then_filename', 'hash_and_filename']:
-    opt_search_mode = 'hash_then_filename'
-
-if opt_selection_mode not in ['manual', 'default', 'auto']:
-    opt_selection_mode = 'default'
-
+# Sanitize some settings
 if opt_gui not in ['gnome', 'kde', 'cli']:
     opt_gui = 'cli'
     opt_search_mode = 'hash_then_filename'
     opt_selection_mode = 'auto'
     print("Unknown GUI, falling back to an automatic CLI mode")
 
+if opt_search_mode not in ['hash', 'filename', 'hash_then_filename', 'hash_and_filename']:
+    opt_search_mode = 'hash_then_filename'
+
+if opt_selection_mode not in ['manual', 'default', 'auto']:
+    opt_selection_mode = 'default'
+
 # ==== Check for the necessary tools (must be done after GUI auto detection)
 
 if dependencyChecker() is False:
     sys.exit(2)
 
-# ==== Get valid video paths
+# ==== Get video paths, validate them, and if needed check if subtitles already exists
 
 videoPathList = []
 
@@ -657,8 +658,6 @@ try:
     # ==== Connection to OpenSubtitlesDownload
     try:
         session = osd_server.LogIn(osd_username, hashlib.md5(osd_password[0:32].encode('utf-8')).hexdigest(), osd_language, 'opensubtitles-download 4.2')
-    except KeyboardInterrupt:
-        sys.exit(1)
     except Exception:
         # Retry once after a delay (could just be a momentary overloaded server?)
         time.sleep(3)
@@ -677,7 +676,7 @@ try:
         if session['status'] == '401 Unauthorized':
             superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\n" + \
                 "- You MUST use a valid OpenSubtitles.org account!\n" + \
-                "- Check out <a href=\"https://github.com/emericg/OpenSubtitlesDownload/wiki/Log-in-with-a-registered-user\">how and why</a> here")
+                "- Check out <a href=\"https://github.com/emericg/OpenSubtitlesDownload/wiki/Log-in-with-a-registered-user\">how and why</a> on our wiki page")
         else:
             superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\nPlease check:\n" + \
                 "- www.opensubtitles.org availability\n" + \
@@ -797,7 +796,7 @@ try:
                     else: # CLI
                         subtitlesSelected = selectionCLI(subtitlesList)
 
-            # If a subtitles has been selected at this point, download it!
+            # At this point a subtitles should be selected
             if subtitlesSelected:
                 subIndex = 0
                 subIndexTemp = 0
@@ -829,7 +828,7 @@ try:
 
                     subPath = subPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesList['data'][subIndex]['SubFormat']
 
-                # Escape non-alphanumeric characters from the subtitles path
+                # Escape non-alphanumeric characters from the subtitles download path
                 if opt_gui != 'cli':
                     subPath = re.escape(subPath)
                     subPath = subPath.replace('"', '\\"')
