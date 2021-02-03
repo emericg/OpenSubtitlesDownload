@@ -636,8 +636,8 @@ for videoPathDispatch in videoPathList:
     # Pass file
     command.append(videoPathDispatch)
 
-    # Do not spawn too many instances at once
-    time.sleep(1)
+    # Do not spawn too many instances at once, avoid error '429 Too Many Requests'
+    time.sleep(2)
 
     if opt_gui == 'cli' and opt_selection_mode != 'auto':
         # Synchronous call
