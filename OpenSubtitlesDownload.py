@@ -618,10 +618,10 @@ for videoPathDispatch in videoPathList:
         command.append(language)
 
     if not opt_search_overwrite:
-        command.append("--i")
+        command.append("-i")
 
     if opt_language_suffix == 'on':
-        command.append("--x")
+        command.append("-x")
 
     if opt_output_path:
         command.append("-o")
