@@ -437,7 +437,7 @@ def selectionAuto(subtitlesResultList):
     """Automatic subtitles selection using filename match"""
 
     videoFileParts = videoFileName.replace('-', '.').replace(' ', '.').replace('_', '.').lower().split('.')
-    languageListReversed = reversed(languageList)
+    languageListReversed = list(reversed(languageList))
     maxScore = -1
 
     for subtitle in subtitlesResultList['data']:
