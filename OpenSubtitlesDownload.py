@@ -147,17 +147,17 @@ def superPrint(priority, title, message):
             priority = 'sorry'
         elif priority == 'info':
             priority = 'msgbox'
-
+        # Print message
         subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
     else:
-        # Clean up formating tags from the zenity messages
+        # Clean up format tags from the zenity string
         message = message.replace("\n\n", "\n")
         message = message.replace('\\"', '"')
         message = message.replace("<i>", "")
         message = message.replace("</i>", "")
         message = message.replace("<b>", "")
         message = message.replace("</b>", "")
-
+        # Print message
         print(">> " + message)
 
 # ==== Check file path & type ==================================================
@@ -736,7 +736,6 @@ try:
 
         ## Parse the results of the XML-RPC query
         if ('data' in subtitlesResultList) and (subtitlesResultList['data']):
-
             # Mark search as successful
             languageCount_results += 1
             subtitlesSelected = ''
@@ -876,7 +875,7 @@ try:
 except KeyboardInterrupt:
     sys.exit(1)
 
-except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
+except (OSError, IOError, RuntimeError, AttributeError, TypeError, NameError, KeyError):
     # Do not warn about remote disconnection # bug/feature of python 3.5?
     if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
         sys.exit(ExitCode)
@@ -886,9 +885,10 @@ except (OSError, IOError, RuntimeError, TypeError, NameError, KeyError):
         "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
         "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
         "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
-        "Just to be safe, please check:\n- www.opensubtitles.org availability\" + \n" + \
-        "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n" + \
+        "Just to be safe, please check:\n" + \
+        "- www.opensubtitles.org availability\n" + \
         "- Your Internet connection status\n" + \
+        "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n" + \
         "- That are using the latest version of this software ;-)")
 
 except Exception:
