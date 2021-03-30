@@ -87,7 +87,7 @@ opt_language_suffix_size = 'auto'
 opt_language_suffix_separator = '_'
 
 # Force downloading and storing UTF-8 encoded subtitles files.
-opt_force_utf8 = True
+opt_force_utf8 = False
 
 # ==== Search settings =========================================================
 
@@ -516,6 +516,7 @@ parser.add_argument('-t', '--select', help="Selection mode: manual, default, aut
 parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
 parser.add_argument('-x', '--suffix', help="Force language code file suffix", action='store_true')
+parser.add_argument('-8', '--utf8', help="Force UTF-8 file download", action='store_true')
 parser.add_argument('-u', '--username', help="Set opensubtitles.org account username")
 parser.add_argument('-p', '--password', help="Set opensubtitles.org account password")
 parser.add_argument('searchPathList', help="The video file(s) or folder(s) for which subtitles should be searched and downloaded", nargs='+')
@@ -542,6 +543,8 @@ if arguments.lang:
     opt_languages = arguments.lang
 if arguments.suffix:
     opt_language_suffix = 'on'
+if arguments.utf8:
+    opt_force_utf8 = True
 if arguments.username and arguments.password:
     osd_username = arguments.username
     osd_password = arguments.password
@@ -623,6 +626,9 @@ for videoPathDispatch in videoPathList:
 
     if opt_language_suffix == 'on':
         command.append("-x")
+
+    if opt_force_utf8 == True:
+        command.append("-8")
 
     if opt_output_path:
         command.append("-o")
