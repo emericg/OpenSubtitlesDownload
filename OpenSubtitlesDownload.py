@@ -32,10 +32,10 @@
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
 import os
-import re
 import sys
-import time
 import gzip
+import time
+import base64
 import struct
 import hashlib
 import argparse
@@ -801,7 +801,7 @@ try:
                         subIndexTemp += 1
 
                 # Prepare download
-                subURL = subtitlesResultList['data'][subIndex]['SubDownloadLink']
+                subID = subtitlesResultList['data'][subIndex]['IDSubtitleFile']
                 subEncoding = subtitlesResultList['data'][subIndex]['SubEncoding']
                 subLangName = subtitlesResultList['data'][subIndex]['LanguageName']
                 subPath = ''
@@ -821,39 +821,22 @@ try:
 
                     subPath = subPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesResultList['data'][subIndex]['SubFormat']
 
-                # Escape non-alphanumeric characters from the subtitles download path
-                if opt_gui != 'cli':
-                    subPath = re.escape(subPath)
-                    subPath = subPath.replace('"', '\\"')
-                    subPath = subPath.replace("'", "\\'")
-                    subPath = subPath.replace('`', '\\`')
+                # Download and unzip the selected subtitles
+                process_subtitlesDownload = 1
+                downloadResult = osd_server.DownloadSubtitles(session['token'], [subID])
+                if('data' in downloadResult) \
+                        and (downloadResult['data']) \
+                        and (len(downloadResult['data']) > 0) \
+                        and ('data' in downloadResult['data'][0]) \
+                        and (downloadResult['data'][0]['data']):
+                    decodedBytes = base64.b64decode(downloadResult['data'][0]['data'])
+                    decompressed = gzip.decompress(decodedBytes)
+                    if len(decompressed) > 0:
+                        decodedStr = str(decompressed, subEncoding)
 
-                # Make sure we are downloading an UTF8 encoded file
-                if opt_force_utf8:
-                    downloadPos = subURL.find("download/")
-                    if downloadPos > 0:
-                        subURL = subURL[:downloadPos+9] + "subencoding-utf8/" + subURL[downloadPos+9:]
+                        with open(subPath, 'w') as f:
+                            f.write(decodedStr)
 
-                ## Download and unzip the selected subtitles (with progressbar)
-                if opt_gui == 'gnome':
-                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesResultList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
-                elif opt_gui == 'kde':
-                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
-                else: # CLI
-                    print(">> Downloading '" + subtitlesResultList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
-
-                    if sys.version_info >= (3, 0):
-                        tmpFile1, headers = urllib.request.urlretrieve(subURL)
-                        tmpFile2 = gzip.GzipFile(tmpFile1)
-                        byteswritten = open(subPath, 'wb').write(tmpFile2.read())
-                        if byteswritten > 0:
-                            process_subtitlesDownload = 0
-                        else:
-                            process_subtitlesDownload = 1
-                    else: # python 2
-                        tmpFile1, headers = urllib.urlretrieve(subURL)
-                        tmpFile2 = gzip.GzipFile(tmpFile1)
-                        open(subPath, 'wb').write(tmpFile2.read())
                         process_subtitlesDownload = 0
 
                 # If an error occurs, say so
@@ -861,9 +844,6 @@ try:
                     superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
                     osd_server.LogOut(session['token'])
                     sys.exit(2)
-
-                # Use a secondary tool after a successful download?
-                #process_subtitlesDownload = subprocess.call("(custom_command" + " " + subPath + ") 2>&1", shell=True)
 
     ## Print a message if no subtitles have been found, for any of the languages
     if languageCount_results == 0:
