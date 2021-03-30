@@ -251,8 +251,8 @@ def hashFile(path):
 
 def selectionGnome(subtitlesResultList):
     """GNOME subtitles selection window using zenity"""
-    subtitlesSelected = ''
-    subtitlesItems = ''
+    subtitlesSelected = u''
+    subtitlesItems = u''
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
     columnHi = ''
@@ -273,7 +273,7 @@ def selectionGnome(subtitlesResultList):
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
             if item['SubHearingImpaired'] == '1':
-                subtitlesItems += '"✔" '
+                subtitlesItems += u'"✔" '
             else:
                 subtitlesItems += '"" '
         if opt_selection_language == 'on':
@@ -331,8 +331,8 @@ def selectionGnome(subtitlesResultList):
 
 def selectionKde(subtitlesResultList):
     """KDE subtitles selection window using kdialog"""
-    subtitlesSelected = ''
-    subtitlesItems = ''
+    subtitlesSelected = u''
+    subtitlesItems = u''
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
 
