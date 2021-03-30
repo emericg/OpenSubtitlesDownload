@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 # OpenSubtitlesDownload.py / Version 5.0
@@ -37,24 +37,19 @@ import sys
 import time
 import gzip
 import base64
+import shutil
 import struct
 import hashlib
 import argparse
 import mimetypes
 import subprocess
 
-if sys.version_info >= (3, 0):
-    import shutil
-    import urllib.request
-    from xmlrpc.client import ServerProxy, Error
-else: # python2
-    import urllib
-    from xmlrpclib import ServerProxy, Error
-
 # ==== OpenSubtitles.org server settings =======================================
 
 # XML-RPC server domain for opensubtitles.org:
-osd_server = ServerProxy('https://api.opensubtitles.org/xml-rpc')
+if sys.version_info > (3, 0):
+    from xmlrpc.client import ServerProxy, Error
+    osd_server = ServerProxy('https://api.opensubtitles.org/xml-rpc')
 
 # You can use your opensubtitles.org VIP account to avoid "in-subtitles" advertisement and bypass download limits.
 # Be careful about your password security, it will be stored right here in plain text...
@@ -312,10 +307,7 @@ def selectionGnome(subtitlesResultList):
 
     # The results contain a subtitles?
     if result_subtitlesSelection[0]:
-        if sys.version_info >= (3, 0):
-            subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
-        else: # python2
-            subtitlesSelected = str(result_subtitlesSelection[0]).strip("\n")
+        subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
 
         # Hack against recent zenity version?
         if len(subtitlesSelected.split("|")) > 1:
@@ -368,11 +360,7 @@ def selectionKde(subtitlesResultList):
 
     # The results contain the key matching a subtitles?
     if result_subtitlesSelection[0]:
-        if sys.version_info >= (3, 0):
-            keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
-        else: # python2
-            keySelected = int(str(result_subtitlesSelection[0]).strip("\n"))
-
+        keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
         subtitlesSelected = subtitlesResultList['data'][keySelected]['SubFileName']
 
     # Return the result
@@ -416,10 +404,7 @@ def selectionCLI(subtitlesResultList):
     sub_selection = -1
     while (sub_selection < 0 or sub_selection > subtitlesIndex):
         try:
-            if sys.version_info >= (3, 0):
-                sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
-            else: # python 2
-                sub_selection = int(raw_input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
+            sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
         except KeyboardInterrupt:
             sys.exit(1)
         except:
@@ -466,12 +451,11 @@ def dependencyChecker():
     """Check the availability of tools used as dependencies"""
 
     if opt_gui != 'cli':
-        if sys.version_info >= (3, 3):
-            for tool in ['gunzip', 'wget']:
-                path = shutil.which(tool)
-                if path is None:
-                    superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
-                    return False
+        for tool in ['gunzip', 'wget']:
+            path = shutil.which(tool)
+            if path is None:
+                superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
+                return False
 
     return True
 
@@ -573,6 +557,14 @@ if opt_search_mode not in ['hash', 'filename', 'hash_then_filename', 'hash_and_f
 
 if opt_selection_mode not in ['manual', 'default', 'auto']:
     opt_selection_mode = 'default'
+
+# ==== Check for Python 3
+
+if sys.version_info < (3, 0):
+    superPrint("error", "Wrong Python version",
+        "You need <b>Python 3</b> to use OpenSubtitlesDownload <b>v5</b>.\n" + \
+        "If you want to stick to Python 2, please continue using OpenSubtitlesDownload v4.")
+    sys.exit(2)
 
 # ==== Check for the necessary tools (must be done after GUI auto detection)
 

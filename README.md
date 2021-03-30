@@ -33,7 +33,7 @@ Features
 Requirements
 ------------
 
-- python (version 2 or 3)
+- Python 3 (you can use legacy versions to continue on Python 2)
 - zenity (only needed for GNOME based desktop environments)
 - kdialog (only needed for KDE based desktop environments)
 - common unix tools (only needed for GUIs): wget & gzip (GUI subtitles downloading), ps & grep (GUI autodetection)
@@ -41,7 +41,7 @@ Requirements
 Installation
 ------------
 
-Quick install as a nautilus script, under GNOME 3 desktop environment:
+Quick install as a nautilus script, under GNOME desktop environment:
 
 ```bash
 $ mkdir -p ~/.local/share/nautilus/scripts/
@@ -64,8 +64,8 @@ To continue using OpenSubtitlesDownload you simply need to:
 Website
 -------
 
-You can browse the project's website at <https://emeric.io/OpenSubtitlesDownload>  
-You can browse the project's GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
+You can browse the project website at <https://emeric.io/OpenSubtitlesDownload>  
+You can browse the project GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
 Learn much more about OpenSubtitlesDownload.py installation and configuration on its wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>  
 
 Screenshots!
