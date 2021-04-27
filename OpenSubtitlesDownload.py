@@ -852,7 +852,7 @@ try:
                         decodedBytes = base64.b64decode(downloadResult['data'][0]['data'])
                         decompressed = gzip.decompress(decodedBytes)
                         if len(decompressed) > 0:
-                            decodedStr = str(decompressed, subEncoding)
+                            decodedStr = str(decompressed, subEncoding, 'replace')
                             byteswritten = open(subPath, 'w').write(decodedStr)
                             if byteswritten > 0:
                                 process_subtitlesDownload = 0
