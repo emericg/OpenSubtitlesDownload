@@ -688,6 +688,12 @@ try:
     if opt_language_suffix == 'auto' and languageCount_search > 1:
         opt_language_suffix = 'on'
 
+    if opt_language_suffix_size == 'auto':
+        languagePrefixSize = 0
+        for language in languageList:
+            languagePrefixSize += len(language)
+        opt_language_suffix_size = (languagePrefixSize // languageCount_search)
+
     # ==== Get file hash, size and name
     videoTitle = ''
     videoHash = hashFile(currentVideoPath)
@@ -815,8 +821,8 @@ try:
 
                 # Write language code into the filename?
                 if (opt_language_suffix == 'on'):
-                    if (str(opt_language_suffix_size) == 'auto' and len(currentLanguage) == 2) or str(opt_language_suffix_size) == '2': subLangId = opt_language_suffix_separator + subtitlesResultList['data'][subIndex]['ISO639']
-                    elif (str(opt_language_suffix_size) == 'auto' and len(currentLanguage) == 3) or str(opt_language_suffix_size) == '3': subLangId = opt_language_suffix_separator + subtitlesResultList['data'][subIndex]['SubLanguageID']
+                    if (opt_language_suffix_size == 2 or opt_language_suffix_size == '2'): subLangId = opt_language_suffix_separator + subtitlesResultList['data'][subIndex]['ISO639']
+                    elif (opt_language_suffix_size == 3 or opt_language_suffix_size == '3'): subLangId = opt_language_suffix_separator + subtitlesResultList['data'][subIndex]['SubLanguageID']
                     else: subLangId = opt_language_suffix_separator + currentLanguage
 
                     subPath = subPath.rsplit('.', 1)[0] + subLangId + '.' + subtitlesResultList['data'][subIndex]['SubFormat']
