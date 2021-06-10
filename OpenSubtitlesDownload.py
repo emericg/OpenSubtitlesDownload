@@ -31,6 +31,10 @@
 # Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
 # Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
+# NOTE: pylint is very noisy ... but disabling these high runners makes pylint a bit useful
+#       to help catch newly introduced problems.
+# pylint: disable=invalid-name,line-too-long,broad-except,redefined-outer-name
+
 import os
 import re
 import sys
@@ -101,6 +105,14 @@ opt_search_overwrite = True
 # - default (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the best subtitles found)
 opt_selection_mode = 'default'
+
+# IMDB specifiers... (especially for the case that the hash and filename don't suffice)
+# It is required to set the IMDB ID; for a TVs show, also, set the season and episode.
+# The IMDB specifiers make sense only if getting subtitles for a single video file.
+#
+opt_search_imdb = None
+opt_search_season = None
+opt_search_episode = None
 
 # Customize subtitles download path. Can be overridden at run time with '-o' argument.
 # By default, subtitles are downloaded next to their video file.
@@ -503,6 +515,10 @@ parser.add_argument('-x', '--suffix', help="Force language code file suffix", ac
 parser.add_argument('-8', '--utf8', help="Force UTF-8 file download", action='store_true')
 parser.add_argument('-u', '--username', help="Set opensubtitles.org account username")
 parser.add_argument('-p', '--password', help="Set opensubtitles.org account password")
+parser.add_argument('-v', '--verbose', action='store_true', help="Print details")
+parser.add_argument('-I', '--imdb', help="Specify IMDB ID")
+parser.add_argument('-S', '--season', help="Specify season (only with --imdb)")
+parser.add_argument('-E', '--episode', help="Specify episode (only with --imdb)")
 parser.add_argument('searchPathList', help="The video file(s) or folder(s) for which subtitles should be searched and downloaded", nargs='+')
 
 # Parse arguments
@@ -532,6 +548,14 @@ if arguments.utf8:
 if arguments.username and arguments.password:
     osd_username = arguments.username
     osd_password = arguments.password
+if arguments.imdb:
+    opt_search_imdb = arguments.imdb
+    if opt_search_imdb.startswith('tt'): # OSD wants only the number part
+        opt_search_imdb = opt_search_imdb[2:]
+if arguments.season:
+    opt_search_season = arguments.season
+if arguments.episode:
+    opt_search_episode = arguments.episode
 
 # GUI auto detection
 if opt_gui == 'auto':
@@ -595,6 +619,7 @@ for i in arguments.searchPathList:
 
 # If videoPathList is empty, abort!
 if not videoPathList:
+    superPrint("error", "No Video Files", "No video files specified.")
     sys.exit(1)
 
 # ==== Instances dispatcher ====================================================
@@ -602,6 +627,11 @@ if not videoPathList:
 # The first video file will be processed by this instance
 currentVideoPath = videoPathList[0]
 videoPathList.pop(0)
+
+if videoPathList and opt_search_imdb:
+    superPrint("error", "Too Many Video Files", "Only provide one video file with --imdb option.")
+    sys.exit(1)
+
 
 # The remaining file(s) are dispatched to new instance(s) of this script
 for videoPathDispatch in videoPathList:
@@ -707,6 +737,12 @@ try:
 
         if opt_search_mode in ('hash', 'hash_then_filename', 'hash_and_filename'):
             subtitlesSearchList.append({'sublanguageid':currentLanguage, 'moviehash':videoHash, 'moviebytesize':str(videoSize)})
+        if opt_search_imdb:
+            subtitlesSearchList.append({'sublanguageid':currentLanguage, 'imdbid': opt_search_imdb})
+            if opt_search_season:
+                subtitlesSearchList[-1]['season'] = opt_search_season
+            if opt_search_episode:
+                subtitlesSearchList[-1]['episode'] = opt_search_episode
         if opt_search_mode in ('filename', 'hash_and_filename'):
             subtitlesSearchList.append({'sublanguageid':currentLanguage, 'query':videoFileName})
 
