@@ -859,7 +859,7 @@ try:
                         decompressed = gzip.decompress(decodedBytes)
                         if len(decompressed) > 0:
                             decodedStr = str(decompressed, subEncoding, 'replace')
-                            byteswritten = open(subPath, 'w').write(decodedStr)
+                            byteswritten = open(subPath, 'w', encoding=subEncoding, errors='replace').write(decodedStr)
                             if byteswritten > 0:
                                 process_subtitlesDownload = 0
 
