@@ -264,7 +264,7 @@ def selectionGnome(subtitlesResultList):
         else:
             subtitlesMatchedByName += 1
 
-        subtitlesItems += f'{idx}"' + item['SubFileName'] + '" '
+        subtitlesItems += f'{idx} "' + item['SubFileName'] + '" '
 
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
