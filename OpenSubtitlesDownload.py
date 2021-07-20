@@ -852,21 +852,8 @@ try:
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
                 else: # CLI
                     print(">> Downloading '" + subtitlesResultList['data'][subIndex]['LanguageName'] + "' subtitles for '" + videoTitle + "'")
-                    process_subtitlesDownload = 1
-
-                    downloadResult = osd_server.DownloadSubtitles(session['token'], [subID])
-                    if ('data' in downloadResult) \
-                            and (downloadResult['data']) \
-                            and (len(downloadResult['data']) > 0) \
-                            and ('data' in downloadResult['data'][0]) \
-                            and (downloadResult['data'][0]['data']):
-                        decodedBytes = base64.b64decode(downloadResult['data'][0]['data'])
-                        decompressed = gzip.decompress(decodedBytes)
-                        if len(decompressed) > 0:
-                            decodedStr = str(decompressed, subEncoding, 'replace')
-                            byteswritten = open(subPath, 'w', encoding=subEncoding, errors='replace').write(decodedStr)
-                            if byteswritten > 0:
-                                process_subtitlesDownload = 0
+                    process_subtitlesDownload = subprocess.call(
+                        "(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
 
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
