@@ -298,11 +298,12 @@ def selectionGnome(subtitlesResultList):
         tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
         textstr = ' --text="Search results using file name AND video detection.\n<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
 
-     # Spawn zenity "list" dialog
+    # Spawn zenity "list" dialog
     process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr
-                                                  + ' --column "id" --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems + ' --hide-column=1 --print-column=ALL', shell=True, stdout=subprocess.PIPE)
+                                                  + ' --column "id" --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems
+                                                  + ' --hide-column=1 --print-column=ALL', shell=True, stdout=subprocess.PIPE)
 
-    # Get back the result
+    # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
     subtitlesSelected = ""
@@ -310,8 +311,7 @@ def selectionGnome(subtitlesResultList):
 
     # The results contain a subtitles?
     if result_subtitlesSelection[0]:
-        result = str(
-            result_subtitlesSelection[0], 'utf-8').strip("\n")
+        result = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
 
         # Hack against recent zenity version?
         if len(result.split("|")) > 1:
@@ -362,7 +362,7 @@ def selectionKde(subtitlesResultList):
     # Spawn kdialog "radiolist"
     process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems, shell=True, stdout=subprocess.PIPE)
 
-    # Get back the result
+    # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
     subtitlesSelected = ""
@@ -370,8 +370,7 @@ def selectionKde(subtitlesResultList):
 
     # The results contain the key matching a subtitles?
     if result_subtitlesSelection[0]:
-        keySelected = int(
-            str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
+        keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
         subtitlesSelected = subtitlesResultList['data'][keySelected]['SubFileName']
 
     # Return the result
@@ -421,11 +420,11 @@ def selectionCLI(subtitlesResultList):
         except:
             sub_selection = -1
 
-   # Return the result
     if sub_selection == 0:
         print("Cancelling search...")
         return ("", -1)
 
+    # Return the result (selected subtitles name and index)
     return (subtitlesResultList['data'][sub_selection-1]['SubFileName'], sub_selection - 1)
 
 # ==== Automatic selection mode ================================================
@@ -574,8 +573,8 @@ if opt_selection_mode not in ['manual', 'default', 'auto']:
 
 if sys.version_info < (3, 0):
     superPrint("error", "Wrong Python version",
-        "You need <b>Python 3</b> to use OpenSubtitlesDownload <b>v5</b>.\n" + \
-        "If you want to stick to Python 2, please continue using OpenSubtitlesDownload v4.")
+               "You need <b>Python 3</b> to use OpenSubtitlesDownload <b>v5</b>.\n" + \
+               "If you want to stick to Python 2, please continue using OpenSubtitlesDownload v4.")
     sys.exit(2)
 
 # ==== Check for the necessary tools (must be done after GUI auto detection)
@@ -670,24 +669,24 @@ try:
             session = osd_server.LogIn(osd_username, osd_password, osd_language, 'opensubtitles-download 5.0')
         except Exception:
             superPrint("error", "Connection error!", "Unable to reach OpenSubtitles.org servers!\n\nPlease check:\n" + \
-                "- Your Internet connection status\n" + \
-                "- www.opensubtitles.org availability\n" + \
-                "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
-                "Be sure to donate if you appreciate the service provided!")
+                       "- Your Internet connection status\n" + \
+                       "- www.opensubtitles.org availability\n" + \
+                       "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
+                       "Be sure to donate if you appreciate the service provided!")
             sys.exit(2)
 
     # Login not accepted?
     if session['status'] != '200 OK':
         if session['status'] == '401 Unauthorized':
             superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\n" + \
-                "- You MUST use a valid OpenSubtitles.org account!\n" + \
-                "- Check out <a href=\"https://github.com/emericg/OpenSubtitlesDownload/wiki/Log-in-with-a-registered-user\">how and why</a> on our wiki page")
+                       "- You MUST use a valid OpenSubtitles.org account!\n" + \
+                       "- Check out <a href=\"https://github.com/emericg/OpenSubtitlesDownload/wiki/Log-in-with-a-registered-user\">how and why</a> on our wiki page")
         else:
             superPrint("error", "Connection error!", "OpenSubtitles.org servers refused the connection: <b>" + session['status'] + "</b>.\n\nPlease check:\n" + \
-                "- www.opensubtitles.org availability\n" + \
-                "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n\n" + \
-                "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
-                "Be sure to donate if you appreciate the service provided!")
+                       "- www.opensubtitles.org availability\n" + \
+                       "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n\n" + \
+                       "The subtitles search and download service is powered by <a href=\"https://opensubtitles.org\">opensubtitles.org</a>.\n" + \
+                       "Be sure to donate if you appreciate the service provided!")
         sys.exit(2)
 
     # ==== Count languages selected for this search
@@ -782,8 +781,7 @@ try:
             if not subtitlesSelected:
                 if opt_selection_mode == 'auto':
                     # Automatic subtitles selection
-                    (subtitlesSelected, subIndex) = selectionAuto(
-                        subtitlesResultList)
+                    (subtitlesSelected, subIndex) = selectionAuto(subtitlesResultList)
                 else:
                     # Go through the list of subtitles and handle 'auto' settings activation
                     for item in subtitlesResultList['data']:
@@ -802,11 +800,9 @@ try:
                     if opt_gui == 'gnome':
                         (subtitlesSelected, subIndex) = selectionGnome(subtitlesResultList)
                     elif opt_gui == 'kde':
-                        (subtitlesSelected, subIndex) = selectionKde(
-                            subtitlesResultList)
+                        (subtitlesSelected, subIndex) = selectionKde(subtitlesResultList)
                     else: # CLI
-                        (subtitlesSelected, subIndex) = selectionCLI(
-                            subtitlesResultList)
+                        (subtitlesSelected, subIndex) = selectionCLI(subtitlesResultList)
 
             # At this point a subtitles should be selected
             if subtitlesSelected:
@@ -847,7 +843,9 @@ try:
 
                 ## Download and unzip the selected subtitles
                 if opt_gui == 'gnome':
-                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subtitlesResultList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
+                    process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1"
+                                                                + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>'
+                                                                + subtitlesResultList['data'][subIndex]['LanguageName'] + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
                 elif opt_gui == 'kde':
                     process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
                 else: # CLI
@@ -870,7 +868,8 @@ try:
 
                 # If an error occurs, say so
                 if process_subtitlesDownload != 0:
-                    superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
+                    superPrint("error", "Subtitling error!",
+                               "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['LanguageName'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
                     osd_server.LogOut(session['token'])
                     sys.exit(2)
 
@@ -894,14 +893,14 @@ except (OSError, IOError, RuntimeError, AttributeError, TypeError, NameError, Ke
 
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unexpected error!",
-        "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
-        "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
-        "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
-        "Just to be safe, please check:\n" + \
-        "- www.opensubtitles.org availability\n" + \
-        "- Your Internet connection status\n" + \
-        "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n" + \
-        "- That are using the latest version of this software ;-)")
+               "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
+               "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
+               "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
+               "Just to be safe, please check:\n" + \
+               "- www.opensubtitles.org availability\n" + \
+               "- Your Internet connection status\n" + \
+               "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n" + \
+               "- That are using the latest version of this software ;-)")
 
 except Exception:
     # Catch unhandled exceptions but do not spawn an error window
