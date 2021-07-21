@@ -90,6 +90,7 @@ Contributors
 - Gui13 for his work on the arguments parsing
 - Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
 - Carlos Acedo <carlos@linux-labs.net> for his work on the original script
+- And [many more](https://github.com/emericg/OpenSubtitlesDownload/graphs/contributors)!
 
 License
 -------

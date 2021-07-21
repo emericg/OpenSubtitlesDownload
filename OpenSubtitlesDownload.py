@@ -6,7 +6,7 @@
 
 # You can browse the project's GitHub page:
 # - https://github.com/emericg/OpenSubtitlesDownload
-# Learn much more about configuring OpenSubtitlesDownload.py on its wiki:
+# Learn much more about customizing OpenSubtitlesDownload.py for your needs:
 # - https://github.com/emericg/OpenSubtitlesDownload/wiki
 
 # Copyright (c) 2020 by Emeric GRANGE <emeric.grange@gmail.com>
@@ -23,13 +23,6 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-# Contributors / special thanks:
-# Thiago Alvarenga Lechuga <thiagoalz@gmail.com> for his work on the 'Windows CLI' and the 'folder search'
-# jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
-# Gui13 for his work on the arguments parsing
-# Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
-# Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 
 import os
 import re
