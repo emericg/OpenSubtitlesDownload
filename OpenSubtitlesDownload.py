@@ -247,7 +247,8 @@ def hashFile(path):
 
 def selectionGnome(subtitlesResultList):
     """GNOME subtitles selection window using zenity"""
-    subtitlesSelected = u''
+    subtitlesSelectedName = u''
+    subtitlesSelectedIndex = -1
     subtitlesItems = u''
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
@@ -306,32 +307,30 @@ def selectionGnome(subtitlesResultList):
     # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
-    subtitlesSelected = ""
-    subIndex = -1
-
     # The results contain a subtitles?
     if result_subtitlesSelection[0]:
-        result = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
+        result = str(result_subtitlesSelection[0], 'utf-8', 'replace').strip("\n")
 
         # Hack against recent zenity version?
         if len(result.split("|")) > 1:
             if result.split("|")[0] == result.split("|")[1]:
                 result = result.split("|")[0]
         # Get index and result
-        [subIndex, subtitlesSelected] = result.split('|')[0:2]
+        [subtitlesSelectedIndex, subtitlesSelectedName] = result.split('|')[0:2]
     else:
         if process_subtitlesSelection.returncode == 0:
-            subtitlesSelected = subtitlesResultList['data'][0]['SubFileName']
-            subIndex = 0
+            subtitlesSelectedName = subtitlesResultList['data'][0]['SubFileName']
+            subtitlesSelectedIndex = 0
 
-    # Return the index and result
-    return (subtitlesSelected, int(subIndex))
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, int(subtitlesSelectedIndex))
 
 # ==== KDE selection window ====================================================
 
 def selectionKde(subtitlesResultList):
     """KDE subtitles selection window using kdialog"""
-    subtitlesSelected = u''
+    subtitlesSelectedName = u''
+    subtitlesSelectedIndex = -1
     subtitlesItems = u''
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
@@ -365,23 +364,20 @@ def selectionKde(subtitlesResultList):
     # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
-    subtitlesSelected = ""
-    keySelected = -1
-
     # The results contain the key matching a subtitles?
     if result_subtitlesSelection[0]:
-        keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
-        subtitlesSelected = subtitlesResultList['data'][keySelected]['SubFileName']
+        subtitlesSelectedIndex = int(str(result_subtitlesSelection[0], 'utf-8', 'replace').strip("\n"))
+        subtitlesSelectedName = subtitlesResultList['data'][subtitlesSelectedIndex]['SubFileName']
 
-    # Return the result
-    return (subtitlesSelected, keySelected)
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, subtitlesSelectedIndex)
 
 # ==== CLI selection mode ======================================================
 
 def selectionCLI(subtitlesResultList):
     """Command Line Interface, subtitles selection inside your current terminal"""
-    subtitlesIndex = 0
-    subtitlesItem = ''
+    subtitlesItemIndex = 0
+    subtitlesItem = u''
 
     # Print video infos
     print("\n>> Title: " + videoTitle)
@@ -390,7 +386,7 @@ def selectionCLI(subtitlesResultList):
     # Print subtitles list on the terminal
     print(">> Available subtitles:")
     for item in subtitlesResultList['data']:
-        subtitlesIndex += 1
+        subtitlesItemIndex += 1
         subtitlesItem = '"' + item['SubFileName'] + '" '
 
         if opt_selection_hi == 'on' and item['SubHearingImpaired'] == '1':
@@ -405,27 +401,28 @@ def selectionCLI(subtitlesResultList):
             subtitlesItem += '> "SubDownloadsCnt: ' + item['SubDownloadsCnt'] + '" '
 
         if item['MatchedBy'] == 'moviehash':
-            print("\033[92m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+            print("\033[92m[" + str(subtitlesItemIndex) + "]\033[0m " + subtitlesItem)
         else:
-            print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+            print("\033[93m[" + str(subtitlesItemIndex) + "]\033[0m " + subtitlesItem)
 
     # Ask user to selected a subtitles
     print("\033[91m[0]\033[0m Cancel search")
-    sub_selection = -1
-    while (sub_selection < 0 or sub_selection > subtitlesIndex):
+    result_subtitlesSelection = -1
+    while (result_subtitlesSelection < 0 or result_subtitlesSelection > subtitlesItemIndex):
         try:
-            sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
+            # Get back the user's choice
+            result_subtitlesSelection = int(input(">> Enter your choice (0-" + str(subtitlesItemIndex) + "): "))
         except KeyboardInterrupt:
             sys.exit(1)
         except:
-            sub_selection = -1
+            result_subtitlesSelection = -1
 
-    if sub_selection == 0:
+    if result_subtitlesSelection == 0:
         print("Cancelling search...")
         return ("", -1)
 
     # Return the result (selected subtitles name and index)
-    return (subtitlesResultList['data'][sub_selection-1]['SubFileName'], sub_selection - 1)
+    return (subtitlesResultList['data'][result_subtitlesSelection-1]['SubFileName'], result_subtitlesSelection-1)
 
 # ==== Automatic selection mode ================================================
 
@@ -451,10 +448,11 @@ def selectionAuto(subtitlesResultList):
                     score += 1
         if score > maxScore:
             maxScore = score
-            subtitlesSelected = subtitle['SubFileName']
-            subIndex = idx
+            subtitlesSelectedName = subtitle['SubFileName']
+            subtitlesSelectedIndex = idx
 
-    return (subtitlesSelected, subIndex)
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, subtitlesSelectedIndex)
 
 # ==== Check dependencies ======================================================
 
@@ -754,13 +752,14 @@ try:
         if ('data' in subtitlesResultList) and (subtitlesResultList['data']):
             # Mark search as successful
             languageCount_results += 1
-            subtitlesSelected = ''
+
+            subName = u''
             subIndex = 0
 
             # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
             if (len(subtitlesResultList['data']) == 1) and (subtitlesResultList['data'][0]['MatchedBy'] == 'moviehash'):
                 if opt_selection_mode != 'manual':
-                    subtitlesSelected = subtitlesResultList['data'][0]['SubFileName']
+                    subName = subtitlesResultList['data'][0]['SubFileName']
 
             # Get video title
             videoTitle = subtitlesResultList['data'][0]['MovieName']
@@ -778,10 +777,10 @@ try:
 
             # If there is more than one subtitles and opt_selection_mode != 'auto',
             # then let the user decide which one will be downloaded
-            if not subtitlesSelected:
+            if not subName:
                 if opt_selection_mode == 'auto':
                     # Automatic subtitles selection
-                    (subtitlesSelected, subIndex) = selectionAuto(subtitlesResultList)
+                    (subName, subIndex) = selectionAuto(subtitlesResultList)
                 else:
                     # Go through the list of subtitles and handle 'auto' settings activation
                     for item in subtitlesResultList['data']:
@@ -798,14 +797,14 @@ try:
 
                     # Spaw selection window
                     if opt_gui == 'gnome':
-                        (subtitlesSelected, subIndex) = selectionGnome(subtitlesResultList)
+                        (subName, subIndex) = selectionGnome(subtitlesResultList)
                     elif opt_gui == 'kde':
-                        (subtitlesSelected, subIndex) = selectionKde(subtitlesResultList)
+                        (subName, subIndex) = selectionKde(subtitlesResultList)
                     else: # CLI
-                        (subtitlesSelected, subIndex) = selectionCLI(subtitlesResultList)
+                        (subName, subIndex) = selectionCLI(subtitlesResultList)
 
             # At this point a subtitles should be selected
-            if subtitlesSelected:
+            if subName:
                 # Prepare download
                 subID = subtitlesResultList['data'][subIndex]['IDSubtitleFile']
                 subURL = subtitlesResultList['data'][subIndex]['SubDownloadLink']
