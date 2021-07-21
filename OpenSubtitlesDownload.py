@@ -258,13 +258,13 @@ def selectionGnome(subtitlesResultList):
     columnCount = ''
 
     # Generate selection window content
-    for item in subtitlesResultList['data']:
+    for idx, item in enumerate(subtitlesResultList['data']):
         if item['MatchedBy'] == 'moviehash':
             subtitlesMatchedByHash += 1
         else:
             subtitlesMatchedByName += 1
 
-        subtitlesItems += '"' + item['SubFileName'] + '" '
+        subtitlesItems += f'{idx} "' + item['SubFileName'] + '" '
 
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
@@ -298,27 +298,34 @@ def selectionGnome(subtitlesResultList):
         tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
         textstr = ' --text="Search results using file name AND video detection.\n<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
 
-    # Spawn zenity "list" dialog
-    process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr \
-        + ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+     # Spawn zenity "list" dialog
+    process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr
+                                                  + ' --column "id" --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems + ' --hide-column=1 --print-column=ALL', shell=True, stdout=subprocess.PIPE)
 
     # Get back the result
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
+    subtitlesSelected = ""
+    subIndex = -1
+
     # The results contain a subtitles?
     if result_subtitlesSelection[0]:
-        subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
+        result = str(
+            result_subtitlesSelection[0], 'utf-8').strip("\n")
 
         # Hack against recent zenity version?
-        if len(subtitlesSelected.split("|")) > 1:
-            if subtitlesSelected.split("|")[0] == subtitlesSelected.split("|")[1]:
-                subtitlesSelected = subtitlesSelected.split("|")[0]
+        if len(result.split("|")) > 1:
+            if result.split("|")[0] == result.split("|")[1]:
+                result = result.split("|")[0]
+        # Get index and result
+        [subIndex, subtitlesSelected] = result.split('|')[0:2]
     else:
         if process_subtitlesSelection.returncode == 0:
             subtitlesSelected = subtitlesResultList['data'][0]['SubFileName']
+            subIndex = 0
 
-    # Return the result
-    return subtitlesSelected
+    # Return the index and result
+    return (subtitlesSelected, int(subIndex))
 
 # ==== KDE selection window ====================================================
 
@@ -358,13 +365,17 @@ def selectionKde(subtitlesResultList):
     # Get back the result
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
+    subtitlesSelected = ""
+    keySelected = -1
+
     # The results contain the key matching a subtitles?
     if result_subtitlesSelection[0]:
-        keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
+        keySelected = int(
+            str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
         subtitlesSelected = subtitlesResultList['data'][keySelected]['SubFileName']
 
     # Return the result
-    return subtitlesSelected
+    return (subtitlesSelected, keySelected)
 
 # ==== CLI selection mode ======================================================
 
@@ -410,12 +421,12 @@ def selectionCLI(subtitlesResultList):
         except:
             sub_selection = -1
 
-    # Return the result
+   # Return the result
     if sub_selection == 0:
         print("Cancelling search...")
-        return ""
+        return ("", -1)
 
-    return subtitlesResultList['data'][sub_selection-1]['SubFileName']
+    return (subtitlesResultList['data'][sub_selection-1]['SubFileName'], sub_selection - 1)
 
 # ==== Automatic selection mode ================================================
 
@@ -426,7 +437,7 @@ def selectionAuto(subtitlesResultList):
     languageListReversed = list(reversed(languageList))
     maxScore = -1
 
-    for subtitle in subtitlesResultList['data']:
+    for idx, subtitle in enumerate(subtitlesResultList['data']):
         score = 0
         # points to respect languages priority
         score += languageListReversed.index(subtitle['SubLanguageID']) * 100
@@ -442,8 +453,9 @@ def selectionAuto(subtitlesResultList):
         if score > maxScore:
             maxScore = score
             subtitlesSelected = subtitle['SubFileName']
+            subIndex = idx
 
-    return subtitlesSelected
+    return (subtitlesSelected, subIndex)
 
 # ==== Check dependencies ======================================================
 
@@ -744,6 +756,7 @@ try:
             # Mark search as successful
             languageCount_results += 1
             subtitlesSelected = ''
+            subIndex = 0
 
             # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
             if (len(subtitlesResultList['data']) == 1) and (subtitlesResultList['data'][0]['MatchedBy'] == 'moviehash'):
@@ -769,7 +782,8 @@ try:
             if not subtitlesSelected:
                 if opt_selection_mode == 'auto':
                     # Automatic subtitles selection
-                    subtitlesSelected = selectionAuto(subtitlesResultList)
+                    (subtitlesSelected, subIndex) = selectionAuto(
+                        subtitlesResultList)
                 else:
                     # Go through the list of subtitles and handle 'auto' settings activation
                     for item in subtitlesResultList['data']:
@@ -786,25 +800,16 @@ try:
 
                     # Spaw selection window
                     if opt_gui == 'gnome':
-                        subtitlesSelected = selectionGnome(subtitlesResultList)
+                        (subtitlesSelected, subIndex) = selectionGnome(subtitlesResultList)
                     elif opt_gui == 'kde':
-                        subtitlesSelected = selectionKde(subtitlesResultList)
+                        (subtitlesSelected, subIndex) = selectionKde(
+                            subtitlesResultList)
                     else: # CLI
-                        subtitlesSelected = selectionCLI(subtitlesResultList)
+                        (subtitlesSelected, subIndex) = selectionCLI(
+                            subtitlesResultList)
 
             # At this point a subtitles should be selected
             if subtitlesSelected:
-                subIndex = 0
-                subIndexTemp = 0
-
-                # Find it on the list
-                for item in subtitlesResultList['data']:
-                    if item['SubFileName'] == subtitlesSelected:
-                        subIndex = subIndexTemp
-                        break
-                    else:
-                        subIndexTemp += 1
-
                 # Prepare download
                 subID = subtitlesResultList['data'][subIndex]['IDSubtitleFile']
                 subURL = subtitlesResultList['data'][subIndex]['SubDownloadLink']
