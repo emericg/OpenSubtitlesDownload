@@ -159,11 +159,9 @@ def checkFileValidity(path):
     fileMimeType, encoding = mimetypes.guess_type(path)
     if fileMimeType is None:
         fileExtension = path.rsplit('.', 1)
-        if fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
+        if fileExtension[1] not in ['avi', 'mov', 'mp4', 'mp4v', 'm4v', 'mkv', 'mk3d', 'webm', \
                                     'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
-                                    'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
-                                    'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
-                                    'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
+                                    'asf', 'wm', 'wmv', 'rm', 'rmvb', 'divx', 'xvid']:
             #superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
