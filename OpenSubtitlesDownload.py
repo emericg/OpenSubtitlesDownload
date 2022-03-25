@@ -154,6 +154,7 @@ def superPrint(priority, title, message):
 def checkFileValidity(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) is False:
+        superPrint("info", "File not found", "The file provided was not found:\n<i>" + path + "</i>")
         return False
 
     fileMimeType, encoding = mimetypes.guess_type(path)
