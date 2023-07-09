@@ -53,7 +53,7 @@ if sys.version_info > (3, 0):
 
 # Detect the OS and assign a config directory to it
 if os.name == "nt": # Windows
-    cfg_dir = f"C:/Users/{getpass.getuser()}/OpenSubtitlesDownload"
+    cfg_dir = f"C:/Users/{getpass.getuser()}/Documents/OpenSubtitlesDownload"
 else: # Anything else
     cfg_dir = f"/home/{getpass.getuser()}/OpenSubtitlesDownload"
 
