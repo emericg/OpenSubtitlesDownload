@@ -93,7 +93,7 @@ except FileNotFoundError:
     with open(cfg_file, "w") as f:
         json.dump(cfg, f, indent=4)
 
-    print('Created missing config.json file. Please edit it and restart OpenSubtitlesDownload. Continuing with default settings.')
+    print(f'Created the config file at {cfg_file}. Please edit it and restart OpenSubtitlesDownload. Continuing with default settings.')
 
 # Convert JSON keys to variables
 for key in cfg:
