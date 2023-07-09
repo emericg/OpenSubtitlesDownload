@@ -34,6 +34,7 @@ import base64
 import shutil
 import struct
 import hashlib
+import getpass
 import argparse
 import mimetypes
 import subprocess
@@ -52,9 +53,9 @@ if sys.version_info > (3, 0):
 
 # Detect the OS and assign a config directory to it
 if os.name == "nt": # Windows
-    cfg_dir = "%USERPROFILE%/OpenSubtitlesDownload"
+    cfg_dir = f"C:/Users/{getpass.getuser()}/OpenSubtitlesDownload"
 else: # Anything else
-    cfg_dir = "~/OpenSubtitlesDownload"
+    cfg_dir = f"/home/{getpass.getuser()}/OpenSubtitlesDownload"
 
 cfg_file = f"{cfg_dir}/config.json"
 
@@ -90,7 +91,7 @@ except FileNotFoundError:
     }
 
     with open(cfg_file, "w") as f:
-        json.dump(cfg_file, f, indent=4)
+        json.dump(cfg, f, indent=4)
 
     print('Created missing config.json file. Please edit it and restart OpenSubtitlesDownload. Continuing with default settings.')
 
