@@ -50,9 +50,21 @@ if sys.version_info > (3, 0):
 # You can also change opensubtitles.org language, it will be used for error codes and stuff.
 # Can be overridden at run time with '-u' and '-p' arguments.
 
+# Detect the OS and assign a config directory to it
+if os.name == "nt": # Windows
+    cfg_dir = "%USERPROFILE%/OpenSubtitlesDownload"
+else: # Anything else
+    cfg_dir = "~/OpenSubtitlesDownload"
+
+cfg_file = f"{cfg_dir}/config.json"
+
+# Check is the config present
+if not os.path.exists(cfg_dir):
+    os.makedirs(cfg_dir)
+
 # Load config from JSON file
 try:
-    cfg = json.load(open("config.json"))
+    cfg = json.load(open(cfg_file))
 except FileNotFoundError:
     cfg = {
         'osd_username': '',
@@ -77,10 +89,8 @@ except FileNotFoundError:
         'opt_selection_count': 'off'
     }
 
-    json_file = json.dumps(cfg, indent=4)
-
-    with open("config.json", "w") as f:
-        f.write(json_file)
+    with open(cfg_file, "w") as f:
+        json.dump(cfg_file, f, indent=4)
 
     print('Created missing config.json file. Please edit it and restart OpenSubtitlesDownload. Continuing with default settings.')
 
