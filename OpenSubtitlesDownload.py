@@ -29,10 +29,12 @@ import re
 import sys
 import time
 import gzip
+import json
 import base64
 import shutil
 import struct
 import hashlib
+import getpass
 import argparse
 import mimetypes
 import subprocess
@@ -48,9 +50,54 @@ if sys.version_info > (3, 0):
 # Be careful about your password security, it will be stored right here in plain text...
 # You can also change opensubtitles.org language, it will be used for error codes and stuff.
 # Can be overridden at run time with '-u' and '-p' arguments.
-osd_username = ''
-osd_password = ''
-osd_language = 'en'
+
+# Detect the OS and assign a config directory to it
+if os.name == "nt": # Windows
+    cfg_dir = f"C:/Users/{getpass.getuser()}/Documents/OpenSubtitlesDownload"
+else: # Anything else
+    cfg_dir = f"/home/{getpass.getuser()}/OpenSubtitlesDownload"
+
+cfg_file = f"{cfg_dir}/config.json"
+
+# Check is the config present
+if not os.path.exists(cfg_dir):
+    os.makedirs(cfg_dir)
+
+# Load config from JSON file
+try:
+    cfg = json.load(open(cfg_file))
+except FileNotFoundError:
+    cfg = {
+        'osd_username': '',
+        'osd_password': '',
+        'osd_language': 'en',
+        'opt_languages': ['eng'],
+        'opt_language_suffix': 'auto',
+        'opt_language_suffix_size': 'auto',
+        'opt_language_suffix_separator': 'auto',
+        'opt_force_utf8': False,
+        'opt_search_mode': 'hash_then_filename',
+        'opt_search_overwrite': True,
+        'opt_selection_mode': 'default',
+        'opt_output_path': '', 
+        'opt_gui': 'auto',
+        'opt_gui_width': 720,
+        'opt_gui_height': 320,
+        'opt_selection_hi': 'auto',
+        'opt_selection_language': 'auto',
+        'opt_selection_match': 'auto',
+        'opt_selection_rating': 'off',
+        'opt_selection_count': 'off'
+    }
+
+    with open(cfg_file, "w") as f:
+        json.dump(cfg, f, indent=4)
+
+    print(f'Created the config file at {cfg_file}. Please edit it and restart OpenSubtitlesDownload. Continuing with default settings.')
+
+# Convert JSON keys to variables
+for key in cfg:
+    globals()[key] = cfg[key]
 
 # ==== Language settings =======================================================
 
@@ -62,20 +109,20 @@ osd_language = 'en'
 #    > Ex: opt_languages = ['eng,fre']
 # 3/ Search for subtitles in several languages (separately, select one of each) by using multiple codes separated by a comma:
 #    > Ex: opt_languages = ['eng','fre']
-opt_languages = ['eng']
+#opt_languages = ['eng']
 
 # Write language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
 # If you are regularly searching for several language at once, you sould use 'on'.
-opt_language_suffix = 'auto'
+#opt_language_suffix = 'auto'
 # - auto: same language code size than set in opt_languages
 # - 2: 2-letter (ISO639-3) language code
 # - 3: 3-letter (ISO639-2) language code
-opt_language_suffix_size = 'auto'
+#opt_language_suffix_size = 'auto'
 # Character used to separate file path from the language code (ex: file_en.srt).
-opt_language_suffix_separator = '_'
+#opt_language_suffix_separator = '_'
 
 # Force downloading and storing UTF-8 encoded subtitles files.
-opt_force_utf8 = False
+#opt_force_utf8 = False
 
 # ==== Search settings =========================================================
 
@@ -84,20 +131,20 @@ opt_force_utf8 = False
 # - filename (search by filename only)
 # - hash_then_filename (search by hash, then if no results by filename)
 # - hash_and_filename (search using both methods)
-opt_search_mode = 'hash_then_filename'
+#opt_search_mode = 'hash_then_filename'
 
 # Search and download a subtitles even if a subtitles file already exists.
-opt_search_overwrite = True
+#opt_search_overwrite = True
 
 # Subtitles selection mode. Can be overridden at run time with '-t' argument.
 # - manual (always let you choose the subtitles you want)
 # - default (in case of multiple results, let you choose the subtitles you want)
 # - auto (automatically select the best subtitles found)
-opt_selection_mode = 'default'
+#opt_selection_mode = 'default'
 
 # Customize subtitles download path. Can be overridden at run time with '-o' argument.
 # By default, subtitles are downloaded next to their video file.
-opt_output_path = ''
+#opt_output_path = ''
 
 # ==== GUI settings ============================================================
 
@@ -106,18 +153,18 @@ opt_output_path = ''
 # - gnome (GNOME/GTK based environments, using 'zenity' backend)
 # - kde (KDE/Qt based environments, using 'kdialog' backend)
 # - cli (Command Line Interface)
-opt_gui = 'auto'
+#opt_gui = 'auto'
 
 # Change the subtitles selection GUI size:
-opt_gui_width  = 720
-opt_gui_height = 320
+#opt_gui_width  = 720
+#opt_gui_height = 320
 
 # Various GUI columns to show/hide during subtitles selection. You can set them to 'on', 'off' or 'auto'.
-opt_selection_hi       = 'auto'
-opt_selection_language = 'auto'
-opt_selection_match    = 'auto'
-opt_selection_rating   = 'off'
-opt_selection_count    = 'off'
+#opt_selection_hi       = 'auto'
+#opt_selection_language = 'auto'
+#opt_selection_match    = 'auto'
+#opt_selection_rating   = 'off'
+#opt_selection_count    = 'off'
 
 # ==== Super Print =============================================================
 # priority: info, warning, error
