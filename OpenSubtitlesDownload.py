@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# OpenSubtitlesDownload.py / Version 5.0
+# OpenSubtitlesDownload.py / Version 6.0
 # This software is designed to help you find and download subtitles for your favorite videos!
 
 # You can browse the project's GitHub page:
@@ -9,7 +9,7 @@
 # Learn much more about configuring OpenSubtitlesDownload.py on its wiki:
 # - https://github.com/emericg/OpenSubtitlesDownload/wiki
 
-# Copyright (c) 2020 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2024 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,13 +24,6 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-# Contributors / special thanks:
-# Thiago Alvarenga Lechuga <thiagoalz@gmail.com> for his work on the 'Windows CLI' and the 'folder search'
-# jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
-# Gui13 for his work on the arguments parsing
-# Tomáš Hnyk <tomashnyk@gmail.com> for his work on the 'multiple language' feature
-# Carlos Acedo <carlos@linux-labs.net> for his work on the original script
-
 import os
 import re
 import sys
@@ -40,42 +33,46 @@ import struct
 import argparse
 import mimetypes
 import subprocess
-import requests
-# from pprint import pprint
 
+import json
+import urllib
+from urllib import request
 
-# ==== OpenSubtitles.org server settings =======================================
+# ==== OpenSubtitles.com server settings =======================================
+
+# Track API availability:
+# > https://opensubtitles.stoplight.io/docs/opensubtitles-api/e3750fd63a100-getting-started#system-status
+
 # API endpoints
 API_URL = 'https://api.opensubtitles.com/api/v1/'
 API_URL_DOWNLOAD_ENDPOINT = API_URL + 'download'
 API_URL_LOGIN_ENDPOINT = API_URL + 'login'
 API_URL_SEARCH_ENDPOINT = API_URL + 'subtitles'
 
+# API key (required)
+API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
 
-# ==== user settings ==========================================================
-# You can use your opensubtitles.org VIP account to avoid "in-subtitles" advertisement and bypass download limits.
+# ==== OpenSubtitles.com account (required) ====================================
+
+# You can use your opensubtitles.com VIP account to avoid "in-subtitles" advertisement and bypass download limits.
 # Be careful about your password security, it will be stored right here in plain text...
-# You can also change opensubtitles.org language, it will be used for error codes and stuff.
 # Can be overridden at run time with '-u' and '-p' arguments.
 osd_username = ''
 osd_password = ''
+
+# You can also change opensubtitles.com language, it will be used for error codes and stuff.
 osd_language = 'en'
-
-# You also need an api key. Log into the https://www.opensubtitles.com/en/consumers/ and select
-# "New consumer" then copy the key here.
-API_KEY = ''
-
 
 # ==== Language settings =======================================================
 
-# 1/ Change the search language by using any supported 2-letter language code:
-#    > Supported language codes: https://www.opensubtitles.org/addons/export_languages.php
-#    > Full guide: https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings
+# Full guide: https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings
+
+# 1/ Change the search language by using any supported 2-letter (ISO 639-1) language code:
+#    > https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+#    > Supported language codes: https://opensubtitles.stoplight.io/docs/opensubtitles-api/1de776d20e873-languages
 #    > Ex: opt_languages = 'en'
 # 2/ Search for subtitles in several languages (at once, select one) by using multiple codes separated by a comma:
-#    Make sure there is NO SPACE between languages:
-#    > Ex: opt_languages = 'en,fr,hr'
-# opt_languages = 'hr,el,ro,en'
+#    > Ex: opt_languages = 'en,fr'
 opt_languages = 'en'
 
 # Write language code (ex: _en) at the end of the subtitles file. 'on', 'off' or 'auto'.
@@ -84,6 +81,9 @@ opt_language_suffix = 'auto'
 
 # Character used to separate file path from the language code (ex: file_en.srt).
 opt_language_suffix_separator = '_'
+
+# Force downloading and storing UTF-8 encoded subtitles files.
+opt_force_utf8 = False
 
 # ==== Search settings =========================================================
 
@@ -98,8 +98,8 @@ opt_search_mode = 'hash_then_filename'
 opt_search_overwrite = True
 
 # Subtitles selection mode. Can be overridden at run time with '-t' argument.
-# - manual (always let you choose the subtitles you want)
 # - default (in case of multiple results, let you choose the subtitles you want)
+# - manual (always let you choose the subtitles you want)
 # - auto (automatically select the best subtitles found)
 opt_selection_mode = 'default'
 
@@ -117,8 +117,8 @@ opt_output_path = ''
 opt_gui = 'auto'
 
 # Change the subtitles selection GUI size:
-opt_gui_width  = 720
-opt_gui_height = 320
+opt_gui_width  = 860
+opt_gui_height = 400
 
 # Various GUI columns to show/hide during subtitles selection. You can set them to 'on', 'off' or 'auto'.
 opt_selection_hi       = 'auto'
@@ -162,16 +162,15 @@ def superPrint(priority, title, message):
 def checkFileValidity(path):
     """Check mimetype and/or file extension to detect valid video file"""
     if os.path.isfile(path) is False:
+        superPrint("info", "File not found", "The file provided was not found:\n<i>" + path + "</i>")
         return False
 
     fileMimeType, encoding = mimetypes.guess_type(path)
     if fileMimeType is None:
         fileExtension = path.rsplit('.', 1)
-        if fileExtension[1] not in ['avi', 'mp4', 'mov', 'mkv', 'mk3d', 'webm', \
+        if fileExtension[1] not in ['avi', 'mov', 'mp4', 'mp4v', 'm4v', 'mkv', 'mk3d', 'webm', \
                                     'ts', 'mts', 'm2ts', 'ps', 'vob', 'evo', 'mpeg', 'mpg', \
-                                    'm1v', 'm2p', 'm2v', 'm4v', 'movhd', 'movx', 'qt', \
-                                    'mxf', 'ogg', 'ogm', 'ogv', 'rm', 'rmvb', 'flv', 'swf', \
-                                    'asf', 'wm', 'wmv', 'wmx', 'divx', 'x264', 'xvid']:
+                                    'asf', 'wm', 'wmv', 'rm', 'rmvb', 'divx', 'xvid']:
             #superPrint("error", "File type error!", "This file is not a video (unknown mimetype AND invalid file extension):\n<i>" + path + "</i>")
             return False
     else:
@@ -186,15 +185,14 @@ def checkFileValidity(path):
 
 def checkSubtitlesExists(path):
     """Check if a subtitles already exists for the current file"""
-    extList = ['srt', 'sub', 'sbv', 'smi', 'ssa', 'ass', 'usf']
+    extList = ['srt', 'sub', 'mpl', 'webvtt', 'dfxp', 'txt',
+               'sbv', 'smi', 'ssa', 'ass', 'usf']
     lngList = ['']
 
     if opt_language_suffix in ('on', 'auto'):
         for language in opt_languages:
             for l in list(language.split(',')):
                 lngList.append(opt_language_suffix_separator + l)
-                # Rough method to try 2 and 3 letters language codes
-                if len(l) == 3: lngList.append(opt_language_suffix_separator + l[0:2])
 
     for ext in extList:
         for lng in lngList:
@@ -243,12 +241,17 @@ def hashFile(path):
     except IOError:
         superPrint("error", "I/O error!", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
+
 
 # ==== GNOME selection window ==================================================
 
 def selectionGnome(subtitlesResultList):
     """GNOME subtitles selection window using zenity"""
-    subtitlesSelected = u''
+    subtitlesSelectedName = u''
+    subtitlesSelectedIndex = -1
+
     subtitlesItems = u''
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
@@ -259,13 +262,13 @@ def selectionGnome(subtitlesResultList):
     columnCount = ''
 
     # Generate selection window content
-    for item in subtitlesResultList['data']:
+    for idx, item in enumerate(subtitlesResultList['data']):
         if item['attributes'].get('moviehash_match', False)  == True:
             subtitlesMatchedByHash += 1
         else:
             subtitlesMatchedByName += 1
 
-        subtitlesItems += '"' + item['attributes']['files'][0]['file_name'] + '" '
+        subtitlesItems += f'{idx} "' + item['attributes']['files'][0]['file_name'] + '" '
 
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
@@ -291,7 +294,7 @@ def selectionGnome(subtitlesResultList):
 
     if subtitlesMatchedByName == 0:
         tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
-        textstr = ' --text="<b>Video title matched by hash:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
+        textstr = ' --text="<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
     elif subtitlesMatchedByHash == 0:
         tilestr = ' --title="Subtitles for: ' + videoFileName + '"'
         textstr = ' --text="Search results using file name, NOT video detection. <b>May be unreliable...</b>\n<b>File name:</b> ' + videoFileName + '" '
@@ -300,31 +303,39 @@ def selectionGnome(subtitlesResultList):
         textstr = ' --text="Search results using file name AND video detection.\n<b>Video title:</b> ' + videoTitle + '\n<b>File name:</b> ' + videoFileName + '"'
 
     # Spawn zenity "list" dialog
-    process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr \
-        + ' --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+    process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr
+                                                  + ' --column "id" --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems
+                                                  + ' --hide-column=1 --print-column=ALL', shell=True, stdout=subprocess.PIPE)
 
-    # Get back the result
+    # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
     # The results contain a subtitles?
     if result_subtitlesSelection[0]:
-        subtitlesSelected = str(result_subtitlesSelection[0], 'utf-8').strip("\n")
+        result = str(result_subtitlesSelection[0], 'utf-8', 'replace').strip("\n")
 
         # Hack against recent zenity version?
-        if len(subtitlesSelected.split("|")) > 1:
-            if subtitlesSelected.split("|")[0] == subtitlesSelected.split("|")[1]:
-                subtitlesSelected = subtitlesSelected.split("|")[0]
+        #if len(result.split("|")) > 1:
+        #    if result.split("|")[0] == result.split("|")[1]:
+        #        result = result.split("|")[0]
+
+        # Get index and result
+        [subtitlesSelectedIndex, subtitlesSelectedName] = result.split('|')[0:2]
     else:
         if process_subtitlesSelection.returncode == 0:
-            subtitlesSelected = subtitlesResultList['data'][0]['attributes']['files'][0]['file_name'] 
-    # Return the result
-    return subtitlesSelected
+            subtitlesSelectedName = subtitlesResultList['data'][0]['attributes']['files'][0]['file_name']
+            subtitlesSelectedIndex = 0
+
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, subtitlesSelectedIndex)
 
 # ==== KDE selection window ====================================================
 
-def selectionKde(subtitlesResultList):
+def selectionKDE(subtitlesResultList):
     """KDE subtitles selection window using kdialog"""
-    subtitlesSelected = u''
+    subtitlesSelectedName = u''
+    subtitlesSelectedIndex = -1
+
     subtitlesItems = u''
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
@@ -356,23 +367,26 @@ def selectionKde(subtitlesResultList):
     # Spawn kdialog "radiolist"
     process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems, shell=True, stdout=subprocess.PIPE)
 
-    # Get back the result
+    # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
 
     # The results contain the key matching a subtitles?
     if result_subtitlesSelection[0]:
-        keySelected = int(str(result_subtitlesSelection[0], 'utf-8').strip("\n"))
-        subtitlesSelected = subtitlesResultList['data'][keySelected]['attributes']['files'][0]['file_name'] 
+        subtitlesSelectedIndex = int(str(result_subtitlesSelection[0], 'utf-8', 'replace').strip("\n"))
+        subtitlesSelectedName = subtitlesResultList['data'][subtitlesSelectedIndex]['attributes']['files'][0]['file_name']
 
-    # Return the result
-    return subtitlesSelected
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, subtitlesSelectedIndex)
 
 # ==== CLI selection mode ======================================================
 
 def selectionCLI(subtitlesResultList):
     """Command Line Interface, subtitles selection inside your current terminal"""
-    subtitlesIndex = 0
-    subtitlesItem = ''
+    subtitlesSelectedName = u''
+    subtitlesSelectedIndex = -1
+
+    subtitlesItemIndex = 0
+    subtitlesItem = u''
 
     # Print video infos
     print("\n>> Title: " + videoTitle)
@@ -381,7 +395,7 @@ def selectionCLI(subtitlesResultList):
     # Print subtitles list on the terminal
     print(">> Available subtitles:")
     for item in subtitlesResultList['data']:
-        subtitlesIndex += 1
+        subtitlesItemIndex += 1
         subtitlesItem = '"' + item['attributes']['files'][0]['file_name'] + '" '
 
         if opt_selection_hi == 'on' and item['attributes']['hearing_impaired'] == '1':
@@ -394,43 +408,47 @@ def selectionCLI(subtitlesResultList):
             else:
                 subtitlesItem += '> "Matched by name" '
         if opt_selection_rating == 'on':
-            subtitlesItem += '> " SubRating: ' + item['attributes']['ratings'] + '" '
+            subtitlesItem += '> "SubRating: ' + item['attributes']['ratings'] + '" '
         if opt_selection_count == 'on':
-            subtitlesItem += '> "SubDownloadsCnt:' + item['attributes']['download_count'] + '" '
+            subtitlesItem += '> "SubDownloadsCnt: ' + item['attributes']['download_count'] + '" '
 
-        if item['attributes']['moviehash_match'] == 'True':
-            print("\033[92m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+        if "moviehash_match" in item['attributes'] and item['attributes']['moviehash_match'] == 'True':
+            print("\033[92m[" + str(subtitlesItemIndex) + "]\033[0m " + subtitlesItem)
         else:
-            print("\033[93m[" + str(subtitlesIndex) + "]\033[0m " + subtitlesItem)
+            print("\033[93m[" + str(subtitlesItemIndex) + "]\033[0m " + subtitlesItem)
 
     # Ask user to selected a subtitles
     print("\033[91m[0]\033[0m Cancel search")
-    sub_selection = -1
-    while (sub_selection < 0 or sub_selection > subtitlesIndex):
+    while (subtitlesSelectedIndex < 0 or subtitlesSelectedIndex > subtitlesItemIndex):
         try:
-            sub_selection = int(input(">> Enter your choice (0-" + str(subtitlesIndex) + "): "))
+            subtitlesSelectedIndex = int(input(">> Enter your choice (0-" + str(subtitlesItemIndex) + "): "))
         except KeyboardInterrupt:
             sys.exit(1)
         except:
-            sub_selection = -1
+            subtitlesSelectedIndex = -1
 
-    # Return the result
-    if sub_selection == 0:
+    if subtitlesSelectedIndex == 0:
         print("Cancelling search...")
-        return ""
+        return ("", -1)
 
-    return subtitlesResultList['data'][sub_selection-1]['attributes']['files'][0]['file_name'] 
+    subtitlesSelectedIndex = subtitlesSelectedIndex-1
+    subtitlesSelectedName = subtitlesResultList['data'][subtitlesSelectedIndex]['attributes']['files'][0]['file_name']
+
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, subtitlesSelectedIndex)
 
 # ==== Automatic selection mode ================================================
 
 def selectionAuto(subtitlesResultList):
     """Automatic subtitles selection using filename match"""
+    subtitlesSelectedName = u''
+    subtitlesSelectedIndex = -1
 
     videoFileParts = videoFileName.replace('-', '.').replace(' ', '.').replace('_', '.').lower().split('.')
     languageListReversed = list(reversed(languageList))
     maxScore = -1
 
-    for subtitle in subtitlesResultList['data']:
+    for idx, subtitle in enumerate(subtitlesResultList['data']):
         score = 0
         # points to respect languages priority
         score += languageListReversed.index(subtitle['SubLanguageID']) * 100
@@ -445,69 +463,99 @@ def selectionAuto(subtitlesResultList):
                     score += 1
         if score > maxScore:
             maxScore = score
-            subtitlesSelected = subtitle['SubFileName']
+            subtitlesSelectedName = subtitle['SubFileName']
+            subtitlesSelectedIndex = idx
 
-    return subtitlesSelected
+    # Return the result (selected subtitles name and index)
+    return (subtitlesSelectedName, subtitlesSelectedIndex)
 
 # ==== Check dependencies ======================================================
 
+def pythonChecker():
+    """Check the availability of python 3 interpreter"""
+    if sys.version_info < (3, 0):
+        superPrint("error", "Wrong Python version", "You need <b>Python 3</b> to use OpenSubtitlesDownload.")
+        return False
+    return True
+
 def dependencyChecker():
     """Check the availability of tools used as dependencies"""
-
     if opt_gui != 'cli':
         for tool in ['gunzip', 'wget']:
             path = shutil.which(tool)
             if path is None:
                 superPrint("error", "Missing dependency!", "The <b>'" + tool + "'</b> tool is not available, please install it!")
                 return False
-
     return True
 
-def getUserToken(username, password):
-    payload = {
-    "username": username,
-    "password": password
-    }
+# ==== REST API helpers ========================================================
 
-    headers = {
-        "Content-Type": "application/json",
-        "User-Agent": "OpenSubtitlesDownload script",
-        "Accept": "application/json",
-        "Api-key": f"{API_KEY}"
-    }
-    response = requests.post(API_URL_LOGIN_ENDPOINT, json=payload, headers=headers)
-    return response.json()['token']
+def getUserToken(username, password):
+    try:
+        headers = {
+            "User-Agent": "OpenSubtitlesDownload v6.0",
+            "Api-key": f"{API_KEY}",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "username": username,
+            "password": password
+        }
+
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(API_URL_LOGIN_ENDPOINT, data=data, headers=headers)
+
+        with urllib.request.urlopen(req) as response:
+            response_data = json.loads(response.read().decode('utf-8'))
+
+        return response_data['token']
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
 def searchSubtitles(**kwargs):
-    headers = {
-        "User-Agent": "OpenSubtitlesDownload script",
-        "Api-key": f"{API_KEY}"
-    }
+    try:
+        headers = {
+            "User-Agent": "OpenSubtitlesDownload v6.0",
+            "Api-key": f"{API_KEY}"
+        }
 
-    query_params = {}
-    for k, v in kwargs.items():
-        query_params[k] = v
+        query_params = urllib.parse.urlencode(kwargs)
+        url = f"{API_URL_SEARCH_ENDPOINT}?{query_params}"
+        req = urllib.request.Request(url, headers=headers)
 
-    response = requests.get(API_URL_SEARCH_ENDPOINT, headers=headers, params=query_params)
+        with urllib.request.urlopen(req) as response:
+            response_data = json.loads(response.read().decode('utf-8'))
 
-    return response.json()
+        return response_data
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
-def getSubtitleInfo(file_id, info='link'):
-    user_token = getUserToken(username=osd_username, password=osd_password)
+def getSubtitlesInfo(file_id):
+    try:
+        USER_TOKEN = getUserToken(username=osd_username, password=osd_password)
 
-    payload = { "file_id": file_id }
-    headers = {
-        "User-Agent": "OpenSubtitlesDownload script",
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        "Authorization": f"Bearer {user_token}",
-        "Api-key": f"{API_KEY}"
-    }
+        headers = {
+            "User-Agent": "OpenSubtitlesDownload v6.0",
+            "Api-key": f"{API_KEY}",
+            "Accept": "application/json",
+            "Authorization": f"Bearer {USER_TOKEN}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "file_id": file_id
+        }
 
-    response = requests.post(API_URL_DOWNLOAD_ENDPOINT, json=payload, headers=headers)
+        data = json.dumps(payload).encode('utf-8')
+        req = urllib.request.Request(API_URL_DOWNLOAD_ENDPOINT, data=data, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            result = response.read().decode('utf-8')
 
-    # pprint(response.json())
-    return response.json()[info]
+        return json.loads(result)
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
+
+
 
 # ==============================================================================
 # ==== Main program (execution starts here) ====================================
@@ -543,15 +591,16 @@ parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
 
 parser.add_argument('--cli', help="Force CLI mode", action='store_true')
 parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
-parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: en).\nSyntax:\n-l en,fr: search in both language\n", nargs='?', action='store')
+parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: en).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language")
 parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles file is detected", action='store_true')
 parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_then_filename, hash_and_filename (default: hash_then_filename)")
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
 parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
 parser.add_argument('-x', '--suffix', help="Force language code file suffix", action='store_true')
-parser.add_argument('-u', '--username', help="Set opensubtitles.org account username")
-parser.add_argument('-p', '--password', help="Set opensubtitles.org account password")
+parser.add_argument('-8', '--utf8', help="Force UTF-8 file download", action='store_true')
+parser.add_argument('-u', '--username', help="Set opensubtitles.com account username")
+parser.add_argument('-p', '--password', help="Set opensubtitles.com account password")
 parser.add_argument('searchPathList', help="The video file(s) or folder(s) for which subtitles should be searched and downloaded", nargs='+')
 
 # Parse arguments
@@ -576,6 +625,8 @@ if arguments.lang:
     opt_languages = arguments.lang
 if arguments.suffix:
     opt_language_suffix = 'on'
+if arguments.utf8:
+    opt_force_utf8 = True
 if arguments.username and arguments.password:
     osd_username = arguments.username
     osd_password = arguments.password
@@ -605,16 +656,11 @@ if opt_search_mode not in ['hash', 'filename', 'hash_then_filename', 'hash_and_f
 if opt_selection_mode not in ['manual', 'default', 'auto']:
     opt_selection_mode = 'default'
 
-# ==== Check for Python 3
-
-if sys.version_info < (3, 0):
-    superPrint("error", "Wrong Python version",
-        "You need <b>Python 3</b> to use OpenSubtitlesDownload <b>v5</b>.\n" + \
-        "If you want to stick to Python 2, please continue using OpenSubtitlesDownload v4.")
+# Check for Python 3
+if pythonChecker() is False:
     sys.exit(2)
 
-# ==== Check for the necessary tools (must be done after GUI auto detection)
-
+# Check for the necessary tools (must be done after GUI auto detection)
 if dependencyChecker() is False:
     sys.exit(2)
 
@@ -666,6 +712,9 @@ for videoPathDispatch in videoPathList:
     if opt_language_suffix == 'on':
         command.append("-x")
 
+    if opt_force_utf8 == True:
+        command.append("-8")
+
     if opt_output_path:
         command.append("-o")
         command.append(opt_output_path)
@@ -692,196 +741,169 @@ for videoPathDispatch in videoPathList:
 # ==== Search and download subtitles ===========================================
 
 try:
-    # ==== Count languages selected for this search
-    languageList = opt_languages.split(',')
+        # ==== Count languages selected for this search
+        if isinstance(opt_languages, list):
+            languageList = opt_languages
+        else:
+            languageList = opt_languages.split(',')
 
-    languageCount_search = len(languageList)
-    languageCount_results = 0
+        languageCount_search = len(languageList)
+        languageCount_results = 0
 
-    if opt_language_suffix == 'auto' and languageCount_search > 1:
-        opt_language_suffix = 'on'
+        # ==== Get file hash, size and name
+        videoTitle = u''
+        videoHash = hashFile(currentVideoPath)
+        videoSize = os.path.getsize(currentVideoPath)
+        videoFileName = os.path.basename(currentVideoPath)
 
-    # ==== Get file hash, size and name
-    videoTitle = ''
-    videoHash = hashFile(currentVideoPath)
-    videoSize = os.path.getsize(currentVideoPath)
-    videoFileName = os.path.basename(currentVideoPath)
+        subtitlesResultList = ''
 
-    # ==== Search for available subtitles
-    # for currentLanguage in opt_languages:
-    subtitlesSearchList = []
-    subtitlesResultList = {}
-
-    try:
-        if opt_search_mode in ('hash', 'hash_then_filename', 'hash_and_filename'):
+        ## Search for subtitles
+        try:
             subtitlesResultList = searchSubtitles(moviehash=videoHash, languages=opt_languages)
-            # superPrint("error", "subtitlesResultList by HASH", f"length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
+            #print(f"SEARCH BY HASH >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
+
+            if len(subtitlesResultList['data']) > 0:
+                videoTitle = subtitlesResultList['data'][0]['attributes']['feature_details']['movie_name']
+
             # if we didn't get any results for hash try searching by name
             if len(subtitlesResultList['data']) == 0:
-                # superPrint("error", "videoFileName", f"{videoFileName}")
                 subtitlesResultList = searchSubtitles(query=videoFileName, languages=opt_languages)
-                # superPrint("error", "subtitlesResultList NO HASH", f"length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
-    except Exception:
-        # Retry once after a delay (we are already connected, the server may be momentary overloaded)
-        time.sleep(3)
-        try:
-            subtitlesResultList = searchSubtitles(moviehash=videoHash)
-            if not subtitlesResultList:
-                subtitlesResultList = searchSubtitles(query=videoFileName)
+                #print(f"SEARCH BY NAME >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
+
         except Exception:
-            superPrint("error", "Search error!", "Unable to reach opensubtitles.org servers!\n<b>Search error</b>")
+            superPrint("error", "Search error!", "Unable to reach opensubtitles.com servers!\n<b>Search error</b>")
+            sys.exit(2)
 
+        ## Parse the results of the search query
+        if ('data' in subtitlesResultList) and (subtitlesResultList['data']):
+            # Mark search as successful
+            languageCount_results += 1
 
-    ## Parse the results of the api query
-    if subtitlesResultList['data']:
-        # Mark search as successful
-        languageCount_results += 1
-        subtitlesSelected = ''
-
-        # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
-        if (len(subtitlesResultList['data']) == 1) and (subtitlesResultList['data'][0]['attributes']['moviehash_match'] == True):
-            if opt_selection_mode != 'manual':
-                subtitlesSelected = subtitlesResultList['data'][0]['attributes']['files'][0]['file_id']
-
-        #superPrint("error", "DEbugg", f">>>>>>>>>>>> {subtitlesResultList}")
-
-        # Get video title
-        # videoTitle = subtitlesResultList['data'][0]['MovieName']
-        fileId = subtitlesResultList['data'][0]['attributes']['files'][0]['file_id']
-        videoTitle = getSubtitleInfo(fileId, info='file_name')
-
-        # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
-        if opt_gui != 'cli':
-            videoTitle = videoTitle.replace('"', '\\"')
-            videoTitle = videoTitle.replace("'", "\\'")
-            videoTitle = videoTitle.replace('`', '\\`')
-            videoTitle = videoTitle.replace("&", "&amp;")
-            videoFileName = videoFileName.replace('"', '\\"')
-            videoFileName = videoFileName.replace("'", "\\'")
-            videoFileName = videoFileName.replace('`', '\\`')
-            videoFileName = videoFileName.replace("&", "&amp;")
-
-        # If there is more than one subtitles and opt_selection_mode != 'auto',
-        # then let the user decide which one will be downloaded
-        if not subtitlesSelected:
-            if opt_selection_mode == 'auto':
-                # Automatic subtitles selection
-                subtitlesSelected = selectionAuto(subtitlesResultList)
-            else:
-                # Go through the list of subtitles and handle 'auto' settings activation
-                for item in subtitlesResultList['data']:
-                    if opt_selection_match == 'auto' and opt_search_mode == 'hash_and_filename':
-                        opt_selection_match = 'on'
-                    if opt_selection_language == 'auto' and languageCount_search > 1:
-                        opt_selection_language = 'on'
-                    if opt_selection_hi == 'auto' and item['attributes']['hearing_impaired'] == 'True':
-                        opt_selection_hi = 'on'
-                    if opt_selection_rating == 'auto' and item['attributes']['ratings'] != '0.0':
-                        opt_selection_rating = 'on'
-                    if opt_selection_count == 'auto':
-                        opt_selection_count = 'on'
-
-                # Spaw selection window
-                if opt_gui == 'gnome':
-                    subtitlesSelected = selectionGnome(subtitlesResultList)
-                elif opt_gui == 'kde':
-                    subtitlesSelected = selectionKde(subtitlesResultList)
-                else: # CLI
-                    subtitlesSelected = selectionCLI(subtitlesResultList)
-
-        # At this point a subtitles should be selected
-        if subtitlesSelected:
+            subName = u''
             subIndex = 0
-            subIndexTemp = 0
 
-            # Find it on the list
-            for item in subtitlesResultList['data']:
-                if item['attributes']['files'][0]['file_name'] == subtitlesSelected:
-                    subIndex = subIndexTemp
-                    break
-                else:
-                    subIndexTemp += 1
+            # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
+            if (len(subtitlesResultList['data']) == 1) and (subtitlesResultList['data'][0]['attributes']['moviehash_match'] == True):
+                if opt_selection_mode != 'manual':
+                    subName = subtitlesResultList['data'][0]['attributes']['files'][0]['file_id']
 
-            # Prepare download
-            subID = subtitlesResultList['data'][subIndex]['id']
-            fileId = subtitlesResultList['data'][subIndex]['attributes']['files'][0]['file_id']
-            # quote the URL to avoid characters like brackets () causing errors in wget command below
-            subURL = f"\'{getSubtitleInfo(fileId, info='link')}\'"
-            subSuffix = subURL.split('.')[-1].strip("'")
-            subLangName = subtitlesResultList['data'][subIndex]['attributes']['language']
-            subPath = ''
-
-            if opt_output_path and os.path.isdir(os.path.abspath(opt_output_path)):
-                # Use the output path provided by the user
-                subPath = os.path.abspath(opt_output_path) + "/" + subPath.rsplit('/', 1)[1]
-            else:
-                # Use the path of the input video
-                subPath = currentVideoPath.rsplit('.', 1)[0] + '.' + videoTitle.split('.')[-1]
-
-            # Write language code into the filename?
-            if opt_language_suffix == 'on':
-                subPath = subPath.rsplit('.', 1)[0] + opt_language_suffix_separator + subtitlesResultList['data'][subIndex]['attributes']['language'] + '.' + subSuffix
-
-            # Escape non-alphanumeric characters from the subtitles download path
+            # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
             if opt_gui != 'cli':
-                subPath = re.escape(subPath)
-                subPath = subPath.replace('"', '\\"')
-                subPath = subPath.replace("'", "\\'")
-                subPath = subPath.replace('`', '\\`')
+                videoTitle = videoTitle.replace('"', '\\"')
+                videoTitle = videoTitle.replace("'", "\\'")
+                videoTitle = videoTitle.replace('`', '\\`')
+                videoTitle = videoTitle.replace("&", "&amp;")
+                videoFileName = videoFileName.replace('"', '\\"')
+                videoFileName = videoFileName.replace("'", "\\'")
+                videoFileName = videoFileName.replace('`', '\\`')
+                videoFileName = videoFileName.replace("&", "&amp;")
 
-            # Download and unzip the selected subtitles
-            if opt_gui == 'gnome':
-                process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1" + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>' + subLangName + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
-            elif opt_gui == 'kde':
-                process_subtitlesDownload = subprocess.call("(wget -q -O - " + subURL + " | gunzip > " + subPath + ") 2>&1", shell=True)
-            else: # CLI
-                print(">> Downloading '" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "' subtitles for '" + videoTitle + "'")
-                downloadResult = subprocess.run("(wget -q -O " + subPath + " " + subURL + ") 2>&1", shell=True)
-                process_subtitlesDownload = downloadResult.returncode
-                if process_subtitlesDownload == 0:
-                    print(">> Subtitles downloaded")
+            # If there is more than one subtitles and opt_selection_mode != 'auto',
+            # then let the user decide which one will be downloaded
+            if not subName:
+                if opt_selection_mode == 'auto':
+                    # Automatic subtitles selection
+                    (subName, subIndex) = selectionAuto(subtitlesResultList)
                 else:
-                    print("!! Error downloading subtitles!")
+                    # Go through the list of subtitles and handle 'auto' settings activation
+                    for item in subtitlesResultList['data']:
+                        if opt_selection_match == 'auto' and opt_search_mode == 'hash_and_filename':
+                            opt_selection_match = 'on'
+                        if opt_selection_language == 'auto' and languageCount_search > 1:
+                            opt_selection_language = 'on'
+                        if opt_selection_hi == 'auto' and item['attributes']['hearing_impaired'] == 'True':
+                            opt_selection_hi = 'on'
+                        if opt_selection_rating == 'auto' and item['attributes']['ratings'] != '0.0':
+                            opt_selection_rating = 'on'
+                        if opt_selection_count == 'auto':
+                            opt_selection_count = 'on'
 
-            # If an error occurs, say so
-            if process_subtitlesDownload != 0:
-                superPrint("error", "Subtitling error!", "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['attributes']['language']
- + "    </b>subtitles for <b>" + videoTitle + "</b>.")
-                sys.exit(2)
+                    # Spaw selection window
+                    if opt_gui == 'gnome':
+                        (subName, subIndex) = selectionGnome(subtitlesResultList)
+                    elif opt_gui == 'kde':
+                        (subName, subIndex) = selectionKDE(subtitlesResultList)
+                    else: # CLI
+                        (subName, subIndex) = selectionCLI(subtitlesResultList)
 
-             # Use a secondary tool after a successful download?
-             # process_subtitlesDownload = subprocess.call("(custom_command" + " " + subPath + ") 2>&1", shell=True)
+            # At this point a subtitles should be selected
+            if subName:
+                # Prepare download
+                fileId = subtitlesResultList['data'][int(subIndex)]['attributes']['files'][0]['file_id']
+                fileInfo = getSubtitlesInfo(fileId)
 
-    ## Print a message if no subtitles have been found, for any of the languages
-    if languageCount_results == 0:
-        superPrint("info", "No subtitles available :-(", '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>. \
-                   \nMaybe try a different language or rename the file.')
-        ExitCode = 1
-    else:
-        ExitCode = 0
+                # quote the URL to avoid characters like brackets () causing errors in wget command below
+                subURL = f"\'{fileInfo['link']}\'"
+                subSuffix = subURL.split('.')[-1].strip("'")
+                subLangName = subtitlesResultList['data'][int(subIndex)]['attributes']['language']
+                subPath = u''
+
+                if opt_output_path and os.path.isdir(os.path.abspath(opt_output_path)):
+                    # Use the output path provided by the user
+                    subPath = os.path.abspath(opt_output_path) + "/" + currentVideoPath.rsplit('.', 1)[0].rsplit('/', 1)[1] + '.' + subSuffix
+                else:
+                    # Use the path of the input video, and the suffix of the subtitles file
+                    subPath = currentVideoPath.rsplit('.', 1)[0] + '.' + subSuffix
+
+                # Write language code into the filename?
+                if opt_language_suffix == 'on':
+                    subPath = subPath.rsplit('.', 1)[0] + opt_language_suffix_separator + subtitlesResultList['data'][int(subIndex)]['attributes']['language'] + '.' + subSuffix
+
+                # Escape non-alphanumeric characters from the subtitles download path
+                if opt_gui != 'cli':
+                    subPath = re.escape(subPath)
+                    subPath = subPath.replace('"', '\\"')
+                    subPath = subPath.replace("'", "\\'")
+                    subPath = subPath.replace('`', '\\`')
+
+                ## Download and unzip the selected subtitles
+                if opt_gui == 'gnome':
+                    process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1"
+                                                                + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>'
+                                                                + subLangName + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
+                elif opt_gui == 'kde':
+                    process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1", shell=True)
+                else: # CLI
+                    print(">> Downloading '" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "' subtitles for '" + videoTitle + "'")
+                    downloadResult = subprocess.run("(wget -q -O " + subPath + " " + subURL + ") 2>&1", shell=True)
+                    process_subtitlesDownload = downloadResult.returncode
+
+                # If an error occurs, say so
+                if process_subtitlesDownload != 0:
+                    superPrint("error", "Subtitling error!",
+                               "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
+                    sys.exit(2)
+
+            ## HOOK # Use a secondary tool after a successful download?
+            #process_subtitlesDownload = subprocess.call("(custom_command" + " " + subPath + ") 2>&1", shell=True)
+
+        ## Print a message if no subtitles have been found, for any of the languages
+        if languageCount_results == 0:
+            superPrint("info", "No subtitles available :-(", '<b>No subtitles found</b> for this video:\n<i>' + videoFileName + '</i>')
+            ExitCode = 1
+        else:
+            ExitCode = 0
 
 except KeyboardInterrupt:
     sys.exit(1)
 
-except (OSError, IOError, RuntimeError, AttributeError, TypeError, NameError, KeyError):
-    # Do not warn about remote disconnection # bug/feature of python 3.5?
-    if "http.client.RemoteDisconnected" in str(sys.exc_info()[0]):
-        sys.exit(ExitCode)
+except urllib.error.HTTPError as e:
+    superPrint("error", "Network error",
+               "Network error: " + e.reason)
 
+except (OSError, IOError, RuntimeError, AttributeError, TypeError, NameError, KeyError):
     # An unknown error occur, let's apologize before exiting
     superPrint("error", "Unexpected error!",
-        "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
-        "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
-        "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
-        "Just to be safe, please check:\n" + \
-        "- www.opensubtitles.org availability\n" + \
-        "- Your Internet connection status\n" + \
-        "- Your download limits (200 subtitles per 24h, 40 subtitles per 10s)\n" + \
-        "- That are using the latest version of this software ;-)")
+               "OpenSubtitlesDownload encountered an <b>unknown error</b>, sorry about that...\n\n" + \
+               "Error: <b>" + str(sys.exc_info()[0]).replace('<', '[').replace('>', ']') + "</b>\n" + \
+               "Line: <b>" + str(sys.exc_info()[-1].tb_lineno) + "</b>\n\n" + \
+               "Just to be safe, please check:\n" + \
+               "- Your Internet connection status\n" + \
+               "- www.opensubtitles.com availability\n" + \
+               "- Your download limits (5 subtitles per 24h for free (non VIP) users, 5 subtitles per 10s)\n" + \
+               "- That are using the latest version of this software ;-)")
 
 except Exception:
     # Catch unhandled exceptions but do not spawn an error window
     print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
-
-
-#####################################################################################

@@ -4,7 +4,7 @@ OpenSubtitlesDownload.py
 [![GitHub release](https://img.shields.io/github/release/emericg/OpenSubtitlesDownload.svg?style=flat-square)](https://github.com/emericg/OpenSubtitlesDownload/releases)
 [![GitHub contributors](https://img.shields.io/github/contributors/emericg/OpenSubtitlesDownload.svg?style=flat-square)](https://github.com/emericg/OpenSubtitlesDownload/graphs/contributors)
 [![GitHub issues](https://img.shields.io/github/issues/emericg/OpenSubtitlesDownload.svg?style=flat-square)](https://github.com/emericg/OpenSubtitlesDownload/issues)
-[![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-brightgreen.svg?style=flat-square)](http://www.gnu.org/licenses/gpl-3.0)
+[![License: GPL v3](https://img.shields.io/badge/license-GPL%20v3-brightgreen.svg?style=flat-square)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## Introduction
 
@@ -12,7 +12,9 @@ OpenSubtitlesDownload.py
 
 The subtitles search is done by precisly **identifying your video files** by computing unique movie hash sums. This way, you have more chance to find the **exact subtitles for your videos**, avoiding synchronization problems between the subtitles and the soundtrack. But what if that doesn't work? Well, a search with the filename will be performed, but be aware: results are a bit more... unpredictable (don't worry, you will be warned! and you can even disable this feature if you want).
 
-The subtitles search and download service is powered by [opensubtitles.org](https://www.opensubtitles.org). Big thanks to their hard work on this amazing project! Be sure to [give them your support](http://www.opensubtitles.org/en/support) if you appreciate the service provided, they sure need donations for handling the ever growing hosting costs!
+The subtitles search and download service is powered by [opensubtitles.com](https://www.opensubtitles.com). Big thanks to their hard work on this amazing project! Be sure to [give them your support](https://www.opensubtitles.com/en/users/vip) if you appreciate the service provided, they sure need donations for handling the ever growing hosting costs!
+
+> OpenSubtitlesDownload v6 use the new REST API from the [opensubtitles.com](https://www.opensubtitles.com) website.
 
 ### Features
 
@@ -32,10 +34,10 @@ The subtitles search and download service is powered by [opensubtitles.org](http
 
 #### Requirements
 
-- Python 3 (you can use legacy versions to continue on Python 2)
+- Python 3
 - zenity (only needed for GNOME based desktop environments)
 - kdialog (only needed for KDE based desktop environments)
-- Common unix tools (only needed for GUIs): wget & gzip (GUI subtitles downloading), ps & grep (GUI autodetection)
+- Common unix tools (only needed for GUIs): wget, ps & grep (GUI autodetection)
 
 #### Quick installation (nautilus script, with GNOME desktop environment)
 
@@ -48,15 +50,17 @@ $ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/Op
 $ chmod u+x OpenSubtitlesDownload.py
 ```
 
-#### IMPORTANT: use an opensubtitles.org account
+#### IMPORTANT: use an opensubtitles.com account
 
 Following a recent policy change from opensubtitles.org, the API is now available only for logged users. More informations can be found on [this discussion](https://github.com/emericg/OpenSubtitlesDownload/issues/51).  
 If you are concern by this issue, the symptoms are **401 unauthorized** error messages. If you try too many times without a valid account, know that your IP address will be banned for 24 H.  
 
 To continue using OpenSubtitlesDownload you simply need to:
 
-- [Create an account](https://www.opensubtitles.org/en/newuser) on opensubtitles.org website
+- [Create an account](https://www.opensubtitles.com/) on opensubtitles.com website
 - [Use that account](https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings#log-in-with-a-registered-user) with the script 
+
+> API status: https://opensubtitles.stoplight.io/docs/opensubtitles-api/e3750fd63a100-getting-started#system-status
 
 ## Screenshots!
 
@@ -72,17 +76,15 @@ The download will only take a moment.
 Enjoy your subtitled video!
 ![Enjoy your subtitled video!](https://i.imgur.com/9KKvISR.jpg)
 
-## Get involved
+## Website
 
-#### Users
-You can help us find and report bugs, propose new features, help with the documentation and more! Visit the [Issues](https://github.com/emericg/OpenSubtitlesDownload/issues) section to start!
-
-#### Developers
-You can browse the code on the GitHub page, submit patches and pull requests! Your help would be greatly appreciated ;-)
+You can browse the project website at <https://emeric.io/OpenSubtitlesDownload>  
+You can browse the project GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
+Learn more about OpenSubtitlesDownload.py installation and configuration on the wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>  
 
 ## Contributors
 
-- Emeric Grange <emeric.grange@gmail.com> maintainer
+- FriendlyTroll <https://github.com/FriendlyTroll> for his work on the REST API port
 - Thiago Alvarenga Lechuga <thiagoalz@gmail.com> for his work on the 'Windows CLI' and the 'folder search'
 - jeroenvdw for his work on the 'subtitles automatic selection' and the 'search by filename'
 - Gui13 for his work on the arguments parsing
@@ -90,11 +92,13 @@ You can browse the code on the GitHub page, submit patches and pull requests! Yo
 - Carlos Acedo <carlos@linux-labs.net> for his work on the original script
 - And [many others](https://github.com/emericg/OpenSubtitlesDownload/graphs/contributors)!
 
-## Website
+## Get involved
 
-You can browse the project website at <https://emeric.io/OpenSubtitlesDownload>  
-You can browse the project GitHub page at <https://github.com/emericg/OpenSubtitlesDownload>  
-Learn more about OpenSubtitlesDownload.py installation and configuration on the wiki at <https://github.com/emericg/OpenSubtitlesDownload/wiki>  
+#### Users
+You can help us find and report bugs, propose new features, help with the documentation and more! Visit the [Issues](https://github.com/emericg/OpenSubtitlesDownload/issues) section to start!
+
+#### Developers
+You can browse the code on the GitHub page, submit patches and pull requests! Your help would be greatly appreciated ;-)
 
 ## License
 
