@@ -507,7 +507,8 @@ def getUserToken(username, password):
         return response_data['token']
 
     except Exception:
-        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
+        superPrint("error", "OpenSubtitles.com login error!", "An error occurred while connecting to the OpenSubtitles.com server")
+        sys.exit(2)
 
 def searchSubtitles(**kwargs):
     try:
@@ -657,6 +658,11 @@ if pythonChecker() is False:
 
 # Check for the necessary tools (must be done after GUI auto detection)
 if dependencyChecker() is False:
+    sys.exit(2)
+
+# Check for OSD credentials
+if not osd_username or not osd_password:
+    superPrint("warning", "OpenSubtitles.com account required!", "A valid OpenSubtitles.com account is <b>REQUIRED</b>, please register on the website!")
     sys.exit(2)
 
 # ==== Get video paths, validate them, and if needed check if subtitles already exists
