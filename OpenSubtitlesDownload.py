@@ -60,9 +60,6 @@ API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
 osd_username = ''
 osd_password = ''
 
-# You can also change opensubtitles.com language, it will be used for error codes and stuff.
-osd_language = 'en'
-
 # ==== Language settings =======================================================
 
 # Full guide: https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings
@@ -82,23 +79,20 @@ opt_language_suffix = 'auto'
 # Character used to separate file path from the language code (ex: file_en.srt).
 opt_language_suffix_separator = '_'
 
-# Force downloading and storing UTF-8 encoded subtitles files.
-opt_force_utf8 = False
-
 # ==== Search settings =========================================================
 
 # Subtitles search mode. Can be overridden at run time with '-s' argument.
+# - hash_then_filename (search by hash, then if no results by filename) (default)
+# - hash_and_filename (search using both methods)
 # - hash (search by hash only)
 # - filename (search by filename only)
-# - hash_then_filename (search by hash, then if no results by filename)
-# - hash_and_filename (search using both methods)
 opt_search_mode = 'hash_then_filename'
 
 # Search and download a subtitles even if a subtitles file already exists.
 opt_search_overwrite = True
 
 # Subtitles selection mode. Can be overridden at run time with '-t' argument.
-# - default (in case of multiple results, let you choose the subtitles you want)
+# - default (in case of multiple results, lets you choose the subtitles you want)
 # - manual (always let you choose the subtitles you want)
 # - auto (automatically select the best subtitles found)
 opt_selection_mode = 'default'
@@ -241,6 +235,7 @@ def hashFile(path):
     except IOError:
         superPrint("error", "I/O error!", "Input/Output error while generating hash for this file:\n<i>" + path + "</i>")
         return "IOError"
+
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
@@ -510,6 +505,7 @@ def getUserToken(username, password):
             response_data = json.loads(response.read().decode('utf-8'))
 
         return response_data['token']
+
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
@@ -528,6 +524,7 @@ def searchSubtitles(**kwargs):
             response_data = json.loads(response.read().decode('utf-8'))
 
         return response_data
+
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
@@ -552,6 +549,7 @@ def getSubtitlesInfo(file_id):
             result = response.read().decode('utf-8')
 
         return json.loads(result)
+
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
@@ -598,12 +596,9 @@ parser.add_argument('-t', '--select', help="Selection mode: manual, default, aut
 parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
 parser.add_argument('-x', '--suffix', help="Force language code file suffix", action='store_true')
-parser.add_argument('-8', '--utf8', help="Force UTF-8 file download", action='store_true')
 parser.add_argument('-u', '--username', help="Set opensubtitles.com account username")
 parser.add_argument('-p', '--password', help="Set opensubtitles.com account password")
 parser.add_argument('searchPathList', help="The video file(s) or folder(s) for which subtitles should be searched and downloaded", nargs='+')
-
-# Parse arguments
 arguments = parser.parse_args()
 
 # Handle arguments
@@ -625,8 +620,6 @@ if arguments.lang:
     opt_languages = arguments.lang
 if arguments.suffix:
     opt_language_suffix = 'on'
-if arguments.utf8:
-    opt_force_utf8 = True
 if arguments.username and arguments.password:
     osd_username = arguments.username
     osd_password = arguments.password
@@ -655,6 +648,8 @@ if opt_search_mode not in ['hash', 'filename', 'hash_then_filename', 'hash_and_f
 
 if opt_selection_mode not in ['manual', 'default', 'auto']:
     opt_selection_mode = 'default'
+
+# ==== Various checks
 
 # Check for Python 3
 if pythonChecker() is False:
@@ -711,9 +706,6 @@ for videoPathDispatch in videoPathList:
 
     if opt_language_suffix == 'on':
         command.append("-x")
-
-    if opt_force_utf8 == True:
-        command.append("-8")
 
     if opt_output_path:
         command.append("-o")
