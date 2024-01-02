@@ -10,11 +10,13 @@ OpenSubtitlesDownload.py
 
 **OpenSubtitlesDownload.py** is a small software written in Python, built to help you **quickly find and download subtitles** for your favorite videos. It can be used as a nautilus script, or as a regular application working under GNOME or KDE desktop environments. You can also use it in full CLI mode (Command Line Interface) on your NAS, Raspberry Pi or anywhere you want really, as long as you have a working Python interpreter.
 
-The subtitles search is done by precisly **identifying your video files** by computing unique movie hash sums. This way, you have more chance to find the **exact subtitles for your videos**, avoiding synchronization problems between the subtitles and the soundtrack. But what if that doesn't work? Well, a search with the filename will be performed, but be aware: results are a bit more... unpredictable (don't worry, you will be warned! and you can even disable this feature if you want).
+The subtitles search is done by precisly **identifying your video files** by computing unique movie hash sums. This way, you have more chance to find a subtitles that is an **exact match** for your video files, avoiding synchronization problems between the subtitles and the soundtrack. But what if that doesn't work? Well, a search with the filename will be performed, but be aware: results are a bit more... unpredictable (don't worry, you will be warned! and you can even disable this feature if you want).
 
 The subtitles search and download service is powered by [opensubtitles.com](https://www.opensubtitles.com). Big thanks to their hard work on this amazing project! Be sure to [give them your support](https://www.opensubtitles.com/en/users/vip) if you appreciate the service provided, they sure need donations for handling the ever growing hosting costs!
 
 > OpenSubtitlesDownload v6 use the new REST API from the [opensubtitles.com](https://www.opensubtitles.com) website.
+
+> Require an account from [opensubtitles.com](https://www.opensubtitles.com).
 
 ### Features
 
@@ -50,17 +52,14 @@ $ wget https://raw.githubusercontent.com/emericg/OpenSubtitlesDownload/master/Op
 $ chmod u+x OpenSubtitlesDownload.py
 ```
 
-#### IMPORTANT: use an opensubtitles.com account
+#### IMPORTANT STEP: use an opensubtitles.com account!
 
-Following a recent policy change from opensubtitles.org, the API is now available only for logged users. More informations can be found on [this discussion](https://github.com/emericg/OpenSubtitlesDownload/issues/51).  
-If you are concern by this issue, the symptoms are **401 unauthorized** error messages. If you try too many times without a valid account, know that your IP address will be banned for 24 H.  
-
-To continue using OpenSubtitlesDownload you simply need to:
+To use OpenSubtitlesDownload you need to:
 
 - [Create an account](https://www.opensubtitles.com/) on opensubtitles.com website
-- [Use that account](https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings#log-in-with-a-registered-user) with the script 
+- [Use that account](https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings#log-in-with-a-registered-user) with the script
 
-> API status: https://opensubtitles.stoplight.io/docs/opensubtitles-api/e3750fd63a100-getting-started#system-status
+The old opensubtitles.ORG accounts won't work anymore, unless you migrated them from the new website.
 
 ## Screenshots!
 
