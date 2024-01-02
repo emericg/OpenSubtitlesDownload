@@ -282,10 +282,10 @@ def selectionGnome(subtitlesResultList):
                 subtitlesItems += '"" '
         if opt_selection_rating == 'on':
             columnRate = '--column="Rating" '
-            subtitlesItems += '"' + item['attributes']['ratings'] + '" '
+            subtitlesItems += '"' + str(item['attributes']['ratings']) + '" '
         if opt_selection_count == 'on':
             columnCount = '--column="Downloads" '
-            subtitlesItems += '"' + item['attributes']['download_count'] + '" '
+            subtitlesItems += '"' + str(item['attributes']['download_count']) + '" '
 
     if subtitlesMatchedByName == 0:
         tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
@@ -379,38 +379,41 @@ def selectionCLI(subtitlesResultList):
     """Command Line Interface, subtitles selection inside your current terminal"""
     subtitlesSelectedName = u''
     subtitlesSelectedIndex = -1
-
     subtitlesItemIndex = 0
-    subtitlesItem = u''
 
     # Print video infos
-    print("\n>> Title: " + videoTitle)
+    print("")
+    print(">> Title: " + videoTitle)
     print(">> Filename: " + videoFileName)
+    print("")
+    print(">> Available subtitles:")
 
     # Print subtitles list on the terminal
-    print(">> Available subtitles:")
     for item in subtitlesResultList['data']:
         subtitlesItemIndex += 1
-        subtitlesItem = '"' + item['attributes']['files'][0]['file_name'] + '" '
+
+        subtitlesItemPre = u''
+        subtitlesItem = u'"' + item['attributes']['files'][0]['file_name'] + '"'
+        subtitlesItemPost = u''
 
         if opt_selection_hi == 'on' and item['attributes']['hearing_impaired'] == '1':
-            subtitlesItem += '> "HI" '
+            subtitlesItemPre += '> "HI" > '
         if opt_selection_language == 'on':
-            subtitlesItem += '> "Language: ' + item['attributes']['language'] + '" '
+            subtitlesItemPre += '> ' + item['attributes']['language'].upper() + ' > '
         if opt_selection_match == 'on':
             if item['attributes']['moviehash_match'] == 'True':
-                subtitlesItem += '> "Matched by hash" '
+                subtitlesItemPre += '> (hash) > '
             else:
-                subtitlesItem += '> "Matched by name" '
+                subtitlesItemPre += '> (name) > '
         if opt_selection_rating == 'on':
-            subtitlesItem += '> "SubRating: ' + item['attributes']['ratings'] + '" '
+            subtitlesItemPost += ' > "Rating: ' + str(item['attributes']['ratings']) + '"'
         if opt_selection_count == 'on':
-            subtitlesItem += '> "SubDownloadsCnt: ' + item['attributes']['download_count'] + '" '
+            subtitlesItemPost += ' > "Downloads: ' + str(item['attributes']['download_count']) + '"'
 
         if "moviehash_match" in item['attributes'] and item['attributes']['moviehash_match'] == 'True':
-            print("\033[92m[" + str(subtitlesItemIndex) + "]\033[0m " + subtitlesItem)
+            print("\033[92m[" + str(subtitlesItemIndex).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
         else:
-            print("\033[93m[" + str(subtitlesItemIndex) + "]\033[0m " + subtitlesItem)
+            print("\033[93m[" + str(subtitlesItemIndex).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
 
     # Ask user to selected a subtitles
     print("\033[91m[0]\033[0m Cancel search")
@@ -423,6 +426,7 @@ def selectionCLI(subtitlesResultList):
             subtitlesSelectedIndex = -1
 
     if subtitlesSelectedIndex == 0:
+        print("")
         print("Cancelling search...")
         return ("", -1)
 
@@ -590,15 +594,15 @@ parser = argparse.ArgumentParser(prog='OpenSubtitlesDownload.py',
 
 parser.add_argument('--cli', help="Force CLI mode", action='store_true')
 parser.add_argument('-g', '--gui', help="Select the GUI you want from: auto, kde, gnome, cli (default: auto)")
-parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: en).\nSyntax:\n-l eng,fre: search in both language\n-l eng -l fre: download both language")
-parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles file is detected", action='store_true')
+parser.add_argument('-u', '--username', help="Set opensubtitles.com account username")
+parser.add_argument('-p', '--password', help="Set opensubtitles.com account password")
+parser.add_argument('-l', '--lang', help="Specify the language in which the subtitles should be downloaded (default: en).\nSyntax:\n-l en,fr: search in both language")
 parser.add_argument('-s', '--search', help="Search mode: hash, filename, hash_then_filename, hash_and_filename (default: hash_then_filename)")
 parser.add_argument('-t', '--select', help="Selection mode: manual, default, auto")
 parser.add_argument('-a', '--auto', help="Force automatic selection and download of the best subtitles found", action='store_true')
-parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next their video file")
+parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles file is detected", action='store_true')
+parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next to their video file")
 parser.add_argument('-x', '--suffix', help="Force language code file suffix", action='store_true')
-parser.add_argument('-u', '--username', help="Set opensubtitles.com account username")
-parser.add_argument('-p', '--password', help="Set opensubtitles.com account password")
 parser.add_argument('searchPathList', help="The video file(s) or folder(s) for which subtitles should be searched and downloaded", nargs='+')
 arguments = parser.parse_args()
 
@@ -607,6 +611,11 @@ if arguments.cli:
     opt_gui = 'cli'
 if arguments.gui:
     opt_gui = arguments.gui
+if arguments.username and arguments.password:
+    osd_username = arguments.username
+    osd_password = arguments.password
+if arguments.lang:
+    opt_languages = arguments.lang
 if arguments.search:
     opt_search_mode = arguments.search
 if arguments.skip:
@@ -617,13 +626,8 @@ if arguments.auto:
     opt_selection_mode = 'auto'
 if arguments.output:
     opt_output_path = arguments.output
-if arguments.lang:
-    opt_languages = arguments.lang
 if arguments.suffix:
     opt_language_suffix = 'on'
-if arguments.username and arguments.password:
-    osd_username = arguments.username
-    osd_password = arguments.password
 
 # GUI auto detection
 if opt_gui == 'auto':
