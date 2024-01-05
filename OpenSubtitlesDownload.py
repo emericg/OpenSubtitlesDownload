@@ -68,7 +68,7 @@ osd_password = ''
 #    > https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
 #    > Supported language codes: https://opensubtitles.stoplight.io/docs/opensubtitles-api/1de776d20e873-languages
 #    > Ex: opt_languages = 'en'
-# 2/ Search for subtitles in several languages (at once, select one) by using multiple codes separated by a comma:
+# 2/ Search for subtitles in several languages by using multiple codes separated by a comma:
 #    > Ex: opt_languages = 'en,fr'
 opt_languages = 'en'
 
@@ -111,7 +111,7 @@ opt_output_path = ''
 opt_gui = 'auto'
 
 # Change the subtitles selection GUI size:
-opt_gui_width  = 860
+opt_gui_width  = 920
 opt_gui_height = 400
 
 # Various GUI columns to show/hide during subtitles selection. You can set them to 'on', 'off' or 'auto'.
@@ -120,36 +120,6 @@ opt_selection_language = 'auto'
 opt_selection_match    = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
-
-# ==== Super Print =============================================================
-# priority: info, warning, error
-# title: only for zenity and kdialog messages
-# message: full text, with tags and breaks (tags will be cleaned up for CLI)
-
-def superPrint(priority, title, message):
-    """Print messages through terminal, zenity or kdialog"""
-    if opt_gui == 'gnome':
-        subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--title=' + title, '--text=' + message])
-    elif opt_gui == 'kde':
-        # Adapt to kdialog
-        message = message.replace("\n", "<br>")
-        message = message.replace('\\"', '"')
-        if priority == 'warning':
-            priority = 'sorry'
-        elif priority == 'info':
-            priority = 'msgbox'
-        # Print message
-        subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
-    else:
-        # Clean up format tags from the zenity string
-        message = message.replace("\n\n", "\n")
-        message = message.replace('\\"', '"')
-        message = message.replace("<i>", "")
-        message = message.replace("</i>", "")
-        message = message.replace("<b>", "")
-        message = message.replace("</b>", "")
-        # Print message
-        print(">> " + message)
 
 # ==== Check file path & type ==================================================
 
@@ -239,6 +209,35 @@ def hashFile(path):
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
+# ==== Super Print =============================================================
+# priority: info, warning, error
+# title: only for zenity and kdialog messages
+# message: full text, with tags and breaks (tags will be cleaned up for CLI)
+
+def superPrint(priority, title, message):
+    """Print messages through terminal, zenity or kdialog"""
+    if opt_gui == 'gnome':
+        subprocess.call(['zenity', '--width=' + str(opt_gui_width), '--' + priority, '--title=' + title, '--text=' + message])
+    elif opt_gui == 'kde':
+        # Adapt to kdialog
+        message = message.replace("\n", "<br>")
+        message = message.replace('\\"', '"')
+        if priority == 'warning':
+            priority = 'sorry'
+        elif priority == 'info':
+            priority = 'msgbox'
+        # Print message
+        subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
+    else:
+        # Clean up format tags from the zenity string
+        message = message.replace("\n\n", "\n")
+        message = message.replace('\\"', '"')
+        message = message.replace("<i>", "")
+        message = message.replace("</i>", "")
+        message = message.replace("<b>", "")
+        message = message.replace("</b>", "")
+        # Print message
+        print(">> " + message)
 
 # ==== GNOME selection window ==================================================
 
@@ -258,7 +257,7 @@ def selectionGnome(subtitlesResultList):
 
     # Generate selection window content
     for idx, item in enumerate(subtitlesResultList['data']):
-        if item['attributes'].get('moviehash_match', False)  == True:
+        if item['attributes'].get('moviehash_match', False) == True:
             subtitlesMatchedByHash += 1
         else:
             subtitlesMatchedByName += 1
@@ -267,7 +266,7 @@ def selectionGnome(subtitlesResultList):
 
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
-            if item['attributes']['hearing_impaired'] == 'True':
+            if item['attributes'].get('hearing_impaired', False) == True:
                 subtitlesItems += u'"✔" '
             else:
                 subtitlesItems += '"" '
@@ -276,10 +275,10 @@ def selectionGnome(subtitlesResultList):
             subtitlesItems += '"' + item['attributes']['language'] + '" '
         if opt_selection_match == 'on':
             columnMatch = '--column="MatchedBy" '
-            if item['attributes']['moviehash_match'] == 'True':
+            if item['attributes'].get('moviehash_match', False) == True:
                 subtitlesItems += '"HASH" '
             else:
-                subtitlesItems += '"" '
+                subtitlesItems += '"name" '
         if opt_selection_rating == 'on':
             columnRate = '--column="Rating" '
             subtitlesItems += '"' + str(item['attributes']['ratings']) + '" '
@@ -309,11 +308,6 @@ def selectionGnome(subtitlesResultList):
     if result_subtitlesSelection[0]:
         result = str(result_subtitlesSelection[0], 'utf-8', 'replace').strip("\n")
 
-        # Hack against recent zenity version?
-        #if len(result.split("|")) > 1:
-        #    if result.split("|")[0] == result.split("|")[1]:
-        #        result = result.split("|")[0]
-
         # Get index and result
         [subtitlesSelectedIndex, subtitlesSelectedName] = result.split('|')[0:2]
     else:
@@ -340,7 +334,7 @@ def selectionKDE(subtitlesResultList):
     index = 0
 
     for item in subtitlesResultList['data']:
-        if item['attributes']['moviehash_match'] == 'True':
+        if item['attributes'].get('moviehash_match', False) == True:
             subtitlesMatchedByHash += 1
         else:
             subtitlesMatchedByName += 1
@@ -396,12 +390,12 @@ def selectionCLI(subtitlesResultList):
         subtitlesItem = u'"' + item['attributes']['files'][0]['file_name'] + '"'
         subtitlesItemPost = u''
 
-        if opt_selection_hi == 'on' and item['attributes']['hearing_impaired'] == '1':
-            subtitlesItemPre += '> "HI" > '
         if opt_selection_language == 'on':
             subtitlesItemPre += '> ' + item['attributes']['language'].upper() + ' > '
+        if opt_selection_hi == 'on' and item['attributes'].get('hearing_impaired', False) == True:
+            subtitlesItemPre += '> "HI" > '
         if opt_selection_match == 'on':
-            if item['attributes']['moviehash_match'] == 'True':
+            if item['attributes'].get('moviehash_match', False) == True:
                 subtitlesItemPre += '> (hash) > '
             else:
                 subtitlesItemPre += '> (name) > '
@@ -410,23 +404,22 @@ def selectionCLI(subtitlesResultList):
         if opt_selection_count == 'on':
             subtitlesItemPost += ' > "Downloads: ' + str(item['attributes']['download_count']) + '"'
 
-        if "moviehash_match" in item['attributes'] and item['attributes']['moviehash_match'] == 'True':
+        if item['attributes'].get('moviehash_match', False) == True:
             print("\033[92m[" + str(subtitlesItemIndex).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
         else:
             print("\033[93m[" + str(subtitlesItemIndex).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
 
     # Ask user to selected a subtitles
-    print("\033[91m[0]\033[0m Cancel search")
+    print("\033[91m[ 0]\033[0m Cancel search")
     while (subtitlesSelectedIndex < 0 or subtitlesSelectedIndex > subtitlesItemIndex):
         try:
-            subtitlesSelectedIndex = int(input(">> Enter your choice (0-" + str(subtitlesItemIndex) + "): "))
+            subtitlesSelectedIndex = int(input("\n>> Enter your choice (0-" + str(subtitlesItemIndex) + "): "))
         except KeyboardInterrupt:
             sys.exit(1)
         except:
             subtitlesSelectedIndex = -1
 
     if subtitlesSelectedIndex == 0:
-        print("")
         print("Cancelling search...")
         return ("", -1)
 
@@ -705,11 +698,8 @@ videoPathList.pop(0)
 for videoPathDispatch in videoPathList:
 
     # Pass settings
-    command = [ sys.executable, scriptPath, "-g", opt_gui, "-s", opt_search_mode, "-t", opt_selection_mode ]
-
-    for language in opt_languages:
-        command.append("-l")
-        command.append(language)
+    command = [ sys.executable, scriptPath,
+                "-g", opt_gui, "-s", opt_search_mode, "-t", opt_selection_mode, "-l", opt_languages ]
 
     if not opt_search_overwrite:
         command.append("-i")
@@ -758,18 +748,21 @@ try:
     videoSize = os.path.getsize(currentVideoPath)
     videoFileName = os.path.basename(currentVideoPath)
 
-    subtitlesResultList = ''
-
     ## Search for subtitles
+    subtitlesResultList = []
     try:
-        subtitlesResultList = searchSubtitles(moviehash=videoHash, languages=opt_languages)
-        #print(f"SEARCH BY HASH >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
+        if 'hash_and_filename' in opt_search_mode:
+            subtitlesResultList = searchSubtitles(moviehash=videoHash, query=videoFileName, languages=opt_languages)
 
-        if len(subtitlesResultList['data']) > 0:
+        if any(mode in opt_search_mode for mode in ['hash_then_filename', 'hash']):
+            subtitlesResultList = searchSubtitles(moviehash=videoHash, languages=opt_languages)
+
+        if subtitlesResultList and len(subtitlesResultList['data']) > 0:
+            #print(f"SEARCH BY HASH >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
             videoTitle = subtitlesResultList['data'][0]['attributes']['feature_details']['movie_name']
 
-        # if we didn't get any results for hash try searching by name
-        if len(subtitlesResultList['data']) == 0:
+        # if we didn't get any results for hash, try searching by name
+        if ('filename' in opt_search_mode) or ('hash_then_filename' in opt_search_mode and len(subtitlesResultList['data']) == 0):
             subtitlesResultList = searchSubtitles(query=videoFileName, languages=opt_languages)
             #print(f"SEARCH BY NAME >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
 
@@ -814,7 +807,7 @@ try:
                         opt_selection_match = 'on'
                     if opt_selection_language == 'auto' and languageCount_search > 1:
                         opt_selection_language = 'on'
-                    if opt_selection_hi == 'auto' and item['attributes']['hearing_impaired'] == 'True':
+                    if opt_selection_hi == 'auto' and item['attributes'].get('hearing_impaired', False) == True:
                         opt_selection_hi = 'on'
                     if opt_selection_rating == 'auto' and item['attributes']['ratings'] != '0.0':
                         opt_selection_rating = 'on'
