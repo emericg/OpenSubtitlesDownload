@@ -36,7 +36,8 @@ import subprocess
 
 import json
 import urllib
-from urllib import request
+import urllib.request
+import urllib.error
 
 # ==== OpenSubtitles.com server settings =======================================
 
@@ -45,9 +46,10 @@ from urllib import request
 
 # API endpoints
 API_URL = 'https://api.opensubtitles.com/api/v1/'
-API_URL_DOWNLOAD_ENDPOINT = API_URL + 'download'
 API_URL_LOGIN_ENDPOINT = API_URL + 'login'
+API_URL_LOGOUT_ENDPOINT = API_URL + 'logout'
 API_URL_SEARCH_ENDPOINT = API_URL + 'subtitles'
+API_URL_DOWNLOAD_ENDPOINT = API_URL + 'download'
 
 # API key (required)
 API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
@@ -354,7 +356,8 @@ def selectionKDE(subtitlesResultList):
         menustr = ' --menu="Search results using file name AND video detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
 
     # Spawn kdialog "radiolist"
-    process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems, shell=True, stdout=subprocess.PIPE)
+    process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems,
+                                                  shell=True, stdout=subprocess.PIPE)
 
     # Get back the user's choice
     result_subtitlesSelection = process_subtitlesSelection.communicate()
@@ -497,15 +500,38 @@ def getUserToken(username, password):
 
         data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(API_URL_LOGIN_ENDPOINT, data=data, headers=headers)
-
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
         return response_data['token']
 
-    except Exception:
+    except (urllib.error.HTTPError, urllib.error.URLError) as err:
+        print("Urllib error (", err.code, ") ", err.reason)
         superPrint("error", "OpenSubtitles.com login error!", "An error occurred while connecting to the OpenSubtitles.com server")
         sys.exit(2)
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
+        superPrint("error", "OpenSubtitles.com login error!", "An error occurred while connecting to the OpenSubtitles.com server")
+        sys.exit(2)
+
+def destroyUserToken(USER_TOKEN):
+    try:
+        headers = {
+            "User-Agent": "OpenSubtitlesDownload v6.0",
+            "Api-key": f"{API_KEY}",
+            "Authorization": f"Bearer {USER_TOKEN}",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+
+        req = urllib.request.Request(API_URL_LOGOUT_ENDPOINT, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            response_data = json.loads(response.read().decode('utf-8'))
+
+    except (urllib.error.HTTPError, urllib.error.URLError) as err:
+        print("Urllib error (", err.code, ") ", err.reason)
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
 def searchSubtitles(**kwargs):
     try:
@@ -517,24 +543,23 @@ def searchSubtitles(**kwargs):
         query_params = urllib.parse.urlencode(kwargs)
         url = f"{API_URL_SEARCH_ENDPOINT}?{query_params}"
         req = urllib.request.Request(url, headers=headers)
-
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
         return response_data
 
+    except (urllib.error.HTTPError, urllib.error.URLError) as err:
+        print("Urllib error (", err.code, ") ", err.reason)
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
-def getSubtitlesInfo(file_id):
+def getSubtitlesInfo(USER_TOKEN, file_id):
     try:
-        USER_TOKEN = getUserToken(username=osd_username, password=osd_password)
-
         headers = {
             "User-Agent": "OpenSubtitlesDownload v6.0",
             "Api-key": f"{API_KEY}",
-            "Accept": "application/json",
             "Authorization": f"Bearer {USER_TOKEN}",
+            "Accept": "application/json",
             "Content-Type": "application/json"
         }
         payload = {
@@ -548,6 +573,32 @@ def getSubtitlesInfo(file_id):
 
         return json.loads(result)
 
+    except (urllib.error.HTTPError, urllib.error.URLError) as err:
+        print("Urllib error (", err.code, ") ", err.reason)
+    except Exception:
+        print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
+
+def downloadSubtitles(USER_TOKEN,subURL, subPath):
+    try:
+        headers = {
+            "User-Agent": "OpenSubtitlesDownload v6.0",
+            "Api-key": f"{API_KEY}",
+            "Authorization": f"Bearer {USER_TOKEN}",
+            "Accept": "application/json",
+            "Content-Type": "application/json"
+        }
+
+        req = urllib.request.Request(subURL, headers=headers)
+        with urllib.request.urlopen(req) as response:
+            decodedStr = response.read().decode('utf-8')
+            byteswritten = open(subPath, 'w', encoding='utf-8', errors='replace').write(decodedStr)
+            if byteswritten > 0:
+                return 0
+
+        return 1
+
+    except (urllib.error.HTTPError, urllib.error.URLError) as err:
+        print("Urllib error (", err.code, ") ", err.reason)
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
@@ -721,7 +772,7 @@ for videoPathDispatch in videoPathList:
     command.append(videoPathDispatch)
 
     # Do not spawn too many instances at once, avoid error '429 Too Many Requests'
-    time.sleep(2)
+    time.sleep(3)
 
     if opt_gui == 'cli' and opt_selection_mode != 'auto':
         # Synchronous call
@@ -748,8 +799,10 @@ try:
     videoSize = os.path.getsize(currentVideoPath)
     videoFileName = os.path.basename(currentVideoPath)
 
-    ## Search for subtitles
+    USER_TOKEN = []
     subtitlesResultList = []
+
+    ## Search for subtitles
     try:
         if 'hash_and_filename' in opt_search_mode:
             subtitlesResultList = searchSubtitles(moviehash=videoHash, query=videoFileName, languages=opt_languages)
@@ -824,9 +877,11 @@ try:
 
         # At this point a subtitles should be selected
         if subName:
+            USER_TOKEN = getUserToken(username=osd_username, password=osd_password)
+
             # Prepare download
             fileId = subtitlesResultList['data'][int(subIndex)]['attributes']['files'][0]['file_id']
-            fileInfo = getSubtitlesInfo(fileId)
+            fileInfo = getSubtitlesInfo(USER_TOKEN, fileId)
 
             # quote the URL to avoid characters like brackets () causing errors in wget command below
             subURL = f"\'{fileInfo['link']}\'"
@@ -861,13 +916,13 @@ try:
                 process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1", shell=True)
             else: # CLI
                 print(">> Downloading '" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "' subtitles for '" + videoTitle + "'")
-                downloadResult = subprocess.run("(wget -q -O " + subPath + " " + subURL + ") 2>&1", shell=True)
-                process_subtitlesDownload = downloadResult.returncode
+                process_subtitlesDownload = downloadSubtitles(USER_TOKEN, fileInfo['link'], subPath)
 
             # If an error occurs, say so
             if process_subtitlesDownload != 0:
                 superPrint("error", "Subtitling error!",
-                           "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "</b> subtitles for <b>" + videoTitle + "</b>.")
+                           "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] +
+                           "</b> subtitles for <b>" + videoTitle + "</b>.")
                 sys.exit(2)
 
         ## HOOK # Use a secondary tool after a successful download?
