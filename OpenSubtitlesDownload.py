@@ -335,7 +335,7 @@ def selectionKDE(subtitlesResultList):
     # TODO doesn't support additional columns
     index = 0
 
-    for item in subtitlesResultList['data']:
+    for idx, item in subtitlesResultList['data']:
         if item['attributes'].get('moviehash_match', False) == True:
             subtitlesMatchedByHash += 1
         else:
@@ -434,7 +434,7 @@ def selectionCLI(subtitlesResultList):
 
 # ==== Automatic selection mode ================================================
 
-def selectionAuto(subtitlesResultList):
+def selectionAuto(subtitlesResultList, languageList):
     """Automatic subtitles selection using filename match"""
     subtitlesSelectedName = u''
     subtitlesSelectedIndex = -1
@@ -443,23 +443,23 @@ def selectionAuto(subtitlesResultList):
     languageListReversed = list(reversed(languageList))
     maxScore = -1
 
-    for idx, subtitle in enumerate(subtitlesResultList['data']):
+    for idx, item in enumerate(subtitlesResultList['data']):
         score = 0
         # points to respect languages priority
-        score += languageListReversed.index(subtitle['SubLanguageID']) * 100
+        score += languageListReversed.index(item['attributes']['language']) * 100
         # extra point if the sub is found by hash
-        if subtitle['MatchedBy'] == 'moviehash':
+        if item['attributes'].get('moviehash_match', False) == True:
             score += 1
         # points for filename mach
-        subFileParts = subtitle['SubFileName'].replace('-', '.').replace(' ', '.').replace('_', '.').lower().split('.')
+        subFileParts = item['attributes']['files'][0]['file_name'].replace('-', '.').replace(' ', '.').replace('_', '.').lower().split('.')
         for subPart in subFileParts:
             for filePart in videoFileParts:
                 if subPart == filePart:
                     score += 1
         if score > maxScore:
             maxScore = score
-            subtitlesSelectedName = subtitle['SubFileName']
             subtitlesSelectedIndex = idx
+            subtitlesSelectedName = subtitlesResultList['data'][subtitlesSelectedIndex]['attributes']['files'][0]['file_name']
 
     # Return the result (selected subtitles name and index)
     return (subtitlesSelectedName, subtitlesSelectedIndex)
@@ -768,7 +768,7 @@ for videoPathDispatch in videoPathList:
         command.append("-p")
         command.append(arguments.password)
 
-    # Pass file
+    # Pass video file
     command.append(videoPathDispatch)
 
     # Do not spawn too many instances at once, avoid error '429 Too Many Requests'
@@ -852,7 +852,7 @@ try:
         if not subName:
             if opt_selection_mode == 'auto':
                 # Automatic subtitles selection
-                (subName, subIndex) = selectionAuto(subtitlesResultList)
+                (subName, subIndex) = selectionAuto(subtitlesResultList, languageList)
             else:
                 # Go through the list of subtitles and handle 'auto' settings activation
                 for item in subtitlesResultList['data']:
