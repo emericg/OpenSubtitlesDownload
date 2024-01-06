@@ -14,9 +14,9 @@ The subtitles search is done by precisly **identifying your video files** by com
 
 The subtitles search and download service is powered by [opensubtitles.com](https://www.opensubtitles.com). Big thanks to their hard work on this amazing project! Be sure to [give them your support](https://www.opensubtitles.com/en/users/vip) if you appreciate the service provided, they sure need donations for handling the ever growing hosting costs!
 
-> OpenSubtitlesDownload v6 use the new REST API from the [opensubtitles.com](https://www.opensubtitles.com) website.
+> OpenSubtitlesDownload v6 use the new REST API from the [opensubtitles.com](https://www.opensubtitles.com) website
 
-> Require an account from [opensubtitles.com](https://www.opensubtitles.com).
+> Requires an account from [opensubtitles.com](https://www.opensubtitles.com)
 
 ### Features
 

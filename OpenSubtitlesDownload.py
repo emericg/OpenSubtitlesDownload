@@ -6,7 +6,8 @@
 
 # You can browse the project's GitHub page:
 # - https://github.com/emericg/OpenSubtitlesDownload
-# Learn much more about configuring OpenSubtitlesDownload.py on its wiki:
+
+# Learn much more about it on the wiki:
 # - https://github.com/emericg/OpenSubtitlesDownload/wiki
 
 # Copyright (c) 2024 by Emeric GRANGE <emeric.grange@gmail.com>
@@ -46,13 +47,15 @@ import urllib.error
 
 # API endpoints
 API_URL = 'https://api.opensubtitles.com/api/v1/'
-API_URL_LOGIN_ENDPOINT = API_URL + 'login'
-API_URL_LOGOUT_ENDPOINT = API_URL + 'logout'
-API_URL_SEARCH_ENDPOINT = API_URL + 'subtitles'
-API_URL_DOWNLOAD_ENDPOINT = API_URL + 'download'
+API_URL_LOGIN = API_URL + 'login'
+API_URL_LOGOUT = API_URL + 'logout'
+API_URL_SEARCH = API_URL + 'subtitles'
+API_URL_DOWNLOAD = API_URL + 'download'
 
-# API key (required)
-API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
+# This application is registered
+APP_NAME = 'OpenSubtitlesDownload'
+APP_VERSION = '6.0'
+APP_API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
 
 # ==== OpenSubtitles.com account (required) ====================================
 
@@ -488,8 +491,8 @@ def dependencyChecker():
 def getUserToken(username, password):
     try:
         headers = {
-            "User-Agent": "OpenSubtitlesDownload v6.0",
-            "Api-key": f"{API_KEY}",
+            "User-Agent": f"{APP_NAME} v{APP_VERSION}",
+            "Api-key": f"{APP_API_KEY}",
             "Accept": "application/json",
             "Content-Type": "application/json"
         }
@@ -499,7 +502,7 @@ def getUserToken(username, password):
         }
 
         data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(API_URL_LOGIN_ENDPOINT, data=data, headers=headers)
+        req = urllib.request.Request(API_URL_LOGIN, data=data, headers=headers)
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
@@ -517,14 +520,14 @@ def getUserToken(username, password):
 def destroyUserToken(USER_TOKEN):
     try:
         headers = {
-            "User-Agent": "OpenSubtitlesDownload v6.0",
-            "Api-key": f"{API_KEY}",
+            "User-Agent": f"{APP_NAME} v{APP_VERSION}",
+            "Api-key": f"{APP_API_KEY}",
             "Authorization": f"Bearer {USER_TOKEN}",
             "Accept": "application/json",
             "Content-Type": "application/json"
         }
 
-        req = urllib.request.Request(API_URL_LOGOUT_ENDPOINT, headers=headers)
+        req = urllib.request.Request(API_URL_LOGOUT, headers=headers)
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
@@ -536,12 +539,12 @@ def destroyUserToken(USER_TOKEN):
 def searchSubtitles(**kwargs):
     try:
         headers = {
-            "User-Agent": "OpenSubtitlesDownload v6.0",
-            "Api-key": f"{API_KEY}"
+            "User-Agent": f"{APP_NAME} v{APP_VERSION}",
+            "Api-key": f"{APP_API_KEY}"
         }
 
         query_params = urllib.parse.urlencode(kwargs)
-        url = f"{API_URL_SEARCH_ENDPOINT}?{query_params}"
+        url = f"{API_URL_SEARCH}?{query_params}"
         req = urllib.request.Request(url, headers=headers)
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
@@ -556,8 +559,8 @@ def searchSubtitles(**kwargs):
 def getSubtitlesInfo(USER_TOKEN, file_id):
     try:
         headers = {
-            "User-Agent": "OpenSubtitlesDownload v6.0",
-            "Api-key": f"{API_KEY}",
+            "User-Agent": f"{APP_NAME} v{APP_VERSION}",
+            "Api-key": f"{APP_API_KEY}",
             "Authorization": f"Bearer {USER_TOKEN}",
             "Accept": "application/json",
             "Content-Type": "application/json"
@@ -567,7 +570,7 @@ def getSubtitlesInfo(USER_TOKEN, file_id):
         }
 
         data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(API_URL_DOWNLOAD_ENDPOINT, data=data, headers=headers)
+        req = urllib.request.Request(API_URL_DOWNLOAD, data=data, headers=headers)
         with urllib.request.urlopen(req) as response:
             result = response.read().decode('utf-8')
 
@@ -581,8 +584,8 @@ def getSubtitlesInfo(USER_TOKEN, file_id):
 def downloadSubtitles(USER_TOKEN,subURL, subPath):
     try:
         headers = {
-            "User-Agent": "OpenSubtitlesDownload v6.0",
-            "Api-key": f"{API_KEY}",
+            "User-Agent": f"{APP_NAME} v{APP_VERSION}",
+            "Api-key": f"{APP_API_KEY}",
             "Authorization": f"Bearer {USER_TOKEN}",
             "Accept": "application/json",
             "Content-Type": "application/json"
@@ -939,8 +942,7 @@ except KeyboardInterrupt:
     sys.exit(1)
 
 except urllib.error.HTTPError as e:
-    superPrint("error", "Network error",
-               "Network error: " + e.reason)
+    superPrint("error", "Network error", "Network error: " + e.reason)
 
 except (OSError, IOError, RuntimeError, AttributeError, TypeError, NameError, KeyError):
     # An unknown error occur, let's apologize before exiting
@@ -951,7 +953,7 @@ except (OSError, IOError, RuntimeError, AttributeError, TypeError, NameError, Ke
                "Just to be safe, please check:\n" + \
                "- Your Internet connection status\n" + \
                "- www.opensubtitles.com availability\n" + \
-               "- Your download limits (5 subtitles per 24h for free (non VIP) users, 5 subtitles per 10s)\n" + \
+               "- Your download limits (10 subtitles per 24h for non VIP users)\n" + \
                "- That are using the latest version of this software ;-)")
 
 except Exception:
