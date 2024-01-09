@@ -613,7 +613,7 @@ def getSubtitlesInfo(USER_TOKEN, file_id):
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
-def downloadSubtitles(USER_TOKEN,subURL, subPath):
+def downloadSubtitles(USER_TOKEN, subURL, subPath):
     try:
         headers = {
             "User-Agent": f"{APP_NAME} v{APP_VERSION}",
@@ -953,6 +953,10 @@ try:
                 subPath = subPath.replace("'", "\\'")
                 subPath = subPath.replace('`', '\\`')
 
+            # Empty videoTitle?
+            if not videoTitle:
+                videoTitle = videoFileName
+
             ## Download and unzip the selected subtitles
             if opt_gui == 'gnome':
                 process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1"
@@ -967,8 +971,8 @@ try:
             # If an error occurs, say so
             if process_subtitlesDownload != 0:
                 superPrint("error", "Subtitling error!",
-                           "An error occurred while downloading or writing <b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] +
-                           "</b> subtitles for <b>" + videoTitle + "</b>.")
+                           "An error occurred while downloading or writing '<b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "</b>'" +
+                           "subtitles for <b>" + videoTitle + "</b>.")
                 sys.exit(2)
 
         ## HOOK # Use a secondary tool after a successful download?
