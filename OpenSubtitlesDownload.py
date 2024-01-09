@@ -107,7 +107,7 @@ opt_selection_mode = 'default'
 opt_output_path = ''
 
 # Ignore Hearing Impaired (HI) subtitles?
-opt_ignore_hi = True
+opt_ignore_hi = False
 
 # Ignore AI translated subtitles?
 opt_ignore_ai = False
