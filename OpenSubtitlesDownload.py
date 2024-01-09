@@ -399,12 +399,23 @@ def selectionCLI(subtitlesResultList):
     subtitlesMatchedByHash = 0
     subtitlesMatchedByName = 0
 
+    # Check if search has results by hash or name
+    for item in subtitlesResultList['data']:
+        if item['attributes'].get('moviehash_match', False) == True:
+            subtitlesMatchedByHash += 1
+        else:
+            subtitlesMatchedByName += 1
+
     # Print video infos
-    print("")
-    print(">> Title: " + videoTitle)
-    print(">> Filename: " + videoFileName)
-    print("")
-    print(">> Available subtitles:")
+    if subtitlesMatchedByName == 0:
+        print("\n>> Subtitles for: " + videoTitle)
+    elif subtitlesMatchedByHash == 0:
+        print("\n>> Subtitles for file: " + videoFileName)
+        print(">> Search results using file name, NOT video detection. May be unreliable...")
+    else: # a mix of the two
+        print("\n>> Subtitles for: " + videoTitle)
+        print(">> Search results using using file name AND video detection.")
+    print("\n>> Available subtitles:")
 
     # Print subtitles list on the terminal
     for idx, item in enumerate(subtitlesResultList['data']):
@@ -412,11 +423,6 @@ def selectionCLI(subtitlesResultList):
             continue
         if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
             continue
-
-        if item['attributes'].get('moviehash_match', False) == True:
-            subtitlesMatchedByHash += 1
-        else:
-            subtitlesMatchedByName += 1
 
         subtitlesItemPre = u''
         subtitlesItem = u'"' + item['attributes']['files'][0]['file_name'] + '"'
