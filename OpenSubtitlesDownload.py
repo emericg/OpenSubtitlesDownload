@@ -815,9 +815,6 @@ try:
             subtitlesResultList = searchSubtitles(moviehash=videoHash, languages=opt_languages)
             #print(f"SEARCH BY HASH >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
 
-        if subtitlesResultList and len(subtitlesResultList['data']) > 0:
-            videoTitle = subtitlesResultList['data'][0]['attributes']['feature_details']['movie_name']
-
         if ((opt_search_mode == 'filename') or
             (opt_search_mode == 'hash_then_filename' and len(subtitlesResultList['data']) == 0)):
             subtitlesResultList = searchSubtitles(query=videoFileName, languages=opt_languages)
@@ -828,7 +825,7 @@ try:
         sys.exit(2)
 
     ## Parse the results of the search query
-    if ('data' in subtitlesResultList) and (subtitlesResultList['data']):
+    if subtitlesResultList and 'data' in subtitlesResultList and len(subtitlesResultList['data']) > 0:
         # Mark search as successful
         languageCount_results += 1
 
@@ -836,9 +833,15 @@ try:
         subIndex = 0
 
         # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
-        if (len(subtitlesResultList['data']) == 1) and (subtitlesResultList['data'][0]['attributes']['moviehash_match'] == True):
+        if (len(subtitlesResultList['data']) == 1) and (item['attributes'].get('moviehash_match', False) == True):
             if opt_selection_mode != 'manual':
                 subName = subtitlesResultList['data'][0]['attributes']['files'][0]['file_id']
+
+        # Check if we have a valid title, found by hash
+        for item in subtitlesResultList['data']:
+            if item['attributes'].get('moviehash_match', False) == True:
+                videoTitle = item['attributes']['feature_details']['movie_name']
+                break
 
         # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
         if opt_gui != 'cli':
@@ -879,7 +882,7 @@ try:
                 else: # CLI
                     (subName, subIndex) = selectionCLI(subtitlesResultList)
 
-        # At this point a subtitles should be selected
+        ## At this point a subtitles should be selected
         if subName:
             USER_TOKEN = getUserToken(username=osd_username, password=osd_password)
 
