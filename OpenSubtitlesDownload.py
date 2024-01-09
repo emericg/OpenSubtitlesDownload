@@ -106,6 +106,12 @@ opt_selection_mode = 'default'
 # By default, subtitles are downloaded next to their video file.
 opt_output_path = ''
 
+# Ignore Hearing Impaired (HI) subtitles?
+opt_ignore_hi = True
+
+# Ignore AI translated subtitles?
+opt_ignore_ai = False
+
 # ==== GUI settings ============================================================
 
 # Select your GUI. Can be overridden at run time with '--gui=xxx' argument.
@@ -262,6 +268,11 @@ def selectionGnome(subtitlesResultList):
 
     # Generate selection window content
     for idx, item in enumerate(subtitlesResultList['data']):
+        if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
+            continue
+        if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
+            continue
+
         if item['attributes'].get('moviehash_match', False) == True:
             subtitlesMatchedByHash += 1
         else:
@@ -338,7 +349,12 @@ def selectionKDE(subtitlesResultList):
     # TODO doesn't support additional columns
     index = 0
 
-    for idx, item in subtitlesResultList['data']:
+    for idx, item in enumerate(subtitlesResultList['data']):
+        if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
+            continue
+        if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
+            continue
+
         if item['attributes'].get('moviehash_match', False) == True:
             subtitlesMatchedByHash += 1
         else:
@@ -379,7 +395,9 @@ def selectionCLI(subtitlesResultList):
     """Command Line Interface, subtitles selection inside your current terminal"""
     subtitlesSelectedName = u''
     subtitlesSelectedIndex = -1
-    subtitlesItemIndex = 0
+
+    subtitlesMatchedByHash = 0
+    subtitlesMatchedByName = 0
 
     # Print video infos
     print("")
@@ -389,8 +407,16 @@ def selectionCLI(subtitlesResultList):
     print(">> Available subtitles:")
 
     # Print subtitles list on the terminal
-    for item in subtitlesResultList['data']:
-        subtitlesItemIndex += 1
+    for idx, item in enumerate(subtitlesResultList['data']):
+        if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
+            continue
+        if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
+            continue
+
+        if item['attributes'].get('moviehash_match', False) == True:
+            subtitlesMatchedByHash += 1
+        else:
+            subtitlesMatchedByName += 1
 
         subtitlesItemPre = u''
         subtitlesItem = u'"' + item['attributes']['files'][0]['file_name'] + '"'
@@ -411,15 +437,15 @@ def selectionCLI(subtitlesResultList):
             subtitlesItemPost += ' > "Downloads: ' + str(item['attributes']['download_count']) + '"'
 
         if item['attributes'].get('moviehash_match', False) == True:
-            print("\033[92m[" + str(subtitlesItemIndex).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
+            print("\033[92m[" + str(idx).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
         else:
-            print("\033[93m[" + str(subtitlesItemIndex).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
+            print("\033[93m[" + str(idx).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
 
     # Ask user to selected a subtitles
     print("\033[91m[ 0]\033[0m Cancel search")
-    while (subtitlesSelectedIndex < 0 or subtitlesSelectedIndex > subtitlesItemIndex):
+    while (subtitlesSelectedIndex < 0 or subtitlesSelectedIndex > idx):
         try:
-            subtitlesSelectedIndex = int(input("\n>> Enter your choice (0-" + str(subtitlesItemIndex) + "): "))
+            subtitlesSelectedIndex = int(input("\n>> Enter your choice (0-" + str(idx) + "): "))
         except KeyboardInterrupt:
             sys.exit(1)
         except:
@@ -650,6 +676,8 @@ parser.add_argument('-a', '--auto', help="Force automatic selection and download
 parser.add_argument('-i', '--skip', help="Skip search if an existing subtitles file is detected", action='store_true')
 parser.add_argument('-o', '--output', help="Override subtitles download path, instead of next to their video file")
 parser.add_argument('-x', '--suffix', help="Force language code file suffix", action='store_true')
+parser.add_argument('--noai', help="Ignore AI or machine translated subtitles", action='store_true')
+parser.add_argument('--nohi', help="Ignore HI (hearing impaired) subtitles", action='store_true')
 parser.add_argument('searchPathList', help="The video file(s) or folder(s) for which subtitles should be searched and downloaded", nargs='+')
 arguments = parser.parse_args()
 
@@ -675,6 +703,10 @@ if arguments.output:
     opt_output_path = arguments.output
 if arguments.suffix:
     opt_language_suffix = 'on'
+if arguments.noai:
+    opt_ignore_ai = True
+if arguments.nohi:
+    opt_ignore_hi = True
 
 # GUI auto detection
 if opt_gui == 'auto':
