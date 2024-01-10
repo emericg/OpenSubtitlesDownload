@@ -6,7 +6,7 @@ GenericName=Automatic subtitles downloader
 Comment=Download synchronized subtitles from opensubtitles.org
 OnlyShowIn=KDE;Razor;TDE;
 Icon=edit-find-symbolic.svg
-Exec=openSubtitlesDownload.py --gui=kde %F
+Exec=OpenSubtitlesDownload.py --gui=kde %F
 Categories=Utility;AudioVideo;Video;
 MimeType=video/avi;video/mpeg;video/mp4;video/ogg;video/quicktime;video/msvideo;video/webm;video/x-matroska;video/x-mpeg;video/x-ms-wmv;video/x-msvideo;video/x-flv;application/ogg;
 ServiceTypes=KonqPopupMenu/Plugin,video/*
