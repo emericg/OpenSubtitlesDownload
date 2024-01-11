@@ -872,7 +872,7 @@ try:
         subIndex = 0
 
         # If there is only one subtitles (matched by file hash), auto-select it (except in CLI mode)
-        if (len(subtitlesResultList['data']) == 1) and (item['attributes'].get('moviehash_match', False) == True):
+        if (len(subtitlesResultList['data']) == 1) and (subtitlesResultList['data'][0]['attributes'].get('moviehash_match', False) == True):
             if opt_selection_mode != 'manual':
                 subName = subtitlesResultList['data'][0]['attributes']['files'][0]['file_id']
 
