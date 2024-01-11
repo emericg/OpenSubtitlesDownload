@@ -419,6 +419,7 @@ def selectionCLI(subtitlesResultList):
 
     # Print subtitles list on the terminal
     for idx, item in enumerate(subtitlesResultList['data']):
+        idx += 1
         if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
             continue
         if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
