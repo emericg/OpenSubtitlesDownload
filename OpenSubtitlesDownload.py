@@ -419,7 +419,6 @@ def selectionCLI(subtitlesResultList):
 
     # Print subtitles list on the terminal
     for idx, item in enumerate(subtitlesResultList['data']):
-        idx += 1
         if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
             continue
         if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
@@ -443,6 +442,8 @@ def selectionCLI(subtitlesResultList):
         if opt_selection_count == 'on':
             subtitlesItemPost += ' > "Downloads: ' + str(item['attributes']['download_count']) + '"'
 
+        idx += 1 # We display subtitles indexes starting from 1, 0 is reserved for cancel
+
         if item['attributes'].get('moviehash_match', False) == True:
             print("\033[92m[" + str(idx).rjust(2, ' ') + "]\033[0m " + subtitlesItemPre + subtitlesItem + subtitlesItemPost)
         else:
@@ -452,17 +453,17 @@ def selectionCLI(subtitlesResultList):
     print("\033[91m[ 0]\033[0m Cancel search")
     while (subtitlesSelectedIndex < 0 or subtitlesSelectedIndex > idx):
         try:
-            subtitlesSelectedIndex = int(input("\n>> Enter your choice (0-" + str(idx) + "): "))
+            subtitlesSelectedIndex = int(input("\n>> Enter your choice [0-" + str(idx) + "]: "))
         except KeyboardInterrupt:
             sys.exit(1)
         except:
             subtitlesSelectedIndex = -1
 
-    if subtitlesSelectedIndex == 0:
+    if subtitlesSelectedIndex <= 0:
         print("Cancelling search...")
         return ("", -1)
 
-    subtitlesSelectedIndex = subtitlesSelectedIndex-1
+    subtitlesSelectedIndex -= 1
     subtitlesSelectedName = subtitlesResultList['data'][subtitlesSelectedIndex]['attributes']['files'][0]['file_name']
 
     # Return the result (selected subtitles name and index)
