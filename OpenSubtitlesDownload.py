@@ -43,7 +43,7 @@ import urllib.error
 # ==== OpenSubtitles.com server settings =======================================
 
 # Track API availability:
-# > https://opensubtitles.stoplight.io/docs/opensubtitles-api/e3750fd63a100-getting-started#system-status
+# > https://92500a62-df9e-42ed-82a4-e6b3eeb89365.site.hbuptime.com/
 
 # API endpoints
 API_URL = 'https://api.opensubtitles.com/api/v1/'
@@ -52,14 +52,17 @@ API_URL_LOGOUT = API_URL + 'logout'
 API_URL_SEARCH = API_URL + 'subtitles'
 API_URL_DOWNLOAD = API_URL + 'download'
 
-# This application is registered
+# This application is registered:
 APP_NAME = 'OpenSubtitlesDownload'
 APP_VERSION = '6.2'
 APP_API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
 
 # ==== OpenSubtitles.com account (required) ====================================
 
-# You can use your opensubtitles.com VIP account to avoid "in-subtitles" advertisement and bypass download limits.
+# A valid account from opensubtitles.com is REQUIRED.
+# You can use a VIP account to avoid "in-subtitles" advertisement and bypass download limits.
+
+# The username is NOT your account email address, but in fact, your username...
 # Be careful about your password security, it will be stored right here in plain text...
 # Can be overridden at run time with '-u' and '-p' arguments.
 osd_username = ''
@@ -70,7 +73,7 @@ osd_password = ''
 # Full guide: https://github.com/emericg/OpenSubtitlesDownload/wiki/Adjust-settings
 
 # 1/ Change the search language by using any supported 2-letter (ISO 639-1) language code:
-#    > https://en.wikipedia.org/wiki/List_of_ISO_639-2_codes
+#    > https://en.wikipedia.org/wiki/List_of_ISO_639_language_codes
 #    > Supported language codes: https://opensubtitles.stoplight.io/docs/opensubtitles-api/1de776d20e873-languages
 #    > Ex: opt_languages = 'en'
 # 2/ Search for subtitles in several languages by using multiple codes separated by a comma:
@@ -93,7 +96,7 @@ opt_language_suffix_separator = '_'
 # - filename (search by filename only)
 opt_search_mode = 'hash_then_filename'
 
-# Search and download a subtitles even if a subtitles file already exists.
+# Search and download a subtitles even if one already exists.
 opt_search_overwrite = True
 
 # Subtitles selection mode. Can be overridden at run time with '-t' argument.
@@ -508,7 +511,7 @@ def selectionAuto(subtitlesResultList, languageList):
 # ==== Check dependencies ======================================================
 
 def pythonChecker():
-    """Check the availability of python 3 interpreter"""
+    """Check the availability of Python 3 interpreter"""
     if sys.version_info < (3, 0):
         superPrint("error", "Wrong Python version", "You need <b>Python 3</b> to use OpenSubtitlesDownload.")
         return False
@@ -757,7 +760,7 @@ if dependencyChecker() is False:
 
 # Check for OSD credentials
 if not osd_username or not osd_password:
-    superPrint("warning", "OpenSubtitles.com account required!", "A valid OpenSubtitles.com account is <b>REQUIRED</b>, please register on the website!")
+    superPrint("warning", "OpenSubtitles.com account required!", "A valid account from OpenSubtitles.com is <b>REQUIRED</b>, please register on the website!")
     sys.exit(2)
 
 # ==== Count languages selected for this search
