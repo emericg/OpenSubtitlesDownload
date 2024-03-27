@@ -162,16 +162,20 @@ def checkSubtitlesExists(path):
     """Check if a subtitles already exists for the current file"""
     extList = ['srt', 'sub', 'mpl', 'webvtt', 'dfxp', 'txt',
                'sbv', 'smi', 'ssa', 'ass', 'usf']
-    lngList = ['']
+    sepList = ['_', '-', '.']
+    tryList = []
+
+    if opt_language_suffix_separator not in sepList:
+        sepList.append(opt_language_suffix_separator)
 
     if opt_language_suffix in ('on', 'auto'):
-        for language in opt_languages:
-            for l in list(language.split(',')):
-                lngList.append(opt_language_suffix_separator + l)
+        for language in languageList:
+            for sep in sepList:
+                tryList.append(sep + language)
 
     for ext in extList:
-        for lng in lngList:
-            subPath = path.rsplit('.', 1)[0] + lng + '.' + ext
+        for teststring in tryList:
+            subPath = path.rsplit('.', 1)[0] + teststring + '.' + ext
             if os.path.isfile(subPath) is True:
                 superPrint("info", "Subtitles already downloaded!", "A subtitles file already exists for this file:\n<i>" + subPath + "</i>")
                 return True
@@ -756,6 +760,15 @@ if not osd_username or not osd_password:
     superPrint("warning", "OpenSubtitles.com account required!", "A valid OpenSubtitles.com account is <b>REQUIRED</b>, please register on the website!")
     sys.exit(2)
 
+# ==== Count languages selected for this search
+
+if isinstance(opt_languages, list):
+    languageList = opt_languages
+else:
+    languageList = opt_languages.split(',')
+
+languageCount_search = len(languageList)
+
 # ==== Get video paths, validate them, and if needed check if subtitles already exists
 
 for i in arguments.searchPathList:
@@ -827,23 +840,15 @@ for videoPathDispatch in videoPathList:
 # ==== Search and download subtitles ===========================================
 
 try:
-    # ==== Count languages selected for this search
-    if isinstance(opt_languages, list):
-        languageList = opt_languages
-    else:
-        languageList = opt_languages.split(',')
-
-    languageCount_search = len(languageList)
+    USER_TOKEN = []
+    subtitlesResultList = []
     languageCount_results = 0
 
-    # ==== Get file hash, size and name
+    ## Get file hash, size and name
     videoTitle = u''
     videoHash = hashFile(currentVideoPath)
     videoSize = os.path.getsize(currentVideoPath)
     videoFileName = os.path.basename(currentVideoPath)
-
-    USER_TOKEN = []
-    subtitlesResultList = []
 
     ## Search for subtitles
     try:
