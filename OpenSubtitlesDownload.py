@@ -134,6 +134,7 @@ opt_selection_language = 'auto'
 opt_selection_match    = 'auto'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
+opt_selection_fps      = 'off'
 
 # ==== Check file path & type ==================================================
 
@@ -272,6 +273,7 @@ def selectionGnome(subtitlesResultList):
     columnMatch = ''
     columnRate = ''
     columnCount = ''
+    columnFPS = ''
 
     # Generate selection window content
     for idx, item in enumerate(subtitlesResultList['data']):
@@ -308,6 +310,9 @@ def selectionGnome(subtitlesResultList):
         if opt_selection_count == 'on':
             columnCount = '--column="Downloads" '
             subtitlesItems += '"' + str(item['attributes']['download_count']) + '" '
+        if opt_selection_fps == 'on':
+            columnFPS = '--column="FPS" '
+            subtitlesItems += '"' + str(item['attributes']['fps']) + '" '
 
     if subtitlesMatchedByName == 0:
         tilestr = ' --title="Subtitles for: ' + videoTitle + '"'
@@ -321,7 +326,7 @@ def selectionGnome(subtitlesResultList):
 
     # Spawn zenity "list" dialog
     process_subtitlesSelection = subprocess.Popen('zenity --width=' + str(opt_gui_width) + ' --height=' + str(opt_gui_height) + ' --list' + tilestr + textstr
-                                                  + ' --column "id" --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + subtitlesItems
+                                                  + ' --column "id" --column="Available subtitles" ' + columnHi + columnLn + columnMatch + columnRate + columnCount + columnFPS + subtitlesItems
                                                   + ' --hide-column=1 --print-column=ALL', shell=True, stdout=subprocess.PIPE)
 
     # Get back the user's choice
@@ -448,6 +453,8 @@ def selectionCLI(subtitlesResultList):
             subtitlesItemPost += ' > "Rating: ' + str(item['attributes']['ratings']) + '"'
         if opt_selection_count == 'on':
             subtitlesItemPost += ' > "Downloads: ' + str(item['attributes']['download_count']) + '"'
+        if opt_selection_fps == 'on':
+            subtitlesItemPost += ' > "FPS: ' + str(item['attributes']['fps']) + '"'
 
         idx += 1 # We display subtitles indexes starting from 1, 0 is reserved for cancel
 
@@ -921,6 +928,8 @@ try:
                         opt_selection_rating = 'on'
                     if opt_selection_count == 'auto':
                         opt_selection_count = 'on'
+                    if opt_selection_fps == 'auto' and item['attributes'].get('fps', '0.0') != '0.0':
+                        opt_selection_fps = 'on'
 
                 # Spaw selection window
                 if opt_gui == 'gnome':
