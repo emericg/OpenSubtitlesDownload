@@ -164,10 +164,9 @@ def checkFileValidity(path):
 
 def checkSubtitlesExists(path):
     """Check if a subtitles already exists for the current file"""
-    extList = ['srt', 'sub', 'mpl', 'webvtt', 'dfxp', 'txt',
-               'sbv', 'smi', 'ssa', 'ass', 'usf']
+    extList = ['srt', 'sub', 'mpl', 'webvtt', 'dfxp', 'txt', 'sbv', 'smi', 'ssa', 'ass', 'usf']
     sepList = ['_', '-', '.']
-    tryList = []
+    tryList = ['']
 
     if opt_language_suffix_separator not in sepList:
         sepList.append(opt_language_suffix_separator)
