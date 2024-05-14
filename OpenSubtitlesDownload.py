@@ -129,12 +129,12 @@ opt_gui_width  = 920
 opt_gui_height = 400
 
 # Various GUI columns to show/hide during subtitles selection. You can set them to 'on', 'off' or 'auto'.
-opt_selection_hi       = 'auto'
 opt_selection_language = 'auto'
 opt_selection_match    = 'auto'
+opt_selection_hi       = 'auto'
+opt_selection_fps      = 'off'
 opt_selection_rating   = 'off'
 opt_selection_count    = 'off'
-opt_selection_fps      = 'off'
 
 # ==== Check file path & type ==================================================
 
@@ -435,25 +435,26 @@ def selectionCLI(subtitlesResultList):
         if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
             continue
 
-        subtitlesItemPre = u''
-        subtitlesItem = u'"' + item['attributes']['files'][0]['file_name'] + '"'
+        subtitlesItemPre = u'> '
+        subtitlesItem = u'"' + item['attributes']['files'][0]['file_name'] + u'"'
         subtitlesItemPost = u''
 
-        if opt_selection_language == 'on':
-            subtitlesItemPre += '> ' + item['attributes']['language'].upper() + ' > '
-        if opt_selection_hi == 'on' and item['attributes'].get('hearing_impaired', False) == True:
-            subtitlesItemPre += '> "HI" > '
         if opt_selection_match == 'on':
             if item['attributes'].get('moviehash_match', False) == True:
-                subtitlesItemPre += '> (hash) > '
+                subtitlesItemPre += '(hash) > '
             else:
-                subtitlesItemPre += '> (name) > '
-        if opt_selection_rating == 'on':
-            subtitlesItemPost += ' > "Rating: ' + str(item['attributes']['ratings']) + '"'
-        if opt_selection_count == 'on':
-            subtitlesItemPost += ' > "Downloads: ' + str(item['attributes']['download_count']) + '"'
+                subtitlesItemPre += '(name) > '
+        if opt_selection_language == 'on':
+            subtitlesItemPre += item['attributes']['language'].upper() + ' > '
+
+        if opt_selection_hi == 'on' and item['attributes'].get('hearing_impaired', False) == True:
+            subtitlesItemPost += ' > ' + '\033[44m' + ' HI ' + '\033[0m'
         if opt_selection_fps == 'on':
-            subtitlesItemPost += ' > "FPS: ' + str(item['attributes']['fps']) + '"'
+            subtitlesItemPost += ' > ' + '\033[100m' + str(item['attributes']['fps']) + ' FPS' + '\033[0m'
+        if opt_selection_rating == 'on':
+            subtitlesItemPost += ' > ' + '\033[100m' + 'Rating: ' + str(item['attributes']['ratings']) + '\033[0m'
+        if opt_selection_count == 'on':
+            subtitlesItemPost += ' > ' + '\033[100m' + 'Downloads: ' + str(item['attributes']['download_count']) + '\033[0m'
 
         idx += 1 # We display subtitles indexes starting from 1, 0 is reserved for cancel
 
@@ -917,8 +918,10 @@ try:
             else:
                 # Go through the list of subtitles and handle 'auto' settings activation
                 for item in subtitlesResultList['data']:
-                    if opt_selection_match == 'auto' and opt_search_mode == 'hash_and_filename':
-                        opt_selection_match = 'on'
+                    if opt_selection_match == 'auto':
+                        if (opt_search_mode == 'hash_and_filename' or opt_search_mode == 'hash_then_filename'):
+                            if item['attributes'].get('moviehash_match', False) == False:
+                                opt_selection_match = 'on'
                     if opt_selection_language == 'auto' and languageCount_search > 1:
                         opt_selection_language = 'on'
                     if opt_selection_hi == 'auto' and item['attributes'].get('hearing_impaired', False) == True:
