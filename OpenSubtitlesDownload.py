@@ -112,8 +112,14 @@ opt_output_path = ''
 # Ignore Hearing Impaired (HI) subtitles?
 opt_ignore_hi = False
 
+# Ignore machine translated subtitles?
+opt_ignore_machine_translated = True
+
 # Ignore AI translated subtitles?
-opt_ignore_ai = False
+opt_ignore_ai_translated = False
+
+# Ignore "foreign parts only" subtitles?
+opt_ignore_foreign_parts_only = False
 
 # ==== GUI settings ============================================================
 
@@ -278,7 +284,11 @@ def selectionGnome(subtitlesResultList):
     for idx, item in enumerate(subtitlesResultList['data']):
         if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
             continue
-        if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
+        if opt_ignore_foreign_parts_only and item['attributes'].get('foreign_parts_only', False) == True:
+            continue
+        if opt_ignore_ai_translated and item['attributes'].get('ai_translated', False) == True:
+            continue
+        if opt_ignore_machine_translated and item['attributes'].get('machine_translated', False) == True:
             continue
 
         if item['attributes'].get('moviehash_match', False) == True:
@@ -363,7 +373,11 @@ def selectionKDE(subtitlesResultList):
     for idx, item in enumerate(subtitlesResultList['data']):
         if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
             continue
-        if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
+        if opt_ignore_foreign_parts_only and item['attributes'].get('foreign_parts_only', False) == True:
+            continue
+        if opt_ignore_ai_translated and item['attributes'].get('ai_translated', False) == True:
+            continue
+        if opt_ignore_machine_translated and item['attributes'].get('machine_translated', False) == True:
             continue
 
         if item['attributes'].get('moviehash_match', False) == True:
@@ -432,7 +446,11 @@ def selectionCLI(subtitlesResultList):
     for idx, item in enumerate(subtitlesResultList['data']):
         if opt_ignore_hi and item['attributes'].get('hearing_impaired', False) == True:
             continue
-        if opt_ignore_ai and item['attributes'].get('ai_translated', False) == True:
+        if opt_ignore_foreign_parts_only and item['attributes'].get('foreign_parts_only', False) == True:
+            continue
+        if opt_ignore_ai_translated and item['attributes'].get('ai_translated', False) == True:
+            continue
+        if opt_ignore_machine_translated and item['attributes'].get('machine_translated', False) == True:
             continue
 
         subtitlesItemPre = u'> '
@@ -726,7 +744,7 @@ if arguments.output:
 if arguments.suffix:
     opt_language_suffix = 'on'
 if arguments.noai:
-    opt_ignore_ai = True
+    opt_ignore_ai_translated = True
 if arguments.nohi:
     opt_ignore_hi = True
 
