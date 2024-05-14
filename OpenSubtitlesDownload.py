@@ -440,6 +440,7 @@ def selectionCLI(subtitlesResultList):
     else: # a mix of the two
         print("\n>> Subtitles for: " + videoTitle)
         print(">> Search results using using file name AND video detection.")
+
     print("\n>> Available subtitles:")
 
     # Print subtitles list on the terminal
@@ -572,6 +573,7 @@ def getUserToken(username, password):
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
+        #print("getUserToken() response data: " + str(response_data))
         return response_data['token']
 
     except (urllib.error.HTTPError, urllib.error.URLError) as err:
@@ -597,6 +599,9 @@ def destroyUserToken(USER_TOKEN):
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
+        #print("destroyUserToken() response data: " + str(response_data))
+        return response_data
+
     except (urllib.error.HTTPError, urllib.error.URLError) as err:
         print("Urllib error (", err.code, ") ", err.reason)
     except Exception:
@@ -615,6 +620,7 @@ def searchSubtitles(**kwargs):
         with urllib.request.urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
+        #print("searchSubtitles() response data: " + str(response_data))
         return response_data
 
     except (urllib.error.HTTPError, urllib.error.URLError) as err:
@@ -638,9 +644,10 @@ def getSubtitlesInfo(USER_TOKEN, file_id):
         data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(API_URL_DOWNLOAD, data=data, headers=headers)
         with urllib.request.urlopen(req) as response:
-            result = response.read().decode('utf-8')
+            response_data = json.loads(response.read().decode('utf-8'))
 
-        return json.loads(result)
+        #print("getSubtitlesInfo() response data:" + response_data)
+        return response_data
 
     except (urllib.error.HTTPError, urllib.error.URLError) as err:
         print("Urllib error (", err.code, ") ", err.reason)
@@ -968,7 +975,7 @@ try:
             fileId = subtitlesResultList['data'][int(subIndex)]['attributes']['files'][0]['file_id']
             fileInfo = getSubtitlesInfo(USER_TOKEN, fileId)
 
-            # quote the URL to avoid characters like brackets () causing errors in wget command below
+            # Quote the URL to avoid characters like brackets () causing errors in wget command below
             subURL = f"\'{fileInfo['link']}\'"
             subSuffix = subURL.split('.')[-1].strip("'")
             subLangName = subtitlesResultList['data'][int(subIndex)]['attributes']['language']
