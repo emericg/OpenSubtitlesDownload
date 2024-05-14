@@ -90,10 +90,10 @@ opt_language_suffix_separator = '_'
 # ==== Search settings =========================================================
 
 # Subtitles search mode. Can be overridden at run time with '-s' argument.
-# - hash_then_filename (search by hash, then if no results by filename) (default)
+# - hash (search using file hash only)
+# - filename (search using filename only)
+# - hash_then_filename (search using file hash, then if no results, by filename) (default)
 # - hash_and_filename (search using both methods)
-# - hash (search by hash only)
-# - filename (search by filename only)
 opt_search_mode = 'hash_then_filename'
 
 # Search and download a subtitles even if one already exists.
@@ -890,15 +890,14 @@ try:
         if (opt_search_mode == 'hash_and_filename'):
             subtitlesResultList = searchSubtitles(moviehash=videoHash, query=videoFileName, languages=opt_languages)
             #print(f"SEARCH BY HASH AND NAME >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
-
-        if any(mode in opt_search_mode for mode in ['hash_then_filename', 'hash']):
-            subtitlesResultList = searchSubtitles(moviehash=videoHash, languages=opt_languages)
-            #print(f"SEARCH BY HASH >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
-
-        if ((opt_search_mode == 'filename') or
-            (opt_search_mode == 'hash_then_filename' and len(subtitlesResultList['data']) == 0)):
-            subtitlesResultList = searchSubtitles(query=videoFileName, languages=opt_languages)
-            #print(f"SEARCH BY NAME >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
+        else:
+            if any(mode in opt_search_mode for mode in ['hash_then_filename', 'hash']):
+                subtitlesResultList = searchSubtitles(moviehash=videoHash, languages=opt_languages)
+                #print(f"SEARCH BY HASH >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
+            if ((opt_search_mode == 'filename') or
+                (opt_search_mode == 'hash_then_filename' and len(subtitlesResultList['data']) == 0)):
+                subtitlesResultList = searchSubtitles(query=videoFileName, languages=opt_languages)
+                #print(f"SEARCH BY NAME >>>>> length {len(subtitlesResultList['data'])} >>>>> {subtitlesResultList['data']}")
 
     except Exception:
         superPrint("error", "Search error!", "Unable to reach opensubtitles.com servers!\n<b>Search error</b>")
