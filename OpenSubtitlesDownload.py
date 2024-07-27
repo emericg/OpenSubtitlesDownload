@@ -233,6 +233,18 @@ def hashFile(path):
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
+# ==== String escaping =========================================================
+
+def escapeGUI(string):
+    string = string.replace('"', '\\"')
+    string = string.replace("'", "\\'")
+    string = string.replace('`', '\\`')
+    string = string.replace("&", "&amp;")
+    return string
+
+def escapeFull(string):
+    return re.escape(string)
+
 # ==== Super Print =============================================================
 # priority: info, warning, error
 # title: only for zenity and kdialog messages
@@ -296,7 +308,7 @@ def selectionGnome(subtitlesResultList):
         else:
             subtitlesMatchedByName += 1
 
-        subtitlesItems += f'{idx} "' + item['attributes']['files'][0]['file_name'] + '" '
+        subtitlesItems += f'{idx} "' + escapeGUI(item['attributes']['files'][0]['file_name']) + '" '
 
         if opt_selection_hi == 'on':
             columnHi = '--column="HI" '
@@ -924,14 +936,8 @@ try:
 
         # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
         if opt_gui != 'cli':
-            videoTitle = videoTitle.replace('"', '\\"')
-            videoTitle = videoTitle.replace("'", "\\'")
-            videoTitle = videoTitle.replace('`', '\\`')
-            videoTitle = videoTitle.replace("&", "&amp;")
-            videoFileName = videoFileName.replace('"', '\\"')
-            videoFileName = videoFileName.replace("'", "\\'")
-            videoFileName = videoFileName.replace('`', '\\`')
-            videoFileName = videoFileName.replace("&", "&amp;")
+            videoTitle = escapeGUI(videoTitle)
+            videoFileName = escapeGUI(videoFileName)
 
         # If there is more than one subtitles and opt_selection_mode != 'auto',
         # then let the user decide which one will be downloaded
@@ -993,10 +999,7 @@ try:
 
             # Escape non-alphanumeric characters from the subtitles download path
             if opt_gui != 'cli':
-                subPath = re.escape(subPath)
-                subPath = subPath.replace('"', '\\"')
-                subPath = subPath.replace("'", "\\'")
-                subPath = subPath.replace('`', '\\`')
+                subPath = escapeFull(subPath)
 
             # Empty videoTitle?
             if not videoTitle:
