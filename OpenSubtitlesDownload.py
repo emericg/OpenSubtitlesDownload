@@ -318,7 +318,7 @@ def selectionGnome(subtitlesResultList):
             subtitlesItems += '"' + str(item['attributes']['ratings']) + '" '
         if opt_selection_count == 'on':
             columnCount = '--column="Downloads" '
-            subtitlesItems += '"' + str(item['attributes']['download_count']) + '" '
+            subtitlesItems += '"' + str(item['attributes']['download_count']).zfill(5) + '" '
         if opt_selection_fps == 'on':
             columnFPS = '--column="FPS" '
             subtitlesItems += '"' + str(item['attributes']['fps']) + '" '
