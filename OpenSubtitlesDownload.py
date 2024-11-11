@@ -236,14 +236,20 @@ def hashFile(path):
 # ==== String escaping =========================================================
 
 def escapeGUI(string):
-    string = string.replace('"', '\\"')
-    string = string.replace("'", "\\'")
-    string = string.replace('`', '\\`')
-    string = string.replace("&", "&amp;")
+    if opt_gui != 'cli':
+        string = string.replace('"', '\\"')
+        string = string.replace("'", "\\'")
+        string = string.replace('`', '\\`')
+        string = string.replace("&", "&amp;")
     return string
 
-def escapeFull(string):
-    return re.escape(string)
+def escapePath(string):
+    if opt_gui == 'gnome':
+        return re.escape(string)
+    elif opt_gui == 'kde':
+        return escapeGUI(string)
+    else:
+        return string
 
 # ==== Super Print =============================================================
 # priority: info, warning, error
@@ -258,12 +264,13 @@ def superPrint(priority, title, message):
         # Adapt to kdialog
         message = message.replace("\n", "<br>")
         message = message.replace('\\"', '"')
+        message = message.replace("\\'", "'")
         if priority == 'warning':
             priority = 'sorry'
         elif priority == 'info':
             priority = 'msgbox'
         # Print message
-        subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height), '--title=' + title, '--' + priority + '=' + message])
+        subprocess.call(['kdialog', '--geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + '+0+0', '--title=' + title, '--' + priority + '=' + message])
     else:
         # Clean up format tags from the zenity string
         message = message.replace("\n\n", "\n")
@@ -412,7 +419,7 @@ def selectionKDE(subtitlesResultList):
         menustr = ' --menu="Search results using file name AND video detection.<br><b>Video title:</b> ' + videoTitle + '<br><b>File name:</b> ' + videoFileName + '" '
 
     # Spawn kdialog "radiolist"
-    process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + tilestr + menustr + subtitlesItems,
+    process_subtitlesSelection = subprocess.Popen('kdialog --geometry=' + str(opt_gui_width) + 'x' + str(opt_gui_height) + '+0+0' + tilestr + menustr + subtitlesItems,
                                                   shell=True, stdout=subprocess.PIPE)
 
     # Get back the user's choice
@@ -935,9 +942,8 @@ try:
                 break
 
         # Title and filename may need string sanitizing to avoid zenity/kdialog handling errors
-        if opt_gui != 'cli':
-            videoTitle = escapeGUI(videoTitle)
-            videoFileName = escapeGUI(videoFileName)
+        videoTitle = escapeGUI(videoTitle)
+        videoFileName = escapeGUI(videoFileName)
 
         # If there is more than one subtitles and opt_selection_mode != 'auto',
         # then let the user decide which one will be downloaded
@@ -998,8 +1004,7 @@ try:
                 subPath = subPath.rsplit('.', 1)[0] + opt_language_suffix_separator + subtitlesResultList['data'][int(subIndex)]['attributes']['language'] + '.' + subSuffix
 
             # Escape non-alphanumeric characters from the subtitles download path
-            if opt_gui != 'cli':
-                subPath = escapeFull(subPath)
+            subPath = escapePath(subPath)
 
             # Empty videoTitle?
             if not videoTitle:
