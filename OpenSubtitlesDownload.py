@@ -131,8 +131,8 @@ opt_ignore_foreign_parts_only = False
 opt_gui = 'auto'
 
 # Change the subtitles selection GUI size:
-opt_gui_width  = 920
-opt_gui_height = 400
+opt_gui_width  = 940
+opt_gui_height = 480
 
 # Various GUI columns to show/hide during subtitles selection. You can set them to 'on', 'off' or 'auto'.
 opt_selection_language = 'auto'
@@ -1024,7 +1024,7 @@ try:
             # If an error occurs, say so
             if process_subtitlesDownload != 0:
                 superPrint("error", "Subtitling error!",
-                           "An error occurred while downloading or writing '<b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "</b>'" +
+                           "An error occurred while downloading or writing '<b>" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "</b>' " +
                            "subtitles for <b>" + videoTitle + "</b>.")
                 sys.exit(2)
 
