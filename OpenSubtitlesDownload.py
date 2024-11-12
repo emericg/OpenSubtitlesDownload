@@ -244,10 +244,9 @@ def escapeGUI(string):
     return string
 
 def escapePath(string):
-    if opt_gui == 'gnome':
-        return re.escape(string)
-    elif opt_gui == 'kde':
+    if opt_gui != 'cli':
         return escapeGUI(string)
+        return re.escape(string) # too much
     else:
         return string
 
@@ -1012,11 +1011,11 @@ try:
 
             ## Download and unzip the selected subtitles
             if opt_gui == 'gnome':
-                process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1"
+                process_subtitlesDownload = subprocess.call("(wget -q -O \"" + subPath + "\" " + subURL + ") 2>&1"
                                                             + ' | (zenity --auto-close --progress --pulsate --title="Downloading subtitles, please wait..." --text="Downloading <b>'
                                                             + subLangName + '</b> subtitles for <b>' + videoTitle + '</b>...")', shell=True)
             elif opt_gui == 'kde':
-                process_subtitlesDownload = subprocess.call("(wget -q -O " + subPath + " " + subURL + ") 2>&1", shell=True)
+                process_subtitlesDownload = subprocess.call("(wget -q -O \"" + subPath + "\" " + subURL + ") 2>&1", shell=True)
             else: # CLI
                 print(">> Downloading '" + subtitlesResultList['data'][subIndex]['attributes']['language'] + "' subtitles for '" + videoTitle + "'")
                 process_subtitlesDownload = downloadSubtitles(USER_TOKEN, fileInfo['link'], subPath)
