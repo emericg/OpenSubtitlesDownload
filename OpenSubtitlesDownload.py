@@ -34,6 +34,9 @@ import argparse
 import mimetypes
 import subprocess
 
+from threading import Lock
+from collections import deque
+
 import json
 import urllib
 import urllib.request
@@ -617,8 +620,8 @@ def getUserToken(username, password):
         }
 
         data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(API_URL_LOGIN, data=data, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        req = urllib_request_Request(API_URL_LOGIN, data=data, headers=headers)
+        with urllib_request_urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
         #print("getUserToken() response data: " + str(response_data))
@@ -643,8 +646,8 @@ def destroyUserToken(USER_TOKEN):
             "Content-Type": "application/json"
         }
 
-        req = urllib.request.Request(API_URL_LOGOUT, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        req = urllib_request_Request(API_URL_LOGOUT, headers=headers)
+        with urllib_request_urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
         #print("destroyUserToken() response data: " + str(response_data))
@@ -664,8 +667,8 @@ def searchSubtitles(**kwargs):
 
         query_params = urllib.parse.urlencode(kwargs)
         url = f"{API_URL_SEARCH}?{query_params}"
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        req = urllib_request_Request(url, headers=headers)
+        with urllib_request_urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
         #print("searchSubtitles() response data: " + str(response_data))
@@ -690,8 +693,8 @@ def getSubtitlesInfo(USER_TOKEN, file_id):
         }
 
         data = json.dumps(payload).encode('utf-8')
-        req = urllib.request.Request(API_URL_DOWNLOAD, data=data, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        req = urllib_request_Request(API_URL_DOWNLOAD, data=data, headers=headers)
+        with urllib_request_urlopen(req) as response:
             response_data = json.loads(response.read().decode('utf-8'))
 
         #print("getSubtitlesInfo() response data:" + response_data)
@@ -712,8 +715,8 @@ def downloadSubtitles(USER_TOKEN, subURL, subPath):
             "Content-Type": "application/json"
         }
 
-        req = urllib.request.Request(subURL, headers=headers)
-        with urllib.request.urlopen(req) as response:
+        req = urllib_request_Request(subURL, headers=headers)
+        with urllib_request_urlopen(req) as response:
             decodedStr = response.read().decode('utf-8')
             byteswritten = open(subPath, 'w', encoding='utf-8', errors='replace').write(decodedStr)
             if byteswritten > 0:
@@ -726,7 +729,228 @@ def downloadSubtitles(USER_TOKEN, subURL, subPath):
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
+# ==== Rate-limit handling =======================================
+# See https://apidog.com/blog/opensubtitles-api/ for details
+#
+class OpenSubtitlesRateLimiter:
+    def __init__(self, max_requests=10, time_window=60, min_delay=0.1, max_retries=3):
+        """
+        Rate-limited wrapper for urllib.request with OpenSubtitles 429 handling
 
+        Args:
+            max_requests: Maximum requests allowed in time_window (fallback)
+            time_window: Time window in seconds (fallback)
+            min_delay: Minimum delay between requests in seconds
+            max_retries: Maximum number of retry attempts for 429 errors
+        """
+        self.max_requests = max_requests
+        self.time_window = time_window
+        self.min_delay = min_delay
+        self.max_retries = max_retries
+        self.request_times = deque()
+        self.lock = Lock()
+        self.last_request_time = 0
+
+        # OpenSubtitles-specific rate limit tracking
+        self.api_limit = None
+        self.api_remaining = None
+        self.api_reset_time = None
+
+    def _parse_rate_limit_headers(self, headers):
+        """Parse OpenSubtitles rate limit headers"""
+        try:
+            if 'X-RateLimit-Limit' in headers:
+                self.api_limit = int(headers['X-RateLimit-Limit'])
+            if 'X-RateLimit-Remaining' in headers:
+                self.api_remaining = int(headers['X-RateLimit-Remaining'])
+            if 'X-RateLimit-Reset' in headers:
+                # Convert to timestamp if needed
+                reset_value = headers['X-RateLimit-Reset']
+                if isinstance(reset_value, str) and reset_value.isdigit():
+                    self.api_reset_time = int(reset_value)
+                else:
+                    self.api_reset_time = int(time.time()) + 60  # fallback
+        except (ValueError, KeyError):
+            pass  # Ignore parsing errors, fall back to local rate limiting
+
+    def _should_wait_for_api_limits(self):
+        """Check if we should wait based on API-provided rate limit info"""
+        if self.api_remaining is not None and self.api_remaining <= 0:
+            if self.api_reset_time:
+                current_time = int(time.time())
+                if current_time < self.api_reset_time:
+                    wait_time = self.api_reset_time - current_time
+                    print(f"API rate limit exhausted. Waiting {wait_time}s until reset...")
+                    return wait_time
+        return 0
+
+    def _wait_if_needed(self):
+        """Implement rate limiting logic with API feedback"""
+        with self.lock:
+            current_time = time.time()
+
+            # First check API-provided limits
+            api_wait = self._should_wait_for_api_limits()
+            if api_wait > 0:
+                time.sleep(api_wait)
+                current_time = time.time()
+
+            # Fallback to local rate limiting if no API info
+            if self.api_remaining is None:
+                # Remove old requests outside the time window
+                while self.request_times and current_time - self.request_times[0] > self.time_window:
+                    self.request_times.popleft()
+
+                # Check if we've hit the local rate limit
+                if len(self.request_times) >= self.max_requests:
+                    sleep_time = self.time_window - (current_time - self.request_times[0]) + 0.1
+                    if sleep_time > 0:
+                        print(f"Local rate limit reached. Sleeping for {sleep_time:.2f} seconds...")
+                        time.sleep(sleep_time)
+                        current_time = time.time()
+
+            # Ensure minimum delay between requests
+            time_since_last = current_time - self.last_request_time
+            if time_since_last < self.min_delay:
+                sleep_time = self.min_delay - time_since_last
+                time.sleep(sleep_time)
+                current_time = time.time()
+
+            # Record this request for local tracking
+            self.request_times.append(current_time)
+            self.last_request_time = current_time
+
+    def _handle_429_retry(self, url, data, headers, retry_count=0):
+        """Handle 429 responses with proper retry logic"""
+        if retry_count >= self.max_retries:
+            raise urllib.error.HTTPError(url, 429, "Max retries exceeded for 429 Too Many Requests", headers, None)
+
+        try:
+            # Create and execute request
+            req = urllib.request.Request(
+                url=url,
+                data=data,
+                headers=headers or {}
+            )
+
+            response = urllib.request.urlopen(req)
+
+            # Parse rate limit headers from successful response
+            self._parse_rate_limit_headers(response.headers)
+
+            return response
+
+        except urllib.error.HTTPError as e:
+            if e.code == 429:
+                print(f"Received 429 Too Many Requests (attempt {retry_count + 1}/{self.max_retries})")
+
+                # Parse rate limit headers from error response
+                if hasattr(e, 'headers') and e.headers:
+                    self._parse_rate_limit_headers(e.headers)
+
+                # Get retry delay from Retry-After header or API reset time
+                retry_after = None
+                if hasattr(e, 'headers') and e.headers:
+                    retry_after = e.headers.get('Retry-After')
+
+                if retry_after:
+                    wait_time = int(retry_after)
+                    print(f"Retry-After header suggests waiting {wait_time} seconds")
+                elif self.api_reset_time:
+                    wait_time = max(1, self.api_reset_time - int(time.time()))
+                    print(f"Using API reset time, waiting {wait_time} seconds")
+                else:
+                    # Exponential backoff as fallback
+                    wait_time = min(300, (2 ** retry_count) * 10)  # Cap at 5 minutes
+                    print(f"Using exponential backoff, waiting {wait_time} seconds")
+
+                time.sleep(wait_time)
+
+                # Reset API remaining counter since we waited
+                self.api_remaining = None
+
+                # Recursive retry
+                return self._handle_429_retry(url, data, headers, retry_count + 1)
+            else:
+                # Re-raise non-429 errors
+                raise
+
+    def Request(self, url, data=None, headers=None, origin_req_host=None, unverifiable=False, method=None):
+        """
+        Rate-limited replacement for urllib.request.Request with 429 handling
+        Returns the actual response object, not just a Request object
+        """
+        self._wait_if_needed()
+
+        # Convert headers dict to the format urllib expects
+        if headers is None:
+            headers = {}
+
+        # Handle the request with 429 retry logic
+        return self._handle_429_retry(url, data, headers)
+
+class OpenSubtitlesRequestWrapper:
+    """
+    Wrapper that maintains the original urllib.request.Request interface
+    but adds rate limiting and 429 handling behind the scenes
+    """
+    def __init__(self, max_requests=10, time_window=60, min_delay=0.1, max_retries=1):
+        self.rate_limiter = OpenSubtitlesRateLimiter(max_requests, time_window, min_delay, max_retries)
+
+    def Request(self, url, data=None, headers=None, origin_req_host=None, unverifiable=False, method=None):
+        """
+        Drop-in replacement for urllib.request.Request
+        This returns a Request object like the original, but the actual HTTP call
+        happens when you use urllib.request.urlopen()
+        """
+        # Create the request object as normal
+        req = urllib.request.Request(
+            url=url,
+            data=data,
+            headers=headers or {},
+            origin_req_host=origin_req_host,
+            unverifiable=unverifiable,
+            method=method
+        )
+
+        # Add rate limiting metadata to the request object
+        req._rate_limiter = self.rate_limiter
+        return req
+
+# Enhanced urlopen function that handles the rate limiting
+def rate_limited_urlopen(url_or_request, data=None, timeout=None):
+    """
+    Rate-limited replacement for urllib.request.urlopen
+    """
+    if hasattr(url_or_request, '_rate_limiter'):
+        # This is our wrapped request object
+        rate_limiter = url_or_request._rate_limiter
+        return rate_limiter.Request(
+            url=url_or_request.full_url,
+            data=url_or_request.data,
+            headers=dict(url_or_request.headers)
+        )
+    else:
+        # Fallback to regular urlopen for unwrapped requests
+        return urllib.request.urlopen(url_or_request, data, timeout)
+
+# Global instances
+# Adjust these parameters based on OpenSubtitles API documentation
+request_wrapper = OpenSubtitlesRequestWrapper(
+    max_requests=40,    # Conservative limit (adjust based on your API tier)
+    time_window=10,     # 10-second windows for responsive limiting
+    min_delay=0.25,     # 250ms minimum between requests
+    max_retries=5       # Retry 429 errors up to 5 times
+)
+
+# Drop-in replacements
+def urllib_request_Request(*args, **kwargs):
+    """Drop-in replacement for urllib.request.Request with OpenSubtitles rate limiting"""
+    return request_wrapper.Request(*args, **kwargs)
+
+def urllib_request_urlopen(*args, **kwargs):
+    """Drop-in replacement for urllib.request.urlopen with rate limiting"""
+    return rate_limited_urlopen(*args, **kwargs)
 
 # ==============================================================================
 # ==== Main program (execution starts here) ====================================
