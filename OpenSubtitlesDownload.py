@@ -841,6 +841,14 @@ class OpenSubtitlesRateLimiter:
             return response
 
         except urllib.error.HTTPError as e:
+            if e.code == 406:
+                # 406 Not Acceptable - Account out of downloads for 24hr period
+                print("ERROR: HTTP 406 - Account has exceeded daily download quota.")
+                print("Your OpenSubtitles account is out of downloads for the current 24-hour period.")
+                print("Please wait until your quota resets or upgrade your account.")
+                print("Exiting application...")
+                import sys
+                sys.exit(1)
             if e.code == 429:
                 print(f"Received 429 Too Many Requests (attempt {retry_count + 1}/{self.max_retries})")
 
