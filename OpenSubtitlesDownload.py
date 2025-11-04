@@ -585,9 +585,9 @@ def selectionAuto(subtitlesResultList, languageList):
 # ==== Check dependencies ======================================================
 
 def pythonChecker():
-    """Check the availability of Python 3 interpreter"""
-    if sys.version_info < (3, 0):
-        superPrint("error", "Wrong Python version", "You need <b>Python 3</b> to use OpenSubtitlesDownload.")
+    """Check the availability of Python 3.6 interpreter"""
+    if sys.version_info < (3, 6):
+        superPrint("error", "Wrong Python version", "You need <b>Python 3.6</b> to use OpenSubtitlesDownload.")
         return False
     return True
 
@@ -830,7 +830,7 @@ if opt_selection_mode not in ['manual', 'default', 'auto']:
 
 # ==== Various checks
 
-# Check for Python 3
+# Check for Python 3.6
 if pythonChecker() is False:
     sys.exit(2)
 
