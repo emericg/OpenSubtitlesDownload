@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# OpenSubtitlesDownload.py / Version 6.4
+# OpenSubtitlesDownload.py / Version 6.5
 # This software is designed to help you find and download subtitles for your favorite videos!
 
 # You can browse the project's GitHub page:
@@ -53,7 +53,7 @@ API_URL_DOWNLOAD = API_URL + 'download'
 
 # This application is registered:
 APP_NAME = 'OpenSubtitlesDownload'
-APP_VERSION = '6.4'
+APP_VERSION = '6.5'
 APP_API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
 
 # ==== OpenSubtitles.com account (required) ====================================
