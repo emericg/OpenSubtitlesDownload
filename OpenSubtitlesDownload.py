@@ -10,7 +10,7 @@
 # Learn much more about it on the wiki:
 # - https://github.com/emericg/OpenSubtitlesDownload/wiki
 
-# Copyright (c) 2024 by Emeric GRANGE <emeric.grange@gmail.com>
+# Copyright (c) 2026 by Emeric GRANGE <emeric.grange@gmail.com>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -302,7 +302,7 @@ def superPrint(priority, title, message):
         # Print message
         print(">> " + message)
 
-# ==== GNOME selection window ==================================================
+# ==== GNOME (zenity) selection window =========================================
 
 def selectionGnome(subtitlesResultList):
     """GNOME subtitles selection window using zenity"""
@@ -398,7 +398,7 @@ def selectionGnome(subtitlesResultList):
     # Return the result (selected subtitles name and index)
     return (subtitlesSelectedName, subtitlesSelectedIndex)
 
-# ==== KDE selection window ====================================================
+# ==== KDE (kdialog) selection window ==========================================
 
 def selectionKDE(subtitlesResultList):
     """KDE subtitles selection window using kdialog"""
@@ -585,7 +585,7 @@ def selectionAuto(subtitlesResultList, languageList):
     # Return the result (selected subtitles name and index)
     return (subtitlesSelectedName, subtitlesSelectedIndex)
 
-# ==== Check dependencies ======================================================
+# ==== Dependency checkers =====================================================
 
 def pythonChecker():
     """Check the availability of Python 3.6 interpreter"""
@@ -729,29 +729,26 @@ def downloadSubtitles(USER_TOKEN, subURL, subPath):
     except Exception:
         print("Unexpected error (line " + str(sys.exc_info()[-1].tb_lineno) + "): " + str(sys.exc_info()[0]))
 
-# ==== Rate-limit handling =======================================
-# See https://apidog.com/blog/opensubtitles-api/ for details
-#
+# ==== Rate-limit handling =====================================================
+
 class OpenSubtitlesRateLimiter:
     def __init__(self, max_requests=10, time_window=60, min_delay=0.1, max_retries=3):
-        """
-        Rate-limited wrapper for urllib.request with OpenSubtitles 429 handling
+        """Rate-limited wrapper for urllib.request with OpenSubtitles 429 handling"""
 
-        Args:
-            max_requests: Maximum requests allowed in time_window (fallback)
-            time_window: Time window in seconds (fallback)
-            min_delay: Minimum delay between requests in seconds
-            max_retries: Maximum number of retry attempts for 429 errors
-        """
+        # max_requests: Maximum requests allowed in time_window (fallback)
+        # time_window: Time window in seconds (fallback)
+        # min_delay: Minimum delay between requests in seconds
+        # max_retries: Maximum number of retry attempts for 429 errors
+
         self.max_requests = max_requests
         self.time_window = time_window
         self.min_delay = min_delay
         self.max_retries = max_retries
+
         self.request_times = deque()
         self.lock = Lock()
         self.last_request_time = 0
 
-        # OpenSubtitles-specific rate limit tracking
         self.api_limit = None
         self.api_remaining = None
         self.api_reset_time = None
@@ -769,9 +766,9 @@ class OpenSubtitlesRateLimiter:
                 if isinstance(reset_value, str) and reset_value.isdigit():
                     self.api_reset_time = int(reset_value)
                 else:
-                    self.api_reset_time = int(time.time()) + 60  # fallback
+                    self.api_reset_time = int(time.time()) + 60 # fallback
         except (ValueError, KeyError):
-            pass  # Ignore parsing errors, fall back to local rate limiting
+            pass # Ignore parsing errors, fall back to local rate limiting
 
     def _should_wait_for_api_limits(self):
         """Check if we should wait based on API-provided rate limit info"""
@@ -841,15 +838,15 @@ class OpenSubtitlesRateLimiter:
             return response
 
         except urllib.error.HTTPError as e:
-            if e.code == 406:
-                # 406 Not Acceptable - Account out of downloads for 24hr period
-                print("ERROR: HTTP 406 - Account has exceeded daily download quota.")
-                print("Your OpenSubtitles account is out of downloads for the current 24-hour period.")
-                print("Please wait until your quota resets or upgrade your account.")
-                print("Exiting application...")
-                import sys
+            if e.code == 406: # 406 Not Acceptable - Account out of downloads for 24hr period
+                superPrint("error", "HTTP error!",
+                           "OpenSubtitlesDownload encountered an <b>HTTP error</b>, sorry about that...<br><br>" + \
+                           "Error: <b>HTTP 406 Not Acceptable</b> Account has exceeded daily download quota<br>" + \
+                           "Your OpenSubtitles account is out of downloads for the current 24-hour period<br>." + \
+                           "Please wait until your quota resets or upgrade your account.")
                 sys.exit(1)
-            if e.code == 429:
+
+            if e.code == 429: # 429 Too Many Requests
                 print(f"Received 429 Too Many Requests (attempt {retry_count + 1}/{self.max_retries})")
 
                 # Parse rate limit headers from error response
@@ -869,7 +866,7 @@ class OpenSubtitlesRateLimiter:
                     print(f"Using API reset time, waiting {wait_time} seconds")
                 else:
                     # Exponential backoff as fallback
-                    wait_time = min(300, (2 ** retry_count) * 10)  # Cap at 5 minutes
+                    wait_time = min(300, (2 ** retry_count) * 10) # Cap at 5 minutes
                     print(f"Using exponential backoff, waiting {wait_time} seconds")
 
                 time.sleep(wait_time)
@@ -879,6 +876,7 @@ class OpenSubtitlesRateLimiter:
 
                 # Recursive retry
                 return self._handle_429_retry(url, data, headers, retry_count + 1)
+
             else:
                 # Re-raise non-429 errors
                 raise
@@ -927,9 +925,7 @@ class OpenSubtitlesRequestWrapper:
 
 # Enhanced urlopen function that handles the rate limiting
 def rate_limited_urlopen(url_or_request, data=None, timeout=None):
-    """
-    Rate-limited replacement for urllib.request.urlopen
-    """
+    """Rate-limited replacement for urllib.request.urlopen """
     if hasattr(url_or_request, '_rate_limiter'):
         # This is our wrapped request object
         rate_limiter = url_or_request._rate_limiter
@@ -942,8 +938,7 @@ def rate_limited_urlopen(url_or_request, data=None, timeout=None):
         # Fallback to regular urlopen for unwrapped requests
         return urllib.request.urlopen(url_or_request, data, timeout)
 
-# Global instances
-# Adjust these parameters based on OpenSubtitles API documentation
+# Global instances # Adjust these parameters based on OpenSubtitles API documentation
 request_wrapper = OpenSubtitlesRequestWrapper(
     max_requests=40,    # Conservative limit (adjust based on your API tier)
     time_window=10,     # 10-second windows for responsive limiting
@@ -951,7 +946,6 @@ request_wrapper = OpenSubtitlesRequestWrapper(
     max_retries=5       # Retry 429 errors up to 5 times
 )
 
-# Drop-in replacements
 def urllib_request_Request(*args, **kwargs):
     """Drop-in replacement for urllib.request.Request with OpenSubtitles rate limiting"""
     return request_wrapper.Request(*args, **kwargs)
@@ -971,7 +965,7 @@ def urllib_request_urlopen(*args, **kwargs):
 
 ExitCode = 2
 
-# ==== File and language lists
+# ==== File and language lists initialization
 
 videoPathList = []
 languageList = []
