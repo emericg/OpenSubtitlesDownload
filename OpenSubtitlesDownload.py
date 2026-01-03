@@ -65,8 +65,9 @@ APP_API_KEY = 'FNyoC96mlztsk3ALgNdhfSNapfFY9lOi'
 # You can use a VIP account to avoid "in-subtitles" advertisement and bypass download limits.
 
 # The username is NOT your account email address, but in fact, your username...
-# Be careful about your password security, it will be stored right here in plain text...
+# Be careful about your password security, it will be stored right here, in plain text...
 # Can be overridden at run time with '-u' and '-p' arguments.
+# Can be overridden at run time with 'OSD_ENV_USERNAME' and 'OSD_ENV_PASSWORD' environment variables.
 osd_username = ''
 osd_password = ''
 
@@ -972,6 +973,14 @@ languageList = []
 
 currentVideoPath = u""
 currentLanguage = u""
+
+# ==== Environment parsing
+
+if osd_username == '':
+    osd_username = os.getenv('OSD_ENV_USERNAME', '')
+
+if osd_password == '':
+    osd_password = os.getenv('OSD_ENV_PASSWORD', '')
 
 # ==== Argument parsing
 
